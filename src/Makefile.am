@@ -20,7 +20,7 @@ BOOST_INCL = -I$(HOME)/Software/boost_1_47_0
 ##############################################################
 SUBDIRS =
 
-noinst_PROGRAMS = dune_gesis gesis2dDG gesis3dDG
+noinst_PROGRAMS = dune_gesis gesis2dDG gesis3dDG gesis2dFEM gesis3dFEM 
 
 # 2D DG version for YASP:
 gesis2dDG_SOURCES = geo_inversion_2d.cc
@@ -73,6 +73,55 @@ gesis3dDG_LDFLAGS = $(AM_LDFLAGS) \
 	$(SUPERLU_LDFLAGS) \
 	$(DUNE_LDFLAGS)
 
+# 2D FEM version for YASP:
+gesis2dFEM_SOURCES = geo_inversion_2d.cc
+
+gesis2dFEM_CPPFLAGS = $(AM_CPPFLAGS) -DUSE_YASP -DUSE_FEM \
+	$(HDF5_INCL) \
+	$(FFTW3_INCL) \
+	$(BOOST_INCL) \
+	$(PARMETIS_CPPFLAGS) \
+	$(SUPERLU_CPPFLAGS) \
+	$(DUNEMPICPPFLAGS)
+
+gesis2dFEM_LDADD = \
+	$(DUNEMPILDFLAGS) \
+	$(DUNEMPILIBS)	\
+	$(HDF5_LIBS) \
+	$(FFTW3_LIBS) \
+	$(PARMETIS_LIBS) \
+	$(SUPERLU_LIBS) \
+	$(DUNE_LDFLAGS) $(DUNE_LIBS) \
+	$(LDADD)
+
+gesis2dFEM_LDFLAGS = $(AM_LDFLAGS) \
+	$(SUPERLU_LDFLAGS) \
+	$(DUNE_LDFLAGS)
+
+# 3D FEM version for YASP:
+gesis3dFEM_SOURCES = geo_inversion_3d.cc
+
+gesis3dFEM_CPPFLAGS = $(AM_CPPFLAGS) -DUSE_YASP -DUSE_FEM \
+	$(HDF5_INCL) \
+	$(FFTW3_INCL) \
+	$(BOOST_INCL) \
+	$(PARMETIS_CPPFLAGS) \
+	$(SUPERLU_CPPFLAGS) \
+	$(DUNEMPICPPFLAGS)
+
+gesis3dFEM_LDADD = \
+	$(DUNEMPILDFLAGS) \
+	$(DUNEMPILIBS)	\
+	$(HDF5_LIBS) \
+	$(FFTW3_LIBS) \
+	$(PARMETIS_LIBS) \
+	$(SUPERLU_LIBS) \
+	$(DUNE_LDFLAGS) $(DUNE_LIBS) \
+	$(LDADD)
+
+gesis3dFEM_LDFLAGS = $(AM_LDFLAGS) \
+	$(SUPERLU_LDFLAGS) \
+	$(DUNE_LDFLAGS)
 
 # default app:
 
