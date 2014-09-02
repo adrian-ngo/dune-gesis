@@ -20,7 +20,7 @@ BOOST_INCL = -I$(HOME)/Software/boost_1_47_0
 ##############################################################
 SUBDIRS =
 
-noinst_PROGRAMS = dune_gesis gesis2dDG
+noinst_PROGRAMS = dune_gesis gesis2dDG gesis3dDG
 
 # 2D DG version for YASP:
 gesis2dDG_SOURCES = geo_inversion_2d.cc
@@ -46,6 +46,33 @@ gesis2dDG_LDADD = \
 gesis2dDG_LDFLAGS = $(AM_LDFLAGS) \
 	$(SUPERLU_LDFLAGS) \
 	$(DUNE_LDFLAGS)
+
+
+# 3D DG version for YASP:
+gesis3dDG_SOURCES = geo_inversion_3d.cc
+
+gesis3dDG_CPPFLAGS = $(AM_CPPFLAGS) -DUSE_YASP \
+	$(HDF5_INCL) \
+	$(FFTW3_INCL) \
+	$(BOOST_INCL) \
+	$(PARMETIS_CPPFLAGS) \
+	$(SUPERLU_CPPFLAGS) \
+	$(DUNEMPICPPFLAGS)
+
+gesis3dDG_LDADD = \
+	$(DUNEMPILDFLAGS) \
+	$(DUNEMPILIBS)	\
+	$(HDF5_LIBS) \
+	$(FFTW3_LIBS) \
+	$(PARMETIS_LIBS) \
+	$(SUPERLU_LIBS) \
+	$(DUNE_LDFLAGS) $(DUNE_LIBS) \
+	$(LDADD)
+
+gesis3dDG_LDFLAGS = $(AM_LDFLAGS) \
+	$(SUPERLU_LDFLAGS) \
+	$(DUNE_LDFLAGS)
+
 
 # default app:
 
