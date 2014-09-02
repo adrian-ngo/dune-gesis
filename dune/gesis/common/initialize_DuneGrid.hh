@@ -51,7 +51,7 @@
 #include <dune/gesis/projectors/L2SubspaceProjector.hh>
 #include <dune/gesis/projectors/CoarseGridP0Projector.hh>
 
-#include <dune/gesis/ForwardSimulator_DG.hh>
+#include <dune/gesis/common/ForwardSimulator.hh>
 
 #if defined USE_ALUGRID || defined USE_UG
 #include "adaptive/adaptiveDrive_h_rgv.hh"
@@ -979,7 +979,7 @@ namespace Dune {
 
           GEP_FWD log_kappawrapper_gw( inputdata, setupdata, log_kappafield ); // equation (66), (147): kappa
 
-          typedef ForwardSimulator_DG<GWP_FWD,
+          typedef ForwardSimulator<GWP_FWD,
             GEP_FWD,
             GFS_GW,
             GFS_TP,
@@ -1768,7 +1768,7 @@ namespace Dune {
               GEP_FWD log_kappawrapper_gw( inputdata, setupdata, log_kappafield ); // equation (66), (147): kappa
 
 
-              typedef ForwardSimulator_DG<GWP_FWD,
+              typedef ForwardSimulator<GWP_FWD,
                 GEP_FWD,
                 GFS_GW,
                 GFS_TP,

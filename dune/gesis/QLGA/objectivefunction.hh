@@ -12,7 +12,7 @@
 
 #include <math.h>
 #include "../io/inputfile.hh"
-#include "../ForwardSimulator_DG.hh"
+#include "../common/ForwardSimulator.hh"
 #include "../io/IO_routines.hh"
 
 
@@ -169,7 +169,7 @@ namespace Dune {
   
 
       // define forward simulator
-      typedef ForwardSimulator_DG<GWP_FWD,
+      typedef ForwardSimulator<GWP_FWD,
                                   GEP_FWD,
                                   GFS_GW,
                                   GFS_TP,
