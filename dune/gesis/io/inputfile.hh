@@ -447,14 +447,16 @@ public:
  */
 struct CInversionParameters
 {
-  std::string L_prior;
-  UINT max_iter;
-  REAL lim_stepsize;
-  REAL weighting_lim;
-  REAL dY_lim;
-  REAL dL_lim_fac;
-  REAL L_accept_confidence_interval;
-  int histogram_bins;
+    std::string L_prior;
+    UINT max_iter;
+    REAL lim_stepsize;
+    REAL weighting_lim;
+    REAL dY_lim;
+    REAL dL_lim_fac;
+    REAL L_accept_confidence_interval;
+    int histogram_bins;
+    REAL disturbance;    // add artifical disturbance to measurement data for test of stability of the inversion scheme
+    REAL m1relerror;
 };
 
 
@@ -1742,7 +1744,13 @@ public:
       inversion_parameters.histogram_bins
         = pt.get("inputfile.inversion_parameters.<xmlattr>.histogram_bins",10);
 
+      inversion_parameters.disturbance
+        = pt.get("inputfile.inversion_parameters.<xmlattr>.disturbance",0.0);
 
+      inversion_parameters.m1relerror
+        = pt.get("inputfile.inversion_parameters.<xmlattr>.m1relerror",0.0);
+
+      
       // =========================
       // "<parallel_fine_tuning>":
       // =========================     

@@ -546,6 +546,13 @@ public:
     int iMeas = 0;
     int iLine = -1;
     bool bExitWhileLoop = false;
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::normal_distribution<> distr(0,1);
+    //std::uniform_real_distribution<REAL> distr(-1.0, 1.0);
+    //gen.seed(11);
+
     while( !instream.eof() && !bExitWhileLoop ) {
       if(iLine > -1){
 
@@ -632,25 +639,34 @@ public:
         }
 #endif
         instream >> value;
+
+
+        REAL stochasticDisturbance = inputdata.inversion_parameters.disturbance * distr(gen);
+
         switch( type ){
         case 1:
           {
+              value += 0.05 * stochasticDisturbance * distr(gen); // Allow maximally 1% disturbance for head measurement (100.0 - 99.90)x0.01
             head_meas[iSetup][iLine].value = value;
             break;
           }
         case 2:
           {
+            value += value * stochasticDisturbance;
             M0_meas[iSetup][iLine].value = value;
             break;
           }
         case 3:
           {
+            value += value * stochasticDisturbance;
             M1_meas[iSetup][iLine].value = value;
             break;
           }
         default:
           std::cerr << "read_measurements: not yet implemented for the type " << type << std::endl;
-        }            
+        }
+
+
         char c=instream.peek();
         if(c=='\n'){
           instream.readsome(&c,1);  
@@ -910,10 +926,11 @@ public:
       maxValue = std::max( maxValue,
                            M1_meas[iSetup][iPoint].value );
     }
+    REAL absErrorForM1 = maxValue * inputdata.inversion_parameters.m1relerror;
     for(UINT iPoint=0; iPoint<nPoints; iPoint++){
-      M1_meas[iSetup][iPoint].abs_error = maxValue * M1_meas[iSetup][iPoint].rel_error;
+      M1_meas[iSetup][iPoint].abs_error = absErrorForM1;
     }
-    return maxValue;
+    return absErrorForM1;
   }
     
     
