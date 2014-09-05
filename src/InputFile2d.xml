@@ -165,6 +165,8 @@
       dL_lim_fac="0.02"
       L_accept_confidence_interval="0.95"
       histogram_bins="25"
+      disturbance="0.0"
+      m1relerror="0.005"
       />
   <!-- -->
   <!-- -->
