@@ -11,9 +11,9 @@
 #define	_OBJECTIVEFUNCTION_HH
 
 #include <math.h>
-#include "../io/inputfile.hh"
+#include "../common/io/inputfile.hh"
 #include "../common/ForwardSimulator.hh"
-#include "../io/IO_routines.hh"
+#include "../common/io/IO_routines.hh"
 
 
 namespace Dune {

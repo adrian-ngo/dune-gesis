@@ -22,8 +22,8 @@
 
 
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
-#include "../BVPs/regularize.hh"
-#include "../FEM/deltaSD.hh"
+#include "dune/gesis/BVPs/regularize.hh"
+#include "dune/gesis/BVPs/FEM/deltaSD.hh"
 
 #include "../common/ParameterTraits.hh"
 

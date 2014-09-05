@@ -16,7 +16,7 @@
 #include <iomanip>
 #include "Vector.hh"
 
-#include "../io/IO_routines.hh"
+#include "dune/gesis/common/io/IO_routines.hh"
 
 namespace Dune {
   namespace GeoInversion {

@@ -14,7 +14,7 @@
 #include <dune/pdelab/common/elementmapper.hh>
 //#include "dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh"
 
-#include "../common/general.hh"
+#include "dune/gesis/common/general.hh"
 
 
 namespace Dune{

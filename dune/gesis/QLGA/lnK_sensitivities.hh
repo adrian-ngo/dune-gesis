@@ -28,9 +28,9 @@
 #ifndef _LNK_SENSITIVITIES_HH
 #define _LNK_SENSITIVITIES_HH
 
-#include "../common/MyMPIComm.hh"
-#include "../io/IO_routines.hh"
-#include "../QLGA/cross_covariance_JQ.hh"
+#include "dune/gesis/common/MyMPIComm.hh"
+#include "dune/gesis/common/io/IO_routines.hh"
+#include "dune/gesis/QLGA/cross_covariance_JQ.hh"
 
 // Lamndas: needs to fit to the size of the FFT data distribution!!!
 // Xzones: zonation matrix -> only on process 0 (process leader of the communicator group) 

@@ -19,7 +19,7 @@
 
 */
 
-#include "../projectors/CoarseGridP0Datahandle.hh"
+#include "dune/gesis/BVPs/projectors/CoarseGridP0Datahandle.hh"
 
 namespace Dune {
   namespace GeoInversion {

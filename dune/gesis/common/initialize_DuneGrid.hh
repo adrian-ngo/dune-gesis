@@ -23,18 +23,18 @@
 #include <dune/gesis/common/Vector.hh>
 #include <dune/gesis/common/DenseMatrix.hh>
 
-#include <dune/gesis/wells/calibrateWellCentersToElementCenters.hh>
+#include <dune/gesis/BVPs/wells/calibrateWellCentersToElementCenters.hh>
 
-#include <dune/gesis/DG/RT0flux.hh>
+#include <dune/gesis/BVPs/DG/RT0flux.hh>
 #include <dune/gesis/common/DarcyVelocityCache.hh>
 #include <dune/gesis/common/my_gfs_utilities.hh>
 #include <dune/gesis/BVPs/GroundWaterParameters.hh>
 #include <dune/gesis/BVPs/GeoElectricalPotentialParameters.hh>
 //#include "FieldParameters.hh"
 
-#include <dune/gesis/DG/dgf_pressurefield.hh>
-#include <dune/gesis/DG/rt0_pressurefield.hh>
-#include <dune/gesis/DG/reorderedgridview.hh>
+#include <dune/gesis/BVPs/DG/dgf_pressurefield.hh>
+#include <dune/gesis/BVPs/DG/rt0_pressurefield.hh>
+#include <dune/gesis/BVPs/DG/reorderedgridview.hh>
 
 #ifdef TEST_GLOBAL_REFINE
 #include "testGlobalRefine.hh"
@@ -48,8 +48,8 @@
 
 #include <dune/gesis/obs/MeasurementList.hh>
 
-#include <dune/gesis/projectors/L2SubspaceProjector.hh>
-#include <dune/gesis/projectors/CoarseGridP0Projector.hh>
+#include <dune/gesis/BVPs/projectors/L2SubspaceProjector.hh>
+#include <dune/gesis/BVPs/projectors/CoarseGridP0Projector.hh>
 
 #include <dune/gesis/common/ForwardSimulator.hh>
 

@@ -1,7 +1,7 @@
 #ifndef POINT_FUNCTION_SOURCE_HH
 #define POINT_FUNCTION_SOURCE_HH
 
-#include "../common/deltafunction.hh"
+#include "dune/gesis/common/deltafunction.hh"
 #include "SourceBaseClass.hh"
 
 

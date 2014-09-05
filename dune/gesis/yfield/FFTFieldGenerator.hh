@@ -23,7 +23,7 @@
 #include <dune/gesis/yfield/RAND/stoc1.cc>                // random library source code
 #include <dune/gesis/yfield/RAND/userintf.cc>             // define system specific user interface
 
-#include <dune/gesis/io/HDF5Tools.hh>
+#include <dune/gesis/common/io/HDF5Tools.hh>
 
 extern CLogfile logger;
 

@@ -20,8 +20,8 @@
 
 //#include"convectiondiffusionparameter.hh"
 
-#include "../common/eval.hh"
-#include "../wells/wellposition.hh"
+#include "dune/gesis/common/eval.hh"
+#include "dune/gesis/BVPs/wells/wellposition.hh"
 
 
 #define HOUSTON_h_F

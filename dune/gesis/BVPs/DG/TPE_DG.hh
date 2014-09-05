@@ -2,7 +2,7 @@
 #define TRANSPORT_EQUATION_DG_HH
 
 //#include "ovlpistlgmresbackend.hh"
-#include "../BVPs/TransportParameters.hh"
+#include "dune/gesis/BVPs/TransportParameters.hh"
 #include "TransportOperatorDG.hh"
 
 namespace Dune {

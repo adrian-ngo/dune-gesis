@@ -16,7 +16,7 @@
 
 #include "../common/MyMPIComm.hh"
 
-#include "../io/IO_routines.hh"
+#include "../common/io/IO_routines.hh"
 
 namespace Dune {
   namespace GeoInversion {

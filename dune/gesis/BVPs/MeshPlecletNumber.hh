@@ -1,7 +1,7 @@
 #ifndef MESH_PECLET_NUMBER_HH
 #define MESH_PECLET_NUMBER_HH
 
-#include "../projectors/CoarseGridP0Datahandle.hh"
+#include "dune/gesis/BVPs/projectors/CoarseGridP0Datahandle.hh"
 
 namespace Dune{
   namespace GeoInversion{

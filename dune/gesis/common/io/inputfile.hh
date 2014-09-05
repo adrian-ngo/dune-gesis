@@ -32,8 +32,8 @@
 
 
 
-#include "../common/Vector.hh"
-#include "../common/general.hh"
+#include "dune/gesis/common/Vector.hh"
+#include "dune/gesis/common/general.hh"
 
 
 /* Get global logfile object */

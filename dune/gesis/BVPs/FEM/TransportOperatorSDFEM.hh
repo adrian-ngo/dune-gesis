@@ -44,8 +44,8 @@
 
 #include "deltaSD.hh"
 
-#include "../common/eval.hh"
-#include "../wells/wellposition.hh"
+#include "dune/gesis/common/eval.hh"
+#include "dune/gesis/BVPs/wells/wellposition.hh"
 
 
 #ifndef CONVECTIVE_FORMULATION

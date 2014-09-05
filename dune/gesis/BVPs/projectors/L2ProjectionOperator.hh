@@ -34,7 +34,7 @@
 #include<dune/pdelab/localoperator/flags.hh>
 #include<dune/pdelab/localoperator/idefault.hh>
 
-#include "../common/eval.hh"
+#include "dune/gesis/common/eval.hh"
 
 namespace Dune {
   namespace GeoInversion {

@@ -11,23 +11,23 @@
 
 
 // include header file for source terms
-#include <dune/gesis/sourceterms/source_head_transport.hh>
+#include <dune/gesis/BVPs/sourceterms/source_head_transport.hh>
 
 // include header files for solving the flow problem (gridview gv_gw)
 #include <dune/gesis/BVPs/GroundWaterParameters.hh>
-#include <dune/gesis/FEM/GWE_Galerkin.hh>
-#include <dune/gesis/DG/GWE_CCFV.hh>
+#include <dune/gesis/BVPs/FEM/GWE_Galerkin.hh>
+#include <dune/gesis/BVPs/DG/GWE_CCFV.hh>
 
 // include header files for reordering grid elements (gridview gv_tp)
-#include <dune/gesis/DG/dgf_pressurefield.hh>
-#include <dune/gesis/DG/rt0_pressurefield.hh>
-#include <dune/gesis/DG/reorderedgridview.hh>
+#include <dune/gesis/BVPs/DG/dgf_pressurefield.hh>
+#include <dune/gesis/BVPs/DG/rt0_pressurefield.hh>
+#include <dune/gesis/BVPs/DG/reorderedgridview.hh>
 
 // include header files for solving the transport problem (gridview gv_tp)
 #include <dune/gesis/BVPs/TransportParameters.hh>
 #include <dune/gesis/BVPs/HeatTransportParameters.hh>
-#include <dune/gesis/FEM/TPE_SDFEM.hh>
-#include <dune/gesis/DG/TPE_DG.hh>
+#include <dune/gesis/BVPs/FEM/TPE_SDFEM.hh>
+#include <dune/gesis/BVPs/DG/TPE_DG.hh>
 
 #include <dune/gesis/BVPs/MeshPlecletNumber.hh>
 

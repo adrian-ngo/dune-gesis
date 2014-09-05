@@ -8,7 +8,7 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/static_assert.hh>
 
-#include "../DG/RT0flux.hh"
+#include "dune/gesis/BVPs/DG/RT0flux.hh"
 
 namespace Dune {
   namespace GeoInversion {

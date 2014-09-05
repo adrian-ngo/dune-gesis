@@ -2,7 +2,7 @@
 #define CALIBRATE_WELL_CENTERS_HH
 
 #include "wellposition.hh"
-#include "../common/MPI_Tools.hh"
+#include "dune/gesis/common/MPI_Tools.hh"
 
 
 namespace Dune {
