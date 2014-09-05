@@ -1418,7 +1418,7 @@ namespace Dune {
               bufferfile_M1_measurements << dir.bufferdimdir << "/m1_orig.meas.iSetup" << iSetup << ".rank" << helper.rank();
 
               if( helper.rank() == 0 )
-                std::cout << "Max. value of M1 for Setup #" << iSetup << " is "
+                std::cout << "Absolute m1 error for Setup #" << iSetup << " is "
                           << orig_measurements.calibrateAbsErrorForM1( iSetup )
                           << std::endl;
 
@@ -1917,8 +1917,12 @@ namespace Dune {
                   log_kappafield,
                   helper
                   );
-            
-              std::cout << "Return value of the inversion kernel L = " << L << std::endl;
+
+              if( helper.rank()==0 
+                  &&
+                  inputdata.verbosity>=VERBOSITY_INVERSION )
+                  std::cout << "Return value of the inversion kernel L = " << L << std::endl;
+
               logger << "Return value of the inversion kernel L = " << L << std::endl;
 
             }
