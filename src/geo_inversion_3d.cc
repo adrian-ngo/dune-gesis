@@ -71,12 +71,12 @@
 #include <unistd.h>
 
 #include <dune/gesis/common/datatypes.hh>
-#include <dune/gesis/io/logfile.hh>
-#include <dune/gesis/io/inputfile.hh>
+#include <dune/gesis/common/io/logfile.hh>
+#include <dune/gesis/common/io/inputfile.hh>
 #include <dune/gesis/common/general.hh>
-#include <dune/gesis/io/IO_locations.hh>
-#include <dune/gesis/io/IO_routines.hh>
-#include <dune/gesis/io/VTKPlot.hh>
+#include <dune/gesis/common/io/IO_locations.hh>
+#include <dune/gesis/common/io/IO_routines.hh>
+#include <dune/gesis/common/io/VTKPlot.hh>
 #include <dune/gesis/yfield/FFTFieldGenerator.hh>
 #include <dune/gesis/common/YaspPartition.hh>
 #include <dune/gesis/common/initialize_DuneGrid.hh>
