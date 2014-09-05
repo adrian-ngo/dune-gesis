@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_L2PROJECTION_OPERATOR_HH
-#define DUNE_PDELAB_L2PROJECTION_OPERATOR_HH
+#ifndef DUNE_GESIS_L2PROJECTION_OPERATOR_HH
+#define DUNE_GESIS_L2PROJECTION_OPERATOR_HH
 
     //! \addtogroup LocalOperator
     //! \ingroup PDELab
@@ -37,7 +37,7 @@
 #include "dune/gesis/common/eval.hh"
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     template<typename DGF>
 	class L2ProjectionOperator 

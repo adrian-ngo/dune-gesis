@@ -27,7 +27,7 @@
 #define HOUSTON_h_F
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     struct ConvectionDiffusionDGMethod
     {

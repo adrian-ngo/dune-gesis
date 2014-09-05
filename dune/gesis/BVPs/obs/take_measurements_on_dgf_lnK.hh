@@ -8,8 +8,8 @@
 // measuring_points: container for the simulated measurements
 // helper: MPI utility
 
-#ifndef _TAKE_MEASUREMENTS_ON_DGF_LNK_HH
-#define	_TAKE_MEASUREMENTS_ON_DGF_LNK_HH
+#ifndef DUNE_GESIS_TAKE_MEASUREMENTS_ON_DGF_LNK_HH
+#define	DUNE_GESIS_TAKE_MEASUREMENTS_ON_DGF_LNK_HH
 
 template<typename GV, typename YFieldGenerator, typename VEC>
 void take_measurements_on_dgf_lnK(const GV& gv,

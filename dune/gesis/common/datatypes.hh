@@ -1,5 +1,5 @@
-#ifndef _DATATYPES_HH
-#define _DATATYPES_HH
+#ifndef DUNE_GESIS_DATATYPES_HH
+#define DUNE_GESIS_DATATYPES_HH
 
 // define some general data types
 
@@ -40,4 +40,4 @@ struct FEMType {
   enum Type{ DG, CG };
 };
 
-#endif // _DATATYPES_HH
+#endif // DUNE_GESIS_DATATYPES_HH

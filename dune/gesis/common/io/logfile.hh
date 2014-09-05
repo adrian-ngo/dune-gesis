@@ -33,8 +33,8 @@
  */
 
 
-#ifndef _LOGFILE_HH
-#define	_LOGFILE_HH
+#ifndef DUNE_GESIS_LOGFILE_HH
+#define	DUNE_GESIS_LOGFILE_HH
 
 class CLogfile : public std::ofstream
 {
@@ -61,4 +61,4 @@ public:
 
 
 
-#endif // _LOGFILE_HH
+#endif // DUNE_GESIS_LOGFILE_HH

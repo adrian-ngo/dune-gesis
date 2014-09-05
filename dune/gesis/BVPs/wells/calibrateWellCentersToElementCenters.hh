@@ -1,12 +1,12 @@
-#ifndef CALIBRATE_WELL_CENTERS_HH
-#define CALIBRATE_WELL_CENTERS_HH
+#ifndef DUNE_GESIS_CALIBRATE_WELL_CENTERS_HH
+#define DUNE_GESIS_CALIBRATE_WELL_CENTERS_HH
 
 #include "wellposition.hh"
 #include "dune/gesis/common/MPI_Tools.hh"
 
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
 template<typename GV,typename IDT>
 void calibrateWellCentersToElementCenters( const GV& gv, 
@@ -258,4 +258,4 @@ void verifyCalibratedWellsOnRefinedGrid( const GV& gv,
   }
 }
 
-#endif // CALIBRATE_WELL_CENTERS_HH
+#endif // DUNE_GESIS_CALIBRATE_WELL_CENTERS_HH

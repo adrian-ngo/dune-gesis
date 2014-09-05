@@ -28,7 +28,7 @@
  */
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
     
     template< typename GWP 
               , typename IDT
@@ -273,9 +273,9 @@ namespace Dune {
 
           double A_eff = 0.0;
           if( element_length_s - element_length_n<1E-12 )
-            A_eff = Dune::GeoInversion::General::harmonicAverage(A_s,A_n);
+            A_eff = Dune::Gesis::General::harmonicAverage(A_s,A_n);
           else
-            A_eff = Dune::GeoInversion::General::harmonicAverageWeightedByDistance( A_s, 
+            A_eff = Dune::Gesis::General::harmonicAverageWeightedByDistance( A_s, 
                                                                                     A_n, 
                                                                                     element_length_s, 
                                                                                     element_length_n );
@@ -416,9 +416,9 @@ namespace Dune {
 
           double A_eff = 0.0;
           if( element_length_s - element_length_n<1E-12 )
-            A_eff = Dune::GeoInversion::General::harmonicAverage(A_s,A_n);
+            A_eff = Dune::Gesis::General::harmonicAverage(A_s,A_n);
           else
-            A_eff = Dune::GeoInversion::General::harmonicAverageWeightedByDistance( A_s, 
+            A_eff = Dune::Gesis::General::harmonicAverageWeightedByDistance( A_s, 
                                                                                     A_n, 
                                                                                     element_length_s, 
                                                                                     element_length_n );

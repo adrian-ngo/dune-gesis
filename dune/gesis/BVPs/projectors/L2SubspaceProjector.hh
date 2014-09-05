@@ -1,5 +1,5 @@
-#ifndef L2_SUBSPACE_PROJECTOR_HH
-#define L2_SUBSPACE_PROJECTOR_HH
+#ifndef DUNE_GESIS_L2_SUBSPACE_PROJECTOR_HH
+#define DUNE_GESIS_L2_SUBSPACE_PROJECTOR_HH
 
 
 
@@ -7,7 +7,7 @@
 #include "L2Projection.hh"
 
 namespace Dune{
-  namespace GeoInversion{
+  namespace Gesis{
 
 template<typename GFS_DG, // source solution space
          typename GFS_CG, // target solution space
@@ -68,4 +68,4 @@ public:
   }
 }
 
-#endif // L2_SUBSPACE_PROJECTOR_HH
+#endif // DUNE_GESIS_L2_SUBSPACE_PROJECTOR_HH

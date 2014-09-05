@@ -1,5 +1,5 @@
-#ifndef POINT_FUNCTION_SOURCE_HH
-#define POINT_FUNCTION_SOURCE_HH
+#ifndef DUNE_GESIS_POINT_FUNCTION_SOURCE_HH
+#define DUNE_GESIS_POINT_FUNCTION_SOURCE_HH
 
 #include "dune/gesis/common/deltafunction.hh"
 #include "SourceBaseClass.hh"
@@ -7,7 +7,7 @@
 
 namespace Dune {
 
-  namespace GeoInversion {
+  namespace Gesis {
 
     /*
      * The PointFunctionSource uses the Gaussian to approx. the peak.
@@ -69,7 +69,7 @@ namespace Dune {
 
         if( pointSmearing > PEAK_THRESHOLD ){
           const GV& gv=gfs.gridView();
-          Dune::GeoInversion::DeltaFunction<GV,REAL,COORDINATES,IDT>
+          Dune::Gesis::DeltaFunction<GV,REAL,COORDINATES,IDT>
             ps_function( gv, inputdata, ps_global, pointValue, pointSmearing, bfixedwidth );
           Dune::PDELab::interpolate( ps_function, gfs, vcPointSource );
         }

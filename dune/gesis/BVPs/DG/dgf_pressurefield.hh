@@ -1,5 +1,5 @@
-#ifndef DGF_PressureField_HH
-#define DGF_PressureField_HH
+#ifndef DUNE_GESIS_DGF_PressureField_HH
+#define DUNE_GESIS_DGF_PressureField_HH
 
 /*
   Note: This class is an extension of DiscreteGridFunction used to evaluate the CCFV pressure.
@@ -105,7 +105,7 @@ public:
       hydraulic_head[index] = head[0];
     }
     
-    Dune::GeoInversion::VTKPlot::output_vector_to_vtu( gv_tp, 
+    Dune::Gesis::VTKPlot::output_vector_to_vtu( gv_tp, 
                                                        hydraulic_head,
                                                        filename,
                                                        "head on leafView",
@@ -118,4 +118,4 @@ public:
   
 };
 
-#endif // DGF_PressureField_HH
+#endif // DUNE_GESIS_DGF_PressureField_HH

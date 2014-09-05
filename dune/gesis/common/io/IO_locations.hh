@@ -1,8 +1,8 @@
-#ifndef DUNE_GEO_INVERSION_IO_LOCATIONS_HH
-#define	DUNE_GEO_INVERSION_IO_LOCATIONS_HH
+#ifndef DUNE_GESIS_IO_LOCATIONS_HH
+#define	DUNE_GESIS_IO_LOCATIONS_HH
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     //This class holds the most important paths and filenames that are being used repeatedly!
     class IO_Locations{
@@ -541,5 +541,5 @@ namespace Dune {
 
 }
 
-#endif // DUNE_GEO_INVERSION_IO_LOCATIONS_HH
+#endif // DUNE_GESIS_IO_LOCATIONS_HH
 

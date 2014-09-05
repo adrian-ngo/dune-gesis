@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef HEAT_TRANSPORT_PARAMETERS_HH
-#define HEAT_TRANSPORT_PARAMETERS_HH
+#ifndef DUNE_GESIS_HEAT_TRANSPORT_PARAMETERS_HH
+#define DUNE_GESIS_HEAT_TRANSPORT_PARAMETERS_HH
 
 #include<vector>
 
@@ -28,7 +28,7 @@
 #include "ParameterTraits.hh"
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     //! base class for parameter class
     template<class T, class Imp>
@@ -473,7 +473,7 @@ namespace Dune {
 
 #ifdef DIMENSION3
             RF gDeltaZ = regularization_factor * delta_z;
-            return Dune::GeoInversion::Regularizer::gRegularYZ( v, w,
+            return Dune::Gesis::Regularizer::gRegularYZ( v, w,
                                                                 y1, z1,
                                                                 y2, z2,
                                                                 gDeltaY, gDeltaZ,
@@ -481,7 +481,7 @@ namespace Dune {
                                                                 bfixedwidth,
                                                                 regularization_factor );
 #else
-            return Dune::GeoInversion::Regularizer::gRegularY( v,
+            return Dune::Gesis::Regularizer::gRegularY( v,
                                                                y1,
                                                                y2,
                                                                gDeltaY,
@@ -615,7 +615,7 @@ namespace Dune {
 
 #ifdef DIMENSION3
           RF gDeltaZ = regularization_factor * delta_z;
-          return Dune::GeoInversion::Regularizer::gRegularYZ( v, w,
+          return Dune::Gesis::Regularizer::gRegularYZ( v, w,
                                                               y1, z1,
                                                               y2, z2,
                                                               gDeltaY, gDeltaZ,
@@ -623,7 +623,7 @@ namespace Dune {
                                                               bfixedwidth,
                                                               regularization_factor );
 #else
-          return Dune::GeoInversion::Regularizer::gRegularY( v,
+          return Dune::Gesis::Regularizer::gRegularY( v,
                                                              y1,
                                                              y2,
                                                              gDeltaY,
@@ -758,4 +758,4 @@ namespace Dune {
 
 } // namespace Dune
 
-#endif // HEAT_TRANSPORT_PARAMETERS_HH
+#endif // DUNE_GESIS_HEAT_TRANSPORT_PARAMETERS_HH

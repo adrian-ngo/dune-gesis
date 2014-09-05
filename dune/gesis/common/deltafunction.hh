@@ -1,12 +1,12 @@
-#ifndef DELTAFUNCTION_HH
-#define DELTAFUNCTION_HH
+#ifndef DUNE_GESIS_DELTAFUNCTION_HH
+#define DUNE_GESIS_DELTAFUNCTION_HH
 
 // If the smearing is below this level it does not make sense to use the Gaussian.
 // The quadrature point might miss the peak of the Gaussian resulting in a zero solution!
 #define PEAK_THRESHOLD 0.125  
 
 namespace Dune{
-  namespace GeoInversion{
+  namespace Gesis{
 
     /***********************************************************************************
      *
@@ -109,7 +109,7 @@ namespace Dune{
       }
     };
 
-  } // GeoInversion
+  } // Gesis
 } // Dune
 
-#endif // DELTAFUNCTION_HH
+#endif // DUNE_GESIS_DELTAFUNCTION_HH

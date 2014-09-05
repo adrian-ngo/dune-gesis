@@ -2,8 +2,8 @@
  * This function defines the classes for calculating the source terms for flow and transport problems
  */
 
-#ifndef COMPUTE_SOURCE_HEAD_HH
-#define COMPUTE_SOURCE_HEAD_HH
+#ifndef DUNE_GESIS_SOURCE_HEAD_TRANSPORT_HH
+#define DUNE_GESIS_SOURCE_HEAD_TRANSPORT_HH
 
 #include <dune/gesis/BVPs/sourceterms/SourceBaseClass.hh>
 

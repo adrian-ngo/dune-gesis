@@ -1,5 +1,5 @@
-#ifndef CROSS_COVARIANCE_JQ_HH
-#define CROSS_COVARIANCE_JQ_HH
+#ifndef DUNE_GESIS_CROSS_COVARIANCE_JQ_HH
+#define DUNE_GESIS_CROSS_COVARIANCE_JQ_HH
 
 #include "covariancematrix_times_vector.hh"
 /*
@@ -20,7 +20,7 @@
  */
 
 namespace Dune{
-  namespace GeoInversion{
+  namespace Gesis{
 
     template<typename IDT, typename DIR>
     void cross_covariance_JQ( const IDT& inputdata,                           // inputdata
@@ -158,7 +158,7 @@ namespace Dune{
       }
     }
 
-  } // namespace GeoInversion
+  } // namespace Gesis
 } // namespace Dune
 
-#endif // CROSS_COVARIANCE_JQ_HH
+#endif // DUNE_GESIS_CROSS_COVARIANCE_JQ_HH

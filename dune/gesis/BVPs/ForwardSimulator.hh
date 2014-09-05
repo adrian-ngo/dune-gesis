@@ -3,8 +3,8 @@
  * Authors: Ronnie Schwede and Adrian Ngo, 2010-2013
  */
 
-#ifndef FORWARDSIMULATOR_HH
-#define FORWARDSIMULATOR_HH
+#ifndef DUNE_GESIS_FORWARDSIMULATOR_HH
+#define DUNE_GESIS_FORWARDSIMULATOR_HH
 
 
 #include <dune/gesis/common/my_gfs_utilities.hh>
@@ -33,7 +33,7 @@
 
 namespace Dune {
 
-  namespace GeoInversion {
+  namespace Gesis {
 
     //
     // The Forward Simulator is required for taking measurements on the synthetic test field
@@ -513,4 +513,4 @@ namespace Dune {
   }
 
 }
-#endif /*FORWARDSIMULATOR_HH*/
+#endif /* DUNE_GESIS_FORWARDSIMULATOR_HH */

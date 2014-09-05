@@ -25,8 +25,8 @@
  * J_times_Y_old: value for the multiplication of the sensitivity times old Y field (at the current meas location)
  */
 
-#ifndef _LNK_SENSITIVITIES_HH
-#define _LNK_SENSITIVITIES_HH
+#ifndef DUNE_GESIS_LNK_SENSITIVITIES_HH
+#define DUNE_GESIS_LNK_SENSITIVITIES_HH
 
 #include "dune/gesis/common/MyMPIComm.hh"
 #include "dune/gesis/common/io/IO_routines.hh"
@@ -37,7 +37,7 @@
 
 
 namespace Dune{
-  namespace GeoInversion{
+  namespace Gesis{
     
     template<typename GV,
              typename DIR,
@@ -215,7 +215,7 @@ namespace Dune{
     }
 
 
-  } // GeoInversion
+  } // Gesis
 } // Dune
 
 #endif

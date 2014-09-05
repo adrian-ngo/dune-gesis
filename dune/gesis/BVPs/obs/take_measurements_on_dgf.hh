@@ -9,15 +9,15 @@
  * 2014/07/29: add time logger
  */
 
-#ifndef _TAKE_MEASUREMENTS_ON_DGF_HH
-#define	_TAKE_MEASUREMENTS_ON_DGF_HH
+#ifndef DUNE_GESIS_TAKE_MEASUREMENTS_ON_DGF_HH
+#define	DUNE_GESIS_TAKE_MEASUREMENTS_ON_DGF_HH
 
 #include "dune/gesis/common/general.hh"
 
 extern CLogfile logger;
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
  // Take care:
  // 1.) 
@@ -276,5 +276,5 @@ void take_measurements_of_differences_on_dgf( const GV& gv
   }
 }
 
-#endif	/* _TAKE_MEASUREMENTS_ON_DGF_HH */
+#endif	/* DUNE_GESIS_TAKE_MEASUREMENTS_ON_DGF_HH */
 

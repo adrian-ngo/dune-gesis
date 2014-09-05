@@ -1,11 +1,11 @@
-#ifndef NULL_SOURCE_HH
-#define NULL_SOURCE_HH
+#ifndef DUNE_GESIS_TP_FUNCTIONSOURCE_HH
+#define DUNE_GESIS_TP_FUNCTIONSOURCE_HH
 
 #include "SourceBaseClass.hh"
 
 namespace Dune {
 
-  namespace GeoInversion {
+  namespace Gesis {
 
 
     //===================================================================================

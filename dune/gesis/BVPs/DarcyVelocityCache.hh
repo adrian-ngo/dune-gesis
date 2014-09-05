@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_GEOINVERSION_DARCYVELOCITYCACHE_HH
-#define DUNE_GEOINVERSION_DARCYVELOCITYCACHE_HH
+#ifndef DUNE_GESIS_DARCYVELOCITYCACHE_HH
+#define DUNE_GESIS_DARCYVELOCITYCACHE_HH
 
 #include<vector>
 #include<map>
@@ -11,7 +11,7 @@
 #include "dune/gesis/BVPs/DG/RT0flux.hh"
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     //! \brief store values of basis functions and gradients in a cache
     template<typename GWP,typename GFS,typename DarcyFluxType>
@@ -104,5 +104,5 @@ namespace Dune {
   }
 }
 
-#endif // DUNE_GEOINVERSION_DARCYVELOCITYCACHE_HH
+#endif // DUNE_GESIS_DARCYVELOCITYCACHE_HH
 

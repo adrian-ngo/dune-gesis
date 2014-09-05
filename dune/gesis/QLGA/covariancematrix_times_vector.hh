@@ -1,5 +1,5 @@
-#ifndef COVARIANCE_MATRIX_TIMES_VECTOR_HH
-#define COVARIANCE_MATRIX_TIMES_VECTOR_HH
+#ifndef DUNE_GESIS_COVARIANCE_MATRIX_TIMES_VECTOR_HH
+#define DUNE_GESIS_COVARIANCE_MATRIX_TIMES_VECTOR_HH
 
 /*
  *
@@ -19,7 +19,7 @@
  */
 
 namespace Dune{
-  namespace GeoInversion{
+  namespace Gesis{
 
     template<typename IDT>
     class CovarianceMatrix {
@@ -368,9 +368,9 @@ namespace Dune{
 
     }; // class CovarianceMatrix
 
-  } // GeoInversion
+  } // Gesis
 
 } // Dune
 
-#endif //COVARIANCE_MATRIX_TIMES_VECTOR_HH
+#endif // DUNE_GESIS_COVARIANCE_MATRIX_TIMES_VECTOR_HH
 

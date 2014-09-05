@@ -1,8 +1,8 @@
-#ifndef DUNE_GEOINVERSION_PARAMETER_TRAITS_HH
-#define DUNE_GEOINVERSION_PARAMETER_TRAITS_HH
+#ifndef DUNE_GESIS_PARAMETER_TRAITS_HH
+#define DUNE_GESIS_PARAMETER_TRAITS_HH
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     //! Traits class for transport parameters
     template<typename GV,
@@ -92,7 +92,7 @@ namespace Dune {
     };
 
 
-  }  // GeoInversion
+  }  // Gesis
 }   // Dune
 
-#endif // DUNE_GEOINVERSION_PARAMETER_TRAITS_HH
+#endif // DUNE_GESIS_PARAMETER_TRAITS_HH

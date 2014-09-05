@@ -5,8 +5,8 @@
  * Created on July 8, 2010, 1:32 PM
  */
 
-#ifndef VTU_ROUTINES_HH
-#define	VTU_ROUTINES_HH
+#ifndef DUNE_GESIS_VTU_ROUTINES_HH
+#define	DUNE_GESIS_VTU_ROUTINES_HH
 
 #include <dune/pdelab/common/geometrywrapper.hh>
 #include <assert.h>
@@ -18,7 +18,7 @@ extern CLogfile logger;
 
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
 
     class VTKPlot{

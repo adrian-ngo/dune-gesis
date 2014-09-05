@@ -11,7 +11,7 @@
 #include "CoarseGridP0Datahandle.hh"
 
 namespace Dune{
-  namespace GeoInversion{
+  namespace Gesis{
 
 template<typename GFS_TP,
          typename GFS_GW,

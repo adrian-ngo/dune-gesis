@@ -12,7 +12,7 @@
 
 namespace Dune {
 
-  namespace GeoInversion {
+  namespace Gesis {
 
 
 template<typename MeasurementElement>
@@ -531,7 +531,7 @@ public:
     REAL current_z;
 #endif
 
-    std::string contents( Dune::GeoInversion::General::readTextFile2String( filename, helper ) );
+    std::string contents( Dune::Gesis::General::readTextFile2String( filename, helper ) );
 
 
     logger << "read_measurements: DEBUG LOG: contents = " << std::endl;
@@ -968,7 +968,7 @@ public:
 };
 
 
-  } // GeoInversion
+  } // Gesis
 
 } // Dune
 

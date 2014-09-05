@@ -22,7 +22,7 @@
 #include "dune/gesis/BVPs/projectors/CoarseGridP0Datahandle.hh"
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     template<typename GV_GW,
              typename DARCY_BASE,
@@ -211,7 +211,7 @@ namespace Dune {
 
     } // void head_sensitivity_field()
 
-  } // GeoInversion
+  } // Gesis
 
 } // Dune
 

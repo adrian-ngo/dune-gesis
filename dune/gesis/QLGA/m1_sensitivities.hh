@@ -28,14 +28,14 @@
  * J_times_Y_old: value for the multiplication of the sensitivity times old Y field (at the current meas location)
  */
 
-#ifndef DUNE_M1_SENSITIVITIES_HH
-#define DUNE_M1_SENSITIVITIES_HH
+#ifndef DUNE_GESIS_M1_SENSITIVITIES_HH
+#define DUNE_GESIS_M1_SENSITIVITIES_HH
 #include "../common/MyMPIComm.hh"
 
 #include "m1_sensitivity_field.hh"
 
 namespace Dune{
-  namespace GeoInversion{
+  namespace Gesis{
 
     // nCellsExt : Dimensions of extended field per zone
     // Lambdas: eigenvalues of the covariance matrix per zone
@@ -170,7 +170,7 @@ namespace Dune{
       // TODO: How about heat_inversion_data for m1? well_flag?
 
 
-      typedef Dune::GeoInversion::TransportProblemAdjoint<GV_TP,
+      typedef Dune::Gesis::TransportProblemAdjoint<GV_TP,
                                                           REAL,
                                                           DARCY_FLUX_DGF,
                                                           IDT,
@@ -359,7 +359,7 @@ namespace Dune{
             // Adrian: This is not required!? Ohne geht's deutlich besser!?
             VCType_CG vc_m1adj_theta_cg = vc_m1adj_cg;
             //multiply a vector container with the porosity. needed for zonation!
-            Dune::GeoInversion::General::
+            Dune::Gesis::General::
               vc_times_theta(vc_m1adj_theta_cg,gv_tp,inputdata);
 
             VCType_TP vc_m0adj_m1adj( gfs_tp, 0.0 );
@@ -386,7 +386,7 @@ namespace Dune{
                             << "_m" << global_meas_id 
                             << "_i" << iteration_number;
 
-            Dune::GeoInversion::VTKPlot::output2vtu( gfs_cg, 
+            Dune::Gesis::VTKPlot::output2vtu( gfs_cg, 
                                                      vc_m0adj_m1adj_cg,
                                                      vtu_m0adj_m1adj.str(), 
                                                      "m0adj_m1adj", 
@@ -412,7 +412,7 @@ namespace Dune{
                  << "_m" << global_meas_id 
                  << "_i" << iteration_number
                  << "_vc_m0adj_m1adj_cg";
-            Dune::GeoInversion::VTKPlot::output2vtu( gfs_cg, 
+            Dune::Gesis::VTKPlot::output2vtu( gfs_cg, 
                                                      vc_m0adj_m1adj_cg,
                                                      vtu1.str(), 
                                                      "vc_m0adj_m1adj_cg", 
@@ -426,7 +426,7 @@ namespace Dune{
                  << "_m" << global_meas_id 
                  << "_i" << iteration_number
                  << "_vcM0_old_cg";
-            Dune::GeoInversion::VTKPlot::output2vtu( gfs_cg, 
+            Dune::Gesis::VTKPlot::output2vtu( gfs_cg, 
                                                      vcM0_old_cg,
                                                      vtu2.str(), 
                                                      "vcM0_old_cg", 
@@ -440,7 +440,7 @@ namespace Dune{
                  << "_m" << global_meas_id 
                  << "_i" << iteration_number
                  << "_vc_m1adj_cg";
-            Dune::GeoInversion::VTKPlot::output2vtu( gfs_cg, 
+            Dune::Gesis::VTKPlot::output2vtu( gfs_cg, 
                                                      vc_m1adj_cg,
                                                      vtu3.str(), 
                                                      "vc_m1adj_cg", 
@@ -454,7 +454,7 @@ namespace Dune{
                  << "_m" << global_meas_id 
                  << "_i" << iteration_number
                  << "_vcM1_old_cg";
-            Dune::GeoInversion::VTKPlot::output2vtu( gfs_cg, 
+            Dune::Gesis::VTKPlot::output2vtu( gfs_cg, 
                                                      vcM1_old_cg,
                                                      vtu4.str(), 
                                                      "vcM1_old_cg", 
@@ -524,7 +524,7 @@ namespace Dune{
                           << "_s" << iSetup
                           << "_m" << global_meas_id 
                           << "_i" << iteration_number;
-            Dune::GeoInversion::VTKPlot::output2vtu( gfs_gw, 
+            Dune::Gesis::VTKPlot::output2vtu( gfs_gw, 
                                                      vc_hadj_m0m1,
                                                      vtu_hadj_m0m1.str(), 
                                                      "hadj_m0m1", 
@@ -680,4 +680,4 @@ namespace Dune{
 
 }
 
-#endif // DUNE_M1_SENSITIVITIES_HH
+#endif // DUNE_GESIS_M1_SENSITIVITIES_HH

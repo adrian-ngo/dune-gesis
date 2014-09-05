@@ -1,5 +1,5 @@
-#ifndef DELTA_SD_HH
-#define DELTA_SD_HH
+#ifndef DUNE_GESIS_DELTA_SD_HH
+#define DUNE_GESIS_DELTA_SD_HH
 
 // Elman, Silvester, Wathen (2005)
 REAL zeta_1( const REAL Pe)
@@ -67,5 +67,5 @@ REAL zeta_9( const REAL Peclet )
 
 
 
-#endif // DELTA_SD_HH
+#endif // DUNE_GESIS_DELTA_SD_HH
 

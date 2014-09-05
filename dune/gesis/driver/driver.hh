@@ -67,7 +67,7 @@ extern CLogfile logger;
 
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     template<typename IDT,typename YFG,typename DIR,int dim>
     REAL driver( IDT& inputdata,   // must be non-const because of well-calibration
@@ -797,7 +797,7 @@ namespace Dune {
 #endif // USE_YASP
 
 #if defined USE_ALUGRID || defined USE_UG
-      Dune::GeoInversion::adaptiveDrive_h_rgv
+      Dune::Gesis::adaptiveDrive_h_rgv
         <GRID,
          GFS_GW,
          IDT,

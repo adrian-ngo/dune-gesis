@@ -1,5 +1,5 @@
-#ifndef GWE_CCFV_HH
-#define GWE_CCFV_HH
+#ifndef DUNE_GESIS_GWE_CCFV_HH
+#define DUNE_GESIS_GWE_CCFV_HH
 
 #include <dune/common/shared_ptr.hh>
 #include <dune/pdelab/gridoperator/gridoperator.hh>
@@ -8,7 +8,7 @@
 
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
 template<typename GFS
          , typename GWP
@@ -32,7 +32,7 @@ class GWE_CCFV
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<GWP> BCType;
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<GWP> BCExtension;
 
-  typedef Dune::GeoInversion::GroundWaterOperatorCCFV<GWP,IDT,SDT,BCType,BCExtension,SOURCE_TYPE> LOP;
+  typedef Dune::Gesis::GroundWaterOperatorCCFV<GWP,IDT,SDT,BCType,BCExtension,SOURCE_TYPE> LOP;
   typedef Dune::PDELab::EmptyTransformation CC; // no constraints for CCFV
   
 #ifdef USE_NOVLP_MODE
@@ -602,7 +602,7 @@ public:
 
   }
 }
-#endif// GWE_CCFV_HH
+#endif// DUNE_GESIS_GWE_CCFV_HH
 
 
 

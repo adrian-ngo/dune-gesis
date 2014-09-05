@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_L2PROJECTION_HH
-#define DUNE_PDELAB_L2PROJECTION_HH
+#ifndef DUNE_GESIS_L2PROJECTION_HH
+#define DUNE_GESIS_L2PROJECTION_HH
 
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 
@@ -8,7 +8,7 @@
 
 
 namespace Dune{
-  namespace GeoInversion{
+  namespace Gesis{
 
 template<
   typename GFS
@@ -22,7 +22,7 @@ class L2Projection
   typedef typename GFS::Traits::BackendType VBE;
   typedef typename Dune::PDELab::BackendVectorSelector<GFS,REAL>::Type VCType;
 
-  typedef Dune::GeoInversion::L2ProjectionOperator<DGF> LOP;
+  typedef Dune::Gesis::L2ProjectionOperator<DGF> LOP;
   typedef typename GFS::template ConstraintsContainer<REAL>::Type CC;
   
   typedef Dune::PDELab::istl::BCRSMatrixBackend<> MBE;
@@ -299,7 +299,7 @@ public:
     
     REAL minimum = 1E+100;
     REAL maximum = -1E+100;
-    Dune::GeoInversion::General::logMinAndMax( vc_m, gv.comm(), minimum, maximum );
+    Dune::Gesis::General::logMinAndMax( vc_m, gv.comm(), minimum, maximum );
 
     REAL lowerlimit=minimum;
     REAL upperlimit=maximum;
@@ -332,7 +332,7 @@ public:
   }
 }
 
-#endif// GROUND_WATER_EQUATION_HH
+#endif// DUNE_GESIS_L2PROJECTION_HH
 
 
 

@@ -1,11 +1,11 @@
-#ifndef DUNE_GEO_INVERSION_RT0_FLUX_HH
-#define DUNE_GEO_INVERSION_RT0_FLUX_HH
+#ifndef DUNE_GESIS_RT0_FLUX_HH
+#define DUNE_GESIS_RT0_FLUX_HH
 
 #include<dune/localfunctions/raviartthomas/raviartthomascube.hh>
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     /** @brief Provide velocity/flux field
      *
@@ -270,10 +270,10 @@ namespace Dune {
                 // set coefficient
                 if( element_length_s - element_length_n<1E-12 )
                   vn[iit->indexInInside()] = 
-                    - Dune::GeoInversion::General::harmonicAverage( K_inside, K_outside ) * w;
+                    - Dune::Gesis::General::harmonicAverage( K_inside, K_outside ) * w;
                 else
                   vn[iit->indexInInside()] = 
-                    - Dune::GeoInversion::General::harmonicAverageWeightedByDistance( K_inside, 
+                    - Dune::Gesis::General::harmonicAverageWeightedByDistance( K_inside, 
                                                                                       K_outside, 
                                                                                       element_length_s, 
                                                                                       element_length_n ) * w;
@@ -425,7 +425,7 @@ namespace Dune {
       }
     }; // class RT0FluxDGF 
 
-  } // GeoInversion
+  } // Gesis
 
 } // Dune
-#endif // DUNE_GEO_INVERSION_RT0_FLUX_HH
+#endif // DUNE_GESIS_RT0_FLUX_HH

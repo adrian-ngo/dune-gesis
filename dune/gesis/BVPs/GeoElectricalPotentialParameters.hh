@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef GEO_ELECTRICAL_POTENTIAL_PARAMETERS_HH
-#define GEO_ELECTRICAL_POTENTIAL_PARAMETERS_HH
+#ifndef DUNE_GESIS_GEO_ELECTRICAL_POTENTIAL_PARAMETERS_HH
+#define DUNE_GESIS_GEO_ELECTRICAL_POTENTIAL_PARAMETERS_HH
 
 #include<vector>
 
@@ -24,7 +24,7 @@
 #include "ParameterTraits.hh"
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     //! base class for parameter class
     template<class T, class Imp>
@@ -389,4 +389,4 @@ namespace Dune {
 
 } // namespace Dune
 
-#endif // GEO_ELECTRICAL_POTENTIAL_PARAMETERS_HH
+#endif // DUNE_GESIS_GEO_ELECTRICAL_POTENTIAL_PARAMETERS_HH

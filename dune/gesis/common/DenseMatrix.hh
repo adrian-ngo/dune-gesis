@@ -5,8 +5,8 @@
  * Created on July 15, 2010, 2:21 PM
  */
 
-#ifndef _DENSEMATRIX_HH
-#define	_DENSEMATRIX_HH
+#ifndef DUNE_GESIS_DENSEMATRIX_HH
+#define	DUNE_GESIS_DENSEMATRIX_HH
 
 #include <vector>
 #include <cmath>
@@ -19,7 +19,7 @@
 #include "dune/gesis/common/io/IO_routines.hh"
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
 template<typename ComponentType>
 class DenseMatrix
@@ -370,8 +370,8 @@ std::ostream & operator << ( std::ostream & os, const DenseMatrix<ComponentType>
   }
 
 
-  } // GeoInversion
+  } // Gesis
 } // Dune 
 
-#endif	/* _DENSEMATRIX_HH */
+#endif	/* DUNE_GESIS_DENSEMATRIX_HH */
 

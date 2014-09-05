@@ -16,7 +16,7 @@
 
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     template<typename GRID,
              typename GFS_GW,
@@ -786,7 +786,7 @@ namespace Dune {
 
 
 
-  } // GeoInversion
+  } // Gesis
 }  // Dune
 #endif	/* DUNE_GESIS_OBJECTIVEFUNCTION_HH */
 

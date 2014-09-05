@@ -1,5 +1,5 @@
-#ifndef RT0_PRESSUREFIELD_HH
-#define RT0_PRESSUREFIELD_HH
+#ifndef DUNE_GESIS_RT0_PRESSUREFIELD_HH
+#define DUNE_GESIS_RT0_PRESSUREFIELD_HH
 
 
 #define USE_LOCAL_COORD
@@ -216,7 +216,7 @@ class RT0_PressureField {
 
       if(eit->partitionType()==Dune::InteriorEntity){
         
-        Dune::GeoInversion::DenseMatrix<REAL> XY( blocksize, blocksize, 0.0 );
+        Dune::Gesis::DenseMatrix<REAL> XY( blocksize, blocksize, 0.0 );
         Vector<REAL> rhs( blocksize );
 
         // It suffices to traverse only two internal of the four intersections of element *eit
@@ -287,10 +287,10 @@ class RT0_PressureField {
               
               if( element_length_s - element_length_n<1E-12 )
                 K_effective = 
-                  Dune::GeoInversion::General::harmonicAverage( K_inside, K_outside );
+                  Dune::Gesis::General::harmonicAverage( K_inside, K_outside );
               else
                 K_effective = 
-                  Dune::GeoInversion::General::harmonicAverageWeightedByDistance( K_inside, 
+                  Dune::Gesis::General::harmonicAverageWeightedByDistance( K_inside, 
                                                                                   K_outside, 
                                                                                   element_length_s, 
                                                                                   element_length_n );
@@ -530,7 +530,7 @@ class RT0_PressureField {
       hydraulic_head[index] = head[0];
     }
     
-    Dune::GeoInversion::VTKPlot::output_vector_to_vtu( gv_tp, 
+    Dune::Gesis::VTKPlot::output_vector_to_vtu( gv_tp, 
                                                        hydraulic_head,
                                                        filename,
                                                        "head on leafView",
@@ -546,7 +546,7 @@ class RT0_PressureField {
 
 }; // class RT0_PressureField
 
-#endif // RT0_PRESSUREFIELD_HH
+#endif // DUNE_GESIS_RT0_PRESSUREFIELD_HH
 
 
 

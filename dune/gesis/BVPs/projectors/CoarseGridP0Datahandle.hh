@@ -1,5 +1,5 @@
-#ifndef COARSE_GRID_P0_DATA_HANDLE_HH
-#define COARSE_GRID_P0_DATA_HANDLE_HH
+#ifndef DUNE_GESIS_COARSE_GRID_P0_DATA_HANDLE_HH
+#define DUNE_GESIS_COARSE_GRID_P0_DATA_HANDLE_HH
 
 template<typename GV,typename ContainerType>
 class CoarseGridP0Datahandle
@@ -104,4 +104,4 @@ public:
 
 
 
-#endif // COARSE_GRID_P0_DATA_HANDLE_HH
+#endif // DUNE_GESIS_COARSE_GRID_P0_DATA_HANDLE_HH

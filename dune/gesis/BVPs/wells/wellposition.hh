@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef WELLPOSITION_HH
-#define WELLPOSITION_HH
+#ifndef DUNE_GESIS_WELLPOSITION_HH
+#define DUNE_GESIS_WELLPOSITION_HH
 
 
 enum WellPosition {w_outside=0,w_inside=1,w_top=2,w_bottom=3};
@@ -126,4 +126,4 @@ WellPosition isElementWithinWellZone( const EG& eg,
 
 
 
-#endif // WELLPOSITION_HH
+#endif // DUNE_GESIS_WELLPOSITION_HH

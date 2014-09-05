@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef TRANSPORT_OPERATOR_SDFEM_HH
-#define TRANSPORT_OPERATOR_SDFEM_HH
+#ifndef DUNE_GESIS_TRANSPORT_OPERATOR_SDFEM_HH
+#define DUNE_GESIS_TRANSPORT_OPERATOR_SDFEM_HH
 
 //
 // A local operator for solving ...
@@ -53,7 +53,7 @@
 #endif
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     template< 
       typename TP,
@@ -1110,4 +1110,4 @@ namespace Dune {
   } // namespace PDELab
 } // namespace Dune
 
-#endif // TRANSPORT_OPERATOR_SDFEM_HH
+#endif // DUNE_GESIS_TRANSPORT_OPERATOR_SDFEM_HH

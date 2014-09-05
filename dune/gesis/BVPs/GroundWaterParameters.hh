@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef GROUNDWATER_PARAMETERS_HH
-#define GROUNDWATER_PARAMETERS_HH
+#ifndef DUNE_GESIS_GROUNDWATER_PARAMETERS_HH
+#define DUNE_GESIS_GROUNDWATER_PARAMETERS_HH
 
 #include<vector>
 
@@ -29,7 +29,7 @@
 #include "ParameterTraits.hh"
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
 
     //! base class for parameter class
@@ -374,4 +374,4 @@ namespace Dune {
 
 } // namespace Dune
 
-#endif //GROUNDWATER_PARAMETERS_HH
+#endif // DUNE_GESIS_GROUNDWATER_PARAMETERS_HH

@@ -43,7 +43,7 @@
   <!-- ***************************************** -->
   <domain_data>
     <extensions>51.2   51.2</extensions>
-    <virtual_nCells>128   128</virtual_nCells>
+    <virtual_nCells>256   256</virtual_nCells>
     <lineplot>
       <startpoint>0.0 0.0</startpoint>
       <endpoint>100.0 100.0</endpoint>

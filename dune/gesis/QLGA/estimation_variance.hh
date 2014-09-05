@@ -3,11 +3,11 @@
  * Author: ronnie
  */
 
-#ifndef ESTIMATION_VARIANCE_HH
-#define ESTIMATION_VARIANCE_HH
+#ifndef DUNE_GESIS_ESTIMATION_VARIANCE_HH
+#define DUNE_GESIS_ESTIMATION_VARIANCE_HH
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     template<typename GV,typename IDT,typename DIR>
     void estimation_variance( const GV& gv,
@@ -18,7 +18,7 @@ namespace Dune {
 
       int mpi_rank = gv.comm().rank();
 
-      Dune::GeoInversion::DenseMatrix<REAL> invM(0,0,0.0);
+      Dune::Gesis::DenseMatrix<REAL> invM(0,0,0.0);
 
       invM.read_from_HDF5(dir.cokriging_inverse_h5file,"/Minv",inputdata);
 
@@ -107,7 +107,7 @@ namespace Dune {
                                 );
 
 #ifdef VTK_PLOT_V_EST
-      typedef Dune::GeoInversion::FFTFieldGenerator<IDT,REAL,GV::dimension> YFG;
+      typedef Dune::Gesis::FFTFieldGenerator<IDT,REAL,GV::dimension> YFG;
       YFG yfg_EstVar( inputdata, dir, gv.comm() );
       VTKPlot::output_hdf5data_to_gridview( gv,
                                             inputdata,
@@ -121,8 +121,8 @@ namespace Dune {
     }
 
 
-  } // GeoInversion
+  } // Gesis
 
 } // Dune
 
-#endif // ESTIMATION_VARIANCE_HH
+#endif // DUNE_GESIS_ESTIMATION_VARIANCE_HH

@@ -1,10 +1,10 @@
-#ifndef GEOELECTRICAL_POTENTIAL_SOURCE_HH
-#define GEOELECTRICAL_POTENTIAL_SOURCE_HH
+#ifndef DUNE_GESIS_GEOELECTRICAL_POTENTIAL_SOURCE_HH
+#define DUNE_GESIS_GEOELECTRICAL_POTENTIAL_SOURCE_HH
 
 #include "SourceBaseClass.hh"
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     
     //==========================================================

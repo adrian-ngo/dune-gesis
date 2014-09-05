@@ -1,11 +1,11 @@
-#ifndef PUMPING_SOURCE_HH
-#define PUMPING_SOURCE_HH
+#ifndef DUNE_GESIS_PUMPING_SOURCE_HH
+#define DUNE_GESIS_PUMPING_SOURCE_HH
 
 #include "SourceBaseClass.hh"
 
 namespace Dune {
 
-  namespace GeoInversion {
+  namespace Gesis {
 
 
     //=========================================================================

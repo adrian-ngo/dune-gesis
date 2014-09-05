@@ -3,8 +3,8 @@
  * Author: Ronnie L. Schwede and Adrian Ngo, 2010-2014
  */
 
-#ifndef SENSITIVITYCLASS_HH
-#define SENSITIVITYCLASS_HH
+#ifndef DUNE_GESIS_SENSITIVITYCLASS_HH
+#define DUNE_GESIS_SENSITIVITYCLASS_HH
 
 
 #include "lnK_sensitivities.hh"
@@ -19,7 +19,7 @@
 #include "../common/io/IO_routines.hh"
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     template<
       typename POOL_GRID
@@ -1945,8 +1945,8 @@ namespace Dune {
 
 
 
-  } // namespace GeoInversion  
+  } // namespace Gesis  
 
 } // namespace Dune
 
-#endif // #ifndef SENSITIVITYCLASS_HH
+#endif // DUNE_GESIS_SENSITIVITYCLASS_HH

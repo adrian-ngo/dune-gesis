@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef DUNE_PDELAB_GWFLOW_HH
-#define DUNE_PDELAB_GWFLOW_HH
+#ifndef DUNE_GESIS_GW_LOP_GALERKIN_HH
+#define DUNE_GESIS_GW_LOP_GALERKIN_HH
 
     //! \addtogroup LocalOperator
     //! \ingroup PDELab
@@ -39,7 +39,7 @@
 #include<dune/pdelab/localoperator/idefault.hh>
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     template< typename GWP
               , typename BCType

@@ -87,7 +87,7 @@ CLogfile logger;
 
 int main(int argc, char** argv) {
 
-  Dune::GeoInversion::General::verbosity = 3;
+  Dune::Gesis::General::verbosity = 3;
 
   Dune::Timer main_timer;
 
@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
 
 
     if(helper.rank()==0){
-      std::cout << Dune::GeoInversion::General::getDateAndTime() 
+      std::cout << Dune::Gesis::General::getDateAndTime() 
                 << "Program starts."
                 << std::endl;
     }
@@ -179,15 +179,15 @@ int main(int argc, char** argv) {
     }
 
 
-    typedef Dune::GeoInversion::IO_Locations DIR;
+    typedef Dune::Gesis::IO_Locations DIR;
     DIR dir(dim, outputpath,inputfile);
 
     if (CLEAN_OUTPUT && helper.rank()==0){
 
       std::cout << "Cleaning old LOG and VTU files ..." << std::endl;
-      Dune::GeoInversion::General::systemCall( "rm -rvf " + dir.logdir + "/*" );
-      Dune::GeoInversion::General::systemCall( "rm -rvf " + dir.vtudir + "/*" );
-      Dune::GeoInversion::General::systemCall( "rm -rvf " + dir.hdf5dir + "/*" );
+      Dune::Gesis::General::systemCall( "rm -rvf " + dir.logdir + "/*" );
+      Dune::Gesis::General::systemCall( "rm -rvf " + dir.vtudir + "/*" );
+      Dune::Gesis::General::systemCall( "rm -rvf " + dir.hdf5dir + "/*" );
 
     }
     // All processes please wait until the cleaning on root is done!
@@ -233,7 +233,7 @@ int main(int argc, char** argv) {
       */
 
       std::cout << "Cleaning old BUFFER files ..." << std::endl;
-      Dune::GeoInversion::General::systemCall( "rm -rvf " + dir.bufferdimdir + "/*" );
+      Dune::Gesis::General::systemCall( "rm -rvf " + dir.bufferdimdir + "/*" );
 
       /*
       cmdline="test -f "+outputpath+".2DL_prior.h5";
@@ -275,19 +275,19 @@ int main(int argc, char** argv) {
         
     if(helper.rank()==0){
 
-      Dune::GeoInversion::General::createDirectory( dir.datadir );
-      Dune::GeoInversion::General::createDirectory( dir.bufferdir );
-      Dune::GeoInversion::General::createDirectory( dir.outputdir );
+      Dune::Gesis::General::createDirectory( dir.datadir );
+      Dune::Gesis::General::createDirectory( dir.bufferdir );
+      Dune::Gesis::General::createDirectory( dir.outputdir );
           
-      Dune::GeoInversion::General::createDirectory( dir.datadimdir );
-      Dune::GeoInversion::General::createDirectory( dir.bufferdimdir );
-      Dune::GeoInversion::General::createDirectory( dir.outputdimdir );
+      Dune::Gesis::General::createDirectory( dir.datadimdir );
+      Dune::Gesis::General::createDirectory( dir.bufferdimdir );
+      Dune::Gesis::General::createDirectory( dir.outputdimdir );
 
-      Dune::GeoInversion::General::createDirectory( dir.yfielddir );
-      Dune::GeoInversion::General::createDirectory( dir.CRdir );
-      Dune::GeoInversion::General::createDirectory( dir.logdir );
-      Dune::GeoInversion::General::createDirectory( dir.vtudir );
-      Dune::GeoInversion::General::createDirectory( dir.hdf5dir );
+      Dune::Gesis::General::createDirectory( dir.yfielddir );
+      Dune::Gesis::General::createDirectory( dir.CRdir );
+      Dune::Gesis::General::createDirectory( dir.logdir );
+      Dune::Gesis::General::createDirectory( dir.vtudir );
+      Dune::Gesis::General::createDirectory( dir.hdf5dir );
           
     }
 
@@ -325,7 +325,7 @@ int main(int argc, char** argv) {
       
     inputdata.writeToScreen();
 
-    Dune::GeoInversion::General::verbosity = inputdata.verbosity;
+    Dune::Gesis::General::verbosity = inputdata.verbosity;
     inputdata.problem_types.using_existing_Yold = bContinue;
 
     // set the directories for zonation!
@@ -363,7 +363,7 @@ int main(int argc, char** argv) {
     if( helper.rank() == 0 ) {
       if( inputdata.problem_types.generate_measurement_data ) {
         std::cout << "Cleaning *meas* files inside datadimdir ..." << std::endl;
-        Dune::GeoInversion::General::systemCall( "rm -rvf " + dir.datadimdir + "/*meas*" );
+        Dune::Gesis::General::systemCall( "rm -rvf " + dir.datadimdir + "/*meas*" );
       }
     }
 
@@ -373,13 +373,13 @@ int main(int argc, char** argv) {
 
       
     //definitions for the Y-Field
-    typedef Dune::GeoInversion::FFTFieldGenerator<CInputData,REAL,dim> YFG;
+    typedef Dune::Gesis::FFTFieldGenerator<CInputData,REAL,dim> YFG;
     YFG Yfieldgenerator( inputdata,dir,helper.getCommunicator() );
     //generate the Y_field
     Yfieldgenerator.init();
 
     // start the main-work-flow
-    double timeCounted = Dune::GeoInversion::driver<CInputData,YFG,DIR,dim>( inputdata, Yfieldgenerator, dir, helper );
+    double timeCounted = Dune::Gesis::driver<CInputData,YFG,DIR,dim>( inputdata, Yfieldgenerator, dir, helper );
 
     if( helper.rank()==0 && inputdata.verbosity > 0 ){
       double elapsedTime = main_timer.elapsed();
@@ -396,7 +396,7 @@ int main(int argc, char** argv) {
 
 
     if(helper.rank()==0){
-      std::cout << Dune::GeoInversion::General::getDateAndTime() 
+      std::cout << Dune::Gesis::General::getDateAndTime() 
                 << "Program ends."
                 << std::endl;
     }

@@ -11,7 +11,7 @@
 
 namespace Dune {
 
-  namespace GeoInversion {
+  namespace Gesis {
 
     class MPI_Tools {
 
@@ -174,7 +174,7 @@ namespace Dune {
 
     }; // class MPI_Tools
 
-  } // GeoInversion
+  } // Gesis
 
 } // Dune
 

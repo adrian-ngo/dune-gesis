@@ -5,8 +5,8 @@
  * Created on July 15, 2010, 2:32 PM
  */
 
-#ifndef _VECTOR_HH
-#define	_VECTOR_HH
+#ifndef DUNE_GESIS_VECTOR_HH
+#define	DUNE_GESIS_VECTOR_HH
 #include <vector>
 #include <cmath>
 #include <assert.h>
@@ -251,5 +251,5 @@ std::ostream & operator <<(std::ostream & os, const Vector<ComponentType> & x) {
 
 
 
-#endif	/* _VECTOR_HH */
+#endif	/* DUNE_GESIS_VECTOR_HH */
 

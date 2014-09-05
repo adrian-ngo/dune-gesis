@@ -1,6 +1,6 @@
 // -*- tab-width: 4; indent-tabs-mode: nil -*-
-#ifndef TRANSPORT_PARAMETERS_HH
-#define TRANSPORT_PARAMETERS_HH
+#ifndef DUNE_GESIS_TRANSPORT_PARAMETERS_HH
+#define DUNE_GESIS_TRANSPORT_PARAMETERS_HH
 
 #include<vector>
 
@@ -28,7 +28,7 @@
 #include "ParameterTraits.hh"
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     //! base class for parameter class
     template<class T, class Imp>
@@ -483,7 +483,7 @@ namespace Dune {
               
         if( u < 1e-12 ) // WEST
         //if( u > 500.0 - 1e-12 ) // EAST
-          return Dune::GeoInversion::Regularizer::gRegular2( v, y1, y2, delta_y, concentration * injection_time);
+          return Dune::Gesis::Regularizer::gRegular2( v, y1, y2, delta_y, concentration * injection_time);
         else
           return RF(0.0);
 
@@ -495,7 +495,7 @@ namespace Dune {
 
 #ifdef DIMENSION3
             RF gDeltaZ = regularization_factor * delta_z;
-            return Dune::GeoInversion::Regularizer::gRegularYZ( v, w, 
+            return Dune::Gesis::Regularizer::gRegularYZ( v, w, 
                                                                 y1, z1,
                                                                 y2, z2,
                                                                 gDeltaY, gDeltaZ,
@@ -503,7 +503,7 @@ namespace Dune {
                                                                 bfixedwidth,
                                                                 regularization_factor );
 #else
-            return Dune::GeoInversion::Regularizer::gRegularY( v, 
+            return Dune::Gesis::Regularizer::gRegularY( v, 
                                                                y1, 
                                                                y2, 
                                                                gDeltaY, 
@@ -636,7 +636,7 @@ namespace Dune {
 #ifdef LINKPOINTS_REGULARIZATION
               
         if( u < 1e-12 )
-          return Dune::GeoInversion::Regularizer::gRegular2( v, y1, y2, delta_y, concentration );
+          return Dune::Gesis::Regularizer::gRegular2( v, y1, y2, delta_y, concentration );
         else
           return RF(0.0);
 
@@ -646,7 +646,7 @@ namespace Dune {
 
 #ifdef DIMENSION3
           RF gDeltaZ = regularization_factor * delta_z;
-          return Dune::GeoInversion::Regularizer::gRegularYZ( v, w, 
+          return Dune::Gesis::Regularizer::gRegularYZ( v, w, 
                                                               y1, z1,
                                                               y2, z2,
                                                               gDeltaY, gDeltaZ,
@@ -654,7 +654,7 @@ namespace Dune {
                                                               bfixedwidth,
                                                               regularization_factor );
 #else
-          return Dune::GeoInversion::Regularizer::gRegularY( v, 
+          return Dune::Gesis::Regularizer::gRegularY( v, 
                                                              y1, 
                                                              y2, 
                                                              gDeltaY, 
@@ -798,4 +798,4 @@ namespace Dune {
 
 } // namespace Dune
 
-#endif //TRANSPORT_PARAMETERS_HH
+#endif // DUNE_GESIS_TRANSPORT_PARAMETERS_HH

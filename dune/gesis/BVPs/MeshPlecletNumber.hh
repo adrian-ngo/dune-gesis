@@ -1,10 +1,10 @@
-#ifndef MESH_PECLET_NUMBER_HH
-#define MESH_PECLET_NUMBER_HH
+#ifndef DUNE_GESIS_MESH_PECLET_NUMBER_HH
+#define DUNE_GESIS_MESH_PECLET_NUMBER_HH
 
 #include "dune/gesis/BVPs/projectors/CoarseGridP0Datahandle.hh"
 
 namespace Dune{
-  namespace GeoInversion{
+  namespace Gesis{
 
     template<typename GV,typename TP>
     class MeshPlecletNumber{
@@ -157,4 +157,4 @@ namespace Dune{
   }
 }
 
-#endif // MESH_PECLET_NUMBER_HH
+#endif // DUNE_GESIS_MESH_PECLET_NUMBER_HH

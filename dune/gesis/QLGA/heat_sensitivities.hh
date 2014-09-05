@@ -32,8 +32,8 @@
  * J_times_Y_old: value for the multiplication of the sensitivity times old Y field (at the current meas location)
  */
 
-#ifndef DUNE_HEAT_SENSITIVITIES_HH
-#define DUNE_HEAT_SENSITIVITIES_HH
+#ifndef DUNE_GESIS_HEAT_SENSITIVITIES_HH
+#define DUNE_GESIS_HEAT_SENSITIVITIES_HH
 #include "../common/MyMPIComm.hh"
 
 #include "m0_sensitivity_field.hh"
@@ -42,7 +42,7 @@
 
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
     
     template<typename POOL_GRID,
              typename GFS_GW,
@@ -608,7 +608,7 @@ namespace Dune {
                                   , heatM0Sensitivity
                                   , measurements.get_value_heatM1( iSetup, meas_point )
                                   , heatM1Sensitivity
-                                  , Sensitivity);
+                                  , Sensitivity );
 
           
       
@@ -715,8 +715,8 @@ namespace Dune {
 
     }// END: void AT_heat_tomography_sensitivities(...)
 
-  } // GeoInversion
+  } // Gesis
 
 } // Dune
 
-#endif // #ifndef DUNE_HEAT_SENSITIVITIES_HH
+#endif // DUNE_GESIS_HEAT_SENSITIVITIES_HH

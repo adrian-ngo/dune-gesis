@@ -6,8 +6,8 @@
  * Last Modified on Friday July 28, 2014
  */
 
-#ifndef FFT_FIELD_GENERATOR_HH
-#define	FFT_FIELD_GENERATOR_HH
+#ifndef DUNE_GESIS_FFT_FIELD_GENERATOR_HH
+#define	DUNE_GESIS_FFT_FIELD_GENERATOR_HH
 
 #include <fftw3.h>
 #include <fftw3-mpi.h>
@@ -29,7 +29,7 @@ extern CLogfile logger;
 
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     template<typename IDT,typename REAL,int dim>
     class FFTFieldGenerator {
@@ -2064,11 +2064,10 @@ namespace Dune {
 
     }; // class FFTFieldGenerator
 
-  } // namespace GeoInversion
-
+  } // namespace Gesis
 } // namespace Dune 
 
 
 
-#endif	/* FFT_FIELD_GENERATOR_HH */
+#endif	/* DUNE_GESIS_FFT_FIELD_GENERATOR_HH */
 

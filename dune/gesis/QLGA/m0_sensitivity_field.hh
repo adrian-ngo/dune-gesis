@@ -1,11 +1,11 @@
-#ifndef M0_SENSITIVITY_FIELD_HH
-#define M0_SENSITIVITY_FIELD_HH
+#ifndef DUNE_GESIS_M0_SENSITIVITY_FIELD_HH
+#define DUNE_GESIS_M0_SENSITIVITY_FIELD_HH
 
 
 #include "dune/gesis/BVPs/projectors/CoarseGridP0Datahandle.hh"
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     template<typename GV_GW,
              typename DGF,
@@ -310,7 +310,7 @@ namespace Dune {
     }
 
 
-  } // namespace GeoInversion
+  } // namespace Gesis
 
 } // namespace Dune
-#endif // M0_SENSITIVITY_FIELD_HH
+#endif // DUNE_GESIS_M0_SENSITIVITY_FIELD_HH

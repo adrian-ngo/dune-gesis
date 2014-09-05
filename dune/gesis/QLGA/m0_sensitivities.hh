@@ -28,8 +28,8 @@
  * J_times_Y_old: value for the multiplication of the sensitivity times old Y field (at the current meas location)
  */
 
-#ifndef DUNE_M0_SENSITIVITIES_HH
-#define DUNE_M0_SENSITIVITIES_HH
+#ifndef DUNE_GESIS_M0_SENSITIVITIES_HH
+#define DUNE_GESIS_M0_SENSITIVITIES_HH
 #include "../common/MyMPIComm.hh"
 
 
@@ -37,7 +37,7 @@
 
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
 
     // nCellsExt : Dimensions of extended field per zone
@@ -192,7 +192,7 @@ namespace Dune {
       // TODO: How about heat_inversion_data for m0? heat_flag and well_flag?
 
 
-      typedef Dune::GeoInversion::TransportProblemAdjoint<GV_TP,
+      typedef Dune::Gesis::TransportProblemAdjoint<GV_TP,
                                                           REAL,
                                                           DARCY_FLUX_DGF,
                                                           IDT,
@@ -696,4 +696,4 @@ namespace Dune {
 
 }
 
-#endif // DUNE_M0_SENSITIVITIES_HH
+#endif // DUNE_GESIS_M0_SENSITIVITIES_HH

@@ -28,15 +28,15 @@
  * J_times_Y_old: value for the multiplication of the sensitivity times old Y field (at the current meas location)
  */
 
-#ifndef DUNE_HEAD_SENSITIVITIES_HH
-#define DUNE_HEAD_SENSITIVITIES_HH
+#ifndef DUNE_GESIS_HEAD_SENSITIVITIES_HH
+#define DUNE_GESIS_HEAD_SENSITIVITIES_HH
 #include "../common/MyMPIComm.hh"
 
 
 #include "head_sensitivity_field.hh"
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
 // zonation matrix -> only on process 0 (process leader of the communicator group) 
     
@@ -226,7 +226,7 @@ namespace Dune {
 #ifdef VTK_PLOT_PSI_HEAD
             std::stringstream vtu_h_adj;
             vtu_h_adj << dir.vchead_adj_prefix << "_m" << global_meas_id << "_i" << iteration_number;
-            Dune::GeoInversion::VTKPlot::output2vtu( gfs_gw, 
+            Dune::Gesis::VTKPlot::output2vtu( gfs_gw, 
                                                      vcAdjoint,
                                                      vtu_h_adj.str(),
                                                      "head_adj",
@@ -247,7 +247,7 @@ namespace Dune {
                                             );
           
 #if defined DEBUG_PLOT && defined VTK_PLOT_PSI_HEAD
-            Dune::GeoInversion::VTKPlot::
+            Dune::Gesis::VTKPlot::
               output_dgf_to_vtu( gv_gw,
                                  gfs_gw,
                                  grad_h_adj_dgf,
@@ -257,7 +257,7 @@ namespace Dune {
                                  true,
                                  0 );
 
-            Dune::GeoInversion::VTKPlot::
+            Dune::Gesis::VTKPlot::
               output_dgf_to_vtu( gv_gw,
                                  gfs_gw,
                                  darcyflux_dgf,
@@ -269,7 +269,7 @@ namespace Dune {
 #endif
       
             // calculate the sensitivities: the function is defined in this FILE!!
-            Dune::GeoInversion::head_sensitivity_field( gv_0
+            Dune::Gesis::head_sensitivity_field( gv_0
                                                         , gv_gw
                                                         , darcyflux_dgf
                                                         , grad_h_adj_dgf
@@ -284,7 +284,7 @@ namespace Dune {
 
 
 #if defined DEBUG_PLOT && defined VTK_PLOT_PSI_HEAD
-            Dune::GeoInversion::VTKPlot::
+            Dune::Gesis::VTKPlot::
               output_vector_to_vtu(
                                    gv_0
                                    , Sensitivity
@@ -463,7 +463,7 @@ namespace Dune {
 
     }// END: void head_sensitivities(...)
 
-  } // namespace GeoInversion
+  } // namespace Gesis
 } // namespace Dune
 
-#endif // DUNE_HEAD_SENSITIVITIES_HH
+#endif // DUNE_GESIS_HEAD_SENSITIVITIES_HH

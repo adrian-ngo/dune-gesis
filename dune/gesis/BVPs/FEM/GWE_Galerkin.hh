@@ -1,12 +1,12 @@
-#ifndef GROUND_WATER_EQUATION_HH
-#define GROUND_WATER_EQUATION_HH
+#ifndef DUNE_GESIS_GWE_GALERKIN_HH
+#define DUNE_GESIS_GWE_GALERKIN_HH
 
 #include<dune/pdelab/gridoperator/gridoperator.hh>
 
 #include "GroundWaterOperatorGalerkin.hh"
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
 template<typename GFS
          , typename GWP
@@ -26,7 +26,7 @@ class GWE_Galerkin
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<GWP> BCType;
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<GWP> BCExtension;
 
-  typedef Dune::GeoInversion::GwFlowOperator<GWP,BCType,SOURCE_TYPE,IDT,SDT> LOP;
+  typedef Dune::Gesis::GwFlowOperator<GWP,BCType,SOURCE_TYPE,IDT,SDT> LOP;
   typedef typename GFS::template ConstraintsContainer<REAL>::Type CC;
   
   // Retrieve VBE from GFS:
@@ -531,7 +531,7 @@ public:
   }
 }
 
-#endif// GROUND_WATER_EQUATION_HH
+#endif// DUNE_GESIS_GWE_GALERKIN_HH
 
 
 

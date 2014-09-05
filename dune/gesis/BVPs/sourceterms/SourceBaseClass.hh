@@ -1,8 +1,8 @@
-#ifndef SOURCE_BASE_CLASS_HH
-#define SOURCE_BASE_CLASS_HH
+#ifndef DUNE_GESIS_SOURCE_BASE_CLASS_HH
+#define DUNE_GESIS_SOURCE_BASE_CLASS_HH
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     /**********************************************************
      *
@@ -174,4 +174,4 @@ namespace Dune {
 
   }
 }
-#endif // SOURCE_BASE_CLASS_HH
+#endif // DUNE_GESIS_SOURCE_BASE_CLASS_HH

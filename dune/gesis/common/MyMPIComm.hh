@@ -7,8 +7,8 @@
  * 
  * 
  */
-#ifndef MYMPICOMM_HH
-#define MYMPICOMM_HH
+#ifndef DUNE_GESIS_MPICOMM_HH
+#define DUNE_GESIS_MPICOMM_HH
 
 // get the logger running
 extern CLogfile logger;
@@ -107,4 +107,4 @@ private:
   bool my_group;  // flag wether the processor is in the group or not
 };
 
-#endif
+#endif // DUNE_GESIS_MPICOMM_HH

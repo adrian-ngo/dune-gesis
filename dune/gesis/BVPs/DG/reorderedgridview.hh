@@ -1,5 +1,5 @@
-#ifndef VERTICALGRIDVIEW_HH
-#define VERTICALGRIDVIEW_HH VERTICALGRIDVIEW_HH
+#ifndef DUNE_GESIS_RGV_HH
+#define DUNE_GESIS_RGV_HH
 
 #include <iostream>
 #include<list>
@@ -19,7 +19,7 @@
 
 namespace Dune{
 
-  namespace GeoInversion{
+  namespace Gesis{
 
 template<typename GV, typename IDT>
 void outputGridviewIndexToDGF( const GV& gv,
@@ -86,7 +86,7 @@ void outputGridviewIndexToDGF( const GV& gv,
                              "IO",
                              jobtitle.str() );
 
-  Dune::GeoInversion::VTKPlot::output2vtu( //gv, 
+  Dune::Gesis::VTKPlot::output2vtu( //gv, 
                                            p0gfs, 
                                            u0, 
                                            filename, 
@@ -599,6 +599,6 @@ public:
 
 };
 
-  } // GeoInversion
+  } // Gesis
 } // Dune
 #endif

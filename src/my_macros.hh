@@ -77,7 +77,7 @@
 #define GroundWaterEquation GWE_CCFV
 #define GEP_Equation GWE_CCFV
 #define TransportEquation TPE_DG
-#define GradientVectorField Dune::GeoInversion::RT0FluxDGF
+#define GradientVectorField Dune::Gesis::RT0FluxDGF
 //#define PLOT_GHOST // This must not be used for USE_FEM
 #endif
 

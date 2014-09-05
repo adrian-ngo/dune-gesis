@@ -1,11 +1,11 @@
-#ifndef _GENERATE_CR_HH
-#define _GENERATE_CR_HH
+#ifndef DUNE_GESIS_GENERATE_CR_HH
+#define DUNE_GESIS_GENERATE_CR_HH
 
 
 #include <time.h>                      // define time()
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
       
       
@@ -206,4 +206,4 @@ void generate_CR( GRID& theGrid,
 }
 
 
-#endif // _GENERATE_CR_HH
+#endif // DUNE_GESIS_GENERATE_CR_HH

@@ -1,7 +1,7 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
-#ifndef DUNE_PDELAB_MYGRIDFUNCTIONSPACEUTILITIES_HH
-#define DUNE_PDELAB_MYGRIDFUNCTIONSPACEUTILITIES_HH
+#ifndef DUNE_GESIS_GRIDFUNCTIONSPACEUTILITIES_HH
+#define DUNE_GESIS_GRIDFUNCTIONSPACEUTILITIES_HH
 
 #include<math.h>
 #include <cstdlib>
@@ -563,10 +563,10 @@ namespace Dune {
               // set coefficient
               if( element_length_s - element_length_n<1E-12 )
                 vn[iit->indexInInside()] = 
-                  - Dune::GeoInversion::General::harmonicAverage( K_inside, K_outside ) * w;
+                  - Dune::Gesis::General::harmonicAverage( K_inside, K_outside ) * w;
               else
                 vn[iit->indexInInside()] = 
-                  - Dune::GeoInversion::General::harmonicAverageWeightedByDistance( K_inside, 
+                  - Dune::Gesis::General::harmonicAverageWeightedByDistance( K_inside, 
                                                        K_outside, 
                                                        element_length_s, 
                                                        element_length_n ) * w;
@@ -824,4 +824,4 @@ namespace Dune {
 
 } // namespace Dune
 
-#endif
+#endif // DUNE_GESIS_GRIDFUNCTIONSPACEUTILITIES_HH

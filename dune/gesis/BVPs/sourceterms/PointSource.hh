@@ -1,10 +1,10 @@
-#ifndef POINT_SOURCE_HH
-#define POINT_SOURCE_HH
+#ifndef DUNE_GESIS_POINT_SOURCE_HH
+#define DUNE_GESIS_POINT_SOURCE_HH
 
 #include "SourceBaseClass.hh"
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     //=========================================================
     // The template class to define the source term 

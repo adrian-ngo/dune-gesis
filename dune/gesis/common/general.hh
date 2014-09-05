@@ -28,7 +28,7 @@ extern CLogfile logger; // declared + initalized in the main function!
 
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
 
     class General{
@@ -1621,7 +1621,7 @@ namespace Dune {
 
 
 
-  } // GeoInversion
+  } // Gesis
 } // Dune
 
 

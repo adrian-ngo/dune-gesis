@@ -6,8 +6,8 @@
  *
  */
 
-#ifndef DUNE_GEOINVERSION_HDF5_TOOLS_HH
-#define	DUNE_GEOINVERSION_HDF5_TOOLS_HH
+#ifndef DUNE_GESIS_HDF5_TOOLS_HH
+#define	DUNE_GESIS_HDF5_TOOLS_HH
 
 #include <dune/pdelab/common/geometrywrapper.hh>
 #include <assert.h>
@@ -19,7 +19,7 @@ extern CLogfile logger;
 
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
 
     class HDF5Tools{
@@ -2872,7 +2872,7 @@ namespace Dune {
     }; // class HDF5Tools
 
 
-  } // GeoInversion
+  } // Gesis
 } // Dune
 
 
@@ -2882,5 +2882,5 @@ namespace Dune {
 
 
 
-#endif	/* DUNE_GEOINVERSION_HDF5_TOOLS_HH */
+#endif	/* DUNE_GESIS_HDF5_TOOLS_HH */
 

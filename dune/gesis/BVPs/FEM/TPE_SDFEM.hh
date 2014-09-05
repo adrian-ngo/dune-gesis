@@ -1,12 +1,12 @@
-#ifndef TRANSPORT_EQUATION_HH
-#define TRANSPORT_EQUATION_HH
+#ifndef DUNE_GESIS_TP_SDFEM_HH
+#define DUNE_GESIS_TP_SDFEM_HH
 
 //#include "ovlpistlgmresbackend.hh"
 #include "TransportOperatorSDFEM.hh"
 
 
 namespace Dune{
-  namespace GeoInversion{
+  namespace Gesis{
 
 template<typename GFS
          , typename DGF_DARCY
@@ -27,7 +27,7 @@ class TPE_SDFEM
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<TP> BCType;
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<TP> BCExtension;
 
-  typedef Dune::GeoInversion::StreamlineDiffusionOperator<TP,FEM,BCType,SOURCE_TYPE,IDT,SDT> LOP;
+  typedef Dune::Gesis::StreamlineDiffusionOperator<TP,FEM,BCType,SOURCE_TYPE,IDT,SDT> LOP;
   typedef typename GFS::template ConstraintsContainer<REAL>::Type CC;
 
   // Retrieve VBE from GFS:
@@ -372,7 +372,7 @@ public:
     // plot b-Ax:
     W b(gos.testGridFunctionSpace(), 0.0);
     b = r;
-    Dune::GeoInversion::VTKPlot::output2vtu( gfs,
+    Dune::Gesis::VTKPlot::output2vtu( gfs,
                                              b,
                                              "m0_residual_0",
                                              "m0_residual_0",
@@ -395,7 +395,7 @@ public:
     /*
     // DEBUG Code:
     // plot end defect r:
-    Dune::GeoInversion::VTKPlot::output2vtu( gfs,
+    Dune::Gesis::VTKPlot::output2vtu( gfs,
                                              r,
                                              "m0_residual_1",
                                              "m0_residual_1",
@@ -407,7 +407,7 @@ public:
     W y(gos.testGridFunctionSpace(), 0.0);
     stiffness_matrix.base().mv(z,y);
     b -= y;
-    Dune::GeoInversion::VTKPlot::output2vtu( gfs,
+    Dune::Gesis::VTKPlot::output2vtu( gfs,
                                              b,
                                              "m0_residual_2",
                                              "m0_residual_2",
@@ -532,7 +532,7 @@ public:
     
     REAL minimum = 1E+100;
     REAL maximum = -1E+100;
-    Dune::GeoInversion::General::logMinAndMax( vc_m, gv.comm(), minimum, maximum );
+    Dune::Gesis::General::logMinAndMax( vc_m, gv.comm(), minimum, maximum );
 
     REAL injection_time = setupdata.transport_equation.injection_time;
     REAL concentration = setupdata.transport_equation.boundaries[0].stripes[0].value;
@@ -553,7 +553,7 @@ public:
 
   }
 }
-#endif// TRANSPORT_EQUATION_HH
+#endif// DUNE_GESIS_TP_SDFEM_HH
 
 
 

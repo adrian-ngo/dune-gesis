@@ -32,8 +32,8 @@
  * J_times_Y_old: value for the multiplication of the sensitivity times old Y field (at the current meas location)
  */
 
-#ifndef DUNE_GEOELECTRICAL_POTENTIAL_SENSITIVITIES_HH
-#define DUNE_GEOELECTRICAL_POTENTIAL_SENSITIVITIES_HH
+#ifndef DUNE_GESIS_GEOELECTRICAL_POTENTIAL_SENSITIVITIES_HH
+#define DUNE_GESIS_GEOELECTRICAL_POTENTIAL_SENSITIVITIES_HH
 #include "../common/MyMPIComm.hh"
 
 // for the internal calculation of the sensitivity of m0 and m1, respectively!
@@ -45,7 +45,7 @@
 //#include "head_sensitivities.hh"
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
 template<typename POOL_GRID,
          typename GFS_GW,
@@ -723,4 +723,4 @@ void geoelectrical_potential_sensitivities( // input:
   }
 }
 
-#endif // DUNE_GEOELECTRICAL_POTENTIAL_SENSITIVITIES_HH
+#endif // DUNE_GESIS_GEOELECTRICAL_POTENTIAL_SENSITIVITIES_HH

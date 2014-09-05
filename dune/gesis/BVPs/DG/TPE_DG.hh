@@ -1,5 +1,5 @@
-#ifndef TRANSPORT_EQUATION_DG_HH
-#define TRANSPORT_EQUATION_DG_HH
+#ifndef DUNE_GESIS_TPE_DG_HH
+#define DUNE_GESIS_TPE_DG_HH
 
 //#include "ovlpistlgmresbackend.hh"
 #include "dune/gesis/BVPs/TransportParameters.hh"
@@ -7,7 +7,7 @@
 
 namespace Dune {
 
-  namespace GeoInversion {
+  namespace Gesis {
 
 template<
   typename GFS
@@ -34,7 +34,7 @@ class TPE_DG    // TransportEquationDG
   typedef Dune::PDELab::ConvectionDiffusionBoundaryConditionAdapter<TP> BCType;
   typedef Dune::PDELab::ConvectionDiffusionDirichletExtensionAdapter<TP> BCExtension;
 
-  typedef Dune::GeoInversion::ConvectionDiffusionDG<TP,
+  typedef Dune::Gesis::ConvectionDiffusionDG<TP,
                                                     FEM,
                                                     SOURCE_TYPE,
                                                     IDT,
@@ -504,7 +504,7 @@ public:
     
     REAL minimum = 1E+100;
     REAL maximum = -1E+100;
-    Dune::GeoInversion::General::logMinAndMax( vc_m, gv.comm(), minimum, maximum );
+    Dune::Gesis::General::logMinAndMax( vc_m, gv.comm(), minimum, maximum );
 
     REAL lowerlimit=minimum;
     REAL upperlimit=maximum;
@@ -534,7 +534,7 @@ public:
   }
 }
 
-#endif// TRANSPORT_EQUATION_DG_HH
+#endif// DUNE_GESIS_TPE_DG_HH
 
 
 

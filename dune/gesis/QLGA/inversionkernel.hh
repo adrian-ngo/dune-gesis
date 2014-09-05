@@ -1,5 +1,5 @@
-#ifndef _INVERSION_KERNEL_HH
-#define _INVERSION_KERNEL_HH
+#ifndef DUNE_GESIS_INVERSION_KERNEL_HH
+#define DUNE_GESIS_INVERSION_KERNEL_HH
 
 #include <boost/math/special_functions/gamma.hpp>
 
@@ -18,7 +18,7 @@
 
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
     
     // grid view on the Dune grid with all processors (global grid)
     // helper: for the global MPI communication
@@ -1799,4 +1799,4 @@ namespace Dune {
   }
 }
 
-#endif // _INVERSION_KERNEL_HH
+#endif // DUNE_GESIS_INVERSION_KERNEL_HH

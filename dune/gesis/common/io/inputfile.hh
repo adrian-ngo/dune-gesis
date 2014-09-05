@@ -8,8 +8,8 @@
  * 2014/08/01: Add timer
  *
  */
-#ifndef _INPUTFILE_HH
-#define	_INPUTFILE_HH
+#ifndef DUNE_GESIS_INPUTFILE_HH
+#define	DUNE_GESIS_INPUTFILE_HH
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,7 +42,7 @@ extern CLogfile logger;
 
 
 //namespace Dune{
-//namespace GeoInversion{
+//namespace Gesis{
 
 
 struct CLinePlot {
@@ -2326,7 +2326,7 @@ public:
 
     std::stringstream jobtitle;
     jobtitle << "readInputFileXml: reading " << filename;
-    Dune::GeoInversion::General::log_elapsed_time( watch.elapsed(),
+    Dune::Gesis::General::log_elapsed_time( watch.elapsed(),
                                helper.getCommunicator(),
                                verbosity,
                                "IO",
@@ -2473,5 +2473,5 @@ public:
 //}
 
 
-#endif	/* _INPUTFILE_HH */
+#endif	/* DUNE_GESIS_INPUTFILE_HH */
 

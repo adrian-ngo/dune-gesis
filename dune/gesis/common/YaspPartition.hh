@@ -1,9 +1,9 @@
-#ifndef DUNE_GEO_INVERSION_YASP_PARTITION_HH
-#define DUNE_GEO_INVERSION_YASP_PARTITION_HH
+#ifndef DUNE_GESIS_YASP_PARTITION_HH
+#define DUNE_GESIS_YASP_PARTITION_HH
 
 namespace Dune {
 
-  namespace GeoInversion {
+  namespace Gesis {
 
     /*
       With this class you can specify how to distribute the total number of
@@ -37,4 +37,4 @@ namespace Dune {
 }
 
 
-#endif // DUNE_GEO_INVERSION_YASP_PARTITION_HH
+#endif // DUNE_GESIS_YASP_PARTITION_HH

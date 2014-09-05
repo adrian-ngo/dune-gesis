@@ -1,8 +1,8 @@
-#ifndef FUNCTION_SOURCE_HH
-#define FUNCTION_SOURCE_HH
+#ifndef DUNE_GESIS_FUNCTION_SOURCE_HH
+#define DUNE_GESIS_FUNCTION_SOURCE_HH
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
 
 
@@ -634,9 +634,9 @@ namespace Dune {
         
         RF A_eff = 0.0;
         if( element_length_s - element_length_n<1E-12 )
-          A_eff = Dune::GeoInversion::General::harmonicAverage(A_s,A_n);
+          A_eff = Dune::Gesis::General::harmonicAverage(A_s,A_n);
         else
-          A_eff = Dune::GeoInversion::General::harmonicAverageWeightedByDistance( A_s, 
+          A_eff = Dune::Gesis::General::harmonicAverageWeightedByDistance( A_s, 
                                                                                   A_n, 
                                                                                   element_length_s, 
                                                                                   element_length_n );
@@ -683,10 +683,10 @@ namespace Dune {
         RF m0_adj = 0.0;
 #ifdef HARMONIC_AVG
         if( element_length_s - element_length_n<1E-12 )
-          m0_adj = Dune::GeoInversion::General::
+          m0_adj = Dune::Gesis::General::
             harmonicAverage(m0_adj_n[0],m0_adj_s[0]);
         else
-          m0_adj = Dune::GeoInversion::General::
+          m0_adj = Dune::Gesis::General::
             harmonicAverageWeightedByDistance( m0_adj_s[0], 
                                                m0_adj_n[0], 
                                                element_length_s, 
@@ -723,10 +723,10 @@ namespace Dune {
           RF m1_adj = 0.0;
 #ifdef HARMONIC_AVG
           if( element_length_s - element_length_n<1E-12 )
-            m1_adj = Dune::GeoInversion::General::
+            m1_adj = Dune::Gesis::General::
               harmonicAverage(m1_adj_n[0],m1_adj_s[0]);
           else
-            m1_adj = Dune::GeoInversion::General::
+            m1_adj = Dune::Gesis::General::
               harmonicAverageWeightedByDistance( m1_adj_s[0], 
                                                  m1_adj_n[0], 
                                                  element_length_s, 

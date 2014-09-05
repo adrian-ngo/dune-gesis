@@ -1,12 +1,12 @@
-#ifndef REGULARIZE_HH
-#define REGULARIZE_HH
+#ifndef DUNE_GESIS_REGULARIZE_HH
+#define DUNE_GESIS_REGULARIZE_HH
 
 
 
 extern CLogfile logger; // declared + initalized in the main function!
 
 namespace Dune {
-  namespace GeoInversion {
+  namespace Gesis {
 
     class Regularizer {
 
@@ -265,7 +265,7 @@ namespace Dune {
 
     }; // class Regularizer
 
-  } // GeoInversion
+  } // Gesis
   
 } // Dune
 
@@ -274,5 +274,5 @@ namespace Dune {
 
 
 
-#endif // REGULARIZE_HH
+#endif // DUNE_GESIS_REGULARIZE_HH
 

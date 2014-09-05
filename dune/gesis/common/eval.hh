@@ -1,5 +1,5 @@
-#ifndef EVAL_HH
-#define EVAL_HH
+#ifndef DUNE_GESIS_EVAL_HH
+#define DUNE_GESIS_EVAL_HH
 
 
 
@@ -381,4 +381,4 @@ void evalGradient( const DomainType& location, // expects element local coordina
 //#endif // USE_CACHE
 
 
-#endif // EVAL_HH
+#endif // DUNE_GESIS_EVAL_HH
