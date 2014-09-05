@@ -1,5 +1,5 @@
-#ifndef INITIALIZE_DUNEGRID_HH
-#define INITIALIZE_DUNEGRID_HH
+#ifndef DUNE_GESIS_DRIVER_HH
+#define DUNE_GESIS_DRIVER_HH
 
 //#include "showIndexSets.hh"
 #ifdef LINE_PLOT_M0
@@ -70,13 +70,13 @@ namespace Dune {
   namespace GeoInversion {
 
     template<typename IDT,typename YFG,typename DIR,int dim>
-    double initialize_DuneGrid( IDT& inputdata,   // must be non-const because of well-calibration
+    REAL driver( IDT& inputdata,   // must be non-const because of well-calibration
                               YFG& yfg_orig,
                               DIR& dir,
                               const Dune::MPIHelper& helper )
     {
       if( helper.rank()==0 && inputdata.verbosity>0 )
-        std::cout << "initialize_DuneGrid(...)" << std::endl;
+        std::cout << "driver(...)" << std::endl;
 
       if( helper.rank()==0 && inputdata.verbosity>0 ){
         std::cout << std::endl;
@@ -1165,7 +1165,7 @@ namespace Dune {
           PressureLikeOrdering comparefunctor;
 
           if( helper.rank()==0 && inputdata.verbosity >= VERBOSITY_EQ_SUMMARY ){
-            std::cout << "initialize_DuneGrid: Reorder gridview" << std::endl;
+            std::cout << "driver: Reorder gridview" << std::endl;
           }
 
           GV_TP gv_tp( grid.leafGridView(),
@@ -1895,7 +1895,7 @@ namespace Dune {
             }
             else {
 
-              double L = inversionkernel<GRID,
+              REAL L = inversionkernel<GRID,
                 PGV,
                 GFS_GW,
                 GFS_TP,
@@ -1937,4 +1937,4 @@ namespace Dune {
 
   }
 }
-#endif // INITIALIZE_DUNEGRID_HH
+#endif // DRIVER_HH
