@@ -19,4 +19,5 @@ then
 else
     echo "File not found: $1"
 fi
-exit returnValue
+echo "Exit with " $returnValue
+exit $returnValue
