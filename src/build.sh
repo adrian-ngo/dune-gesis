@@ -11,9 +11,12 @@ else
 fi
 #
 make CXXFLAGS="$build_flags" $1
+returnValue="$?"
 if [ -f "$1" ];
 then
     mv -v $1 $build_dir
+    returnValue="$?"
 else
     echo "File not found: $1"
 fi
+exit returnValue
