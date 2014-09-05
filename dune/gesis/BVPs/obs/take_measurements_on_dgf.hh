@@ -12,7 +12,7 @@
 #ifndef _TAKE_MEASUREMENTS_ON_DGF_HH
 #define	_TAKE_MEASUREMENTS_ON_DGF_HH
 
-#include "../common/general.hh"
+#include "dune/gesis/common/general.hh"
 
 extern CLogfile logger;
 

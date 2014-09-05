@@ -6,8 +6,8 @@
  * Last Modified on July 29 2014
  */
 
-#ifndef DUNE_GEOINVERSION_GENERAL_HH
-#define	DUNE_GEOINVERSION_GENERAL_HH
+#ifndef DUNE_GESIS_GENERAL_HH
+#define	DUNE_GESIS_GENERAL_HH
 
 #include <iostream>
 #include <string>
@@ -1625,5 +1625,5 @@ namespace Dune {
 } // Dune
 
 
-#endif	/* DUNE_GEOINVERSION_GENERAL_HH */
+#endif	/* DUNE_GESIS_GENERAL_HH */
 

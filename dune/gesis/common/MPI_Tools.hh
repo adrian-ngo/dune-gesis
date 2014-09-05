@@ -6,8 +6,8 @@
  *
  *
  */
-#ifndef DUNE_GEOINVERSION_MPI_ROUTINES_HH
-#define DUNE_GEOINVERSION_MPI_ROUTINES_HH
+#ifndef DUNE_GESIS_MPI_ROUTINES_HH
+#define DUNE_GESIS_MPI_ROUTINES_HH
 
 namespace Dune {
 
@@ -178,7 +178,7 @@ namespace Dune {
 
 } // Dune
 
-#endif //DUNE_GEOINVERSION_MPI_ROUTINES_HH
+#endif //DUNE_GESIS_MPI_ROUTINES_HH
 
 
 

@@ -80,7 +80,7 @@
 #include <dune/gesis/common/io/IO_routines.hh>
 #include <dune/gesis/common/io/VTKPlot.hh>
 #include <dune/gesis/yfield/FFTFieldGenerator.hh>
-#include <dune/gesis/common/initialize_DuneGrid.hh>
+#include <dune/gesis/driver/driver.hh>
 
 CLogfile logger;
 
@@ -379,7 +379,7 @@ int main(int argc, char** argv) {
     Yfieldgenerator.init();
 
     // start the main-work-flow
-    double timeCounted = Dune::GeoInversion::initialize_DuneGrid<CInputData,YFG,DIR,dim>( inputdata, Yfieldgenerator, dir, helper );
+    double timeCounted = Dune::GeoInversion::driver<CInputData,YFG,DIR,dim>( inputdata, Yfieldgenerator, dir, helper );
 
     if( helper.rank()==0 && inputdata.verbosity > 0 ){
       double elapsedTime = main_timer.elapsed();

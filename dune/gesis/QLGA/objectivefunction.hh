@@ -1,18 +1,17 @@
 // -*- C++ -*-
 /* 
- * File:   objectivefunction.hh
- * Author: ngo
+ * File  : objectivefunction.hh
+ * Author: Ronnie L. Schwede and Adrian Ngo (2010-2014)
  * 
- * modification by Ronnie
- *
+ * 
  */
 
-#ifndef _OBJECTIVEFUNCTION_HH
-#define	_OBJECTIVEFUNCTION_HH
+#ifndef DUNE_GESIS_OBJECTIVEFUNCTION_HH
+#define	DUNE_GESIS_OBJECTIVEFUNCTION_HH
 
 #include <math.h>
 #include "../common/io/inputfile.hh"
-#include "../common/ForwardSimulator.hh"
+#include "../BVPs/ForwardSimulator.hh"
 #include "../common/io/IO_routines.hh"
 
 
@@ -789,5 +788,5 @@ namespace Dune {
 
   } // GeoInversion
 }  // Dune
-#endif	/* _OBJECTIVEFUNCTION_HH */
+#endif	/* DUNE_GESIS_OBJECTIVEFUNCTION_HH */
 

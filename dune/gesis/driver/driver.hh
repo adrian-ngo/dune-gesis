@@ -26,7 +26,7 @@
 #include <dune/gesis/BVPs/wells/calibrateWellCentersToElementCenters.hh>
 
 #include <dune/gesis/BVPs/DG/RT0flux.hh>
-#include <dune/gesis/common/DarcyVelocityCache.hh>
+#include <dune/gesis/BVPs/DarcyVelocityCache.hh>
 #include <dune/gesis/common/my_gfs_utilities.hh>
 #include <dune/gesis/BVPs/GroundWaterParameters.hh>
 #include <dune/gesis/BVPs/GeoElectricalPotentialParameters.hh>
@@ -46,12 +46,12 @@
 #include "testDriveRGV.hh"
 #endif
 
-#include <dune/gesis/obs/MeasurementList.hh>
+#include <dune/gesis/BVPs/obs/MeasurementList.hh>
 
 #include <dune/gesis/BVPs/projectors/L2SubspaceProjector.hh>
 #include <dune/gesis/BVPs/projectors/CoarseGridP0Projector.hh>
 
-#include <dune/gesis/common/ForwardSimulator.hh>
+#include <dune/gesis/BVPs/ForwardSimulator.hh>
 
 #if defined USE_ALUGRID || defined USE_UG
 #include "adaptive/adaptiveDrive_h_rgv.hh"

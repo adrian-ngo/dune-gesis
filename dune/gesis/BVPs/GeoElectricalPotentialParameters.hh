@@ -21,7 +21,7 @@
 
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
 
-#include "../common/ParameterTraits.hh"
+#include "ParameterTraits.hh"
 
 namespace Dune {
   namespace GeoInversion {

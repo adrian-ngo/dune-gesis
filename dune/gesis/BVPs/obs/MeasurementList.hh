@@ -5,7 +5,7 @@
 
 #include "take_measurements_on_dgf.hh"
 #include "take_measurements_on_dgf_lnK.hh"
-#include "../common/MPI_Tools.hh"
+#include "dune/gesis/common/MPI_Tools.hh"
 
 #ifndef _MEASUREMENTLIST_HH
 #define _MEASUREMENTLIST_HH
