@@ -1,6 +1,14 @@
 #ifndef DUNE_GESIS_RGV_HH
 #define DUNE_GESIS_RGV_HH
 
+/*
+ * Classes for renumbering grid cells by the pressure field
+ *
+ * Authors: J. Fahlke, E. Müller, A. Ngo
+ * Date   : 12/2012
+ *
+ */
+
 #include <iostream>
 #include<list>
 #include<vector>
@@ -351,7 +359,6 @@ public:
   }
 
 
-  // Adrian:
   template<typename GridView, typename Compare>
   void update( const GridView& gridview, 
                Dune::shared_ptr<RT0_PF> rt0_pf,
@@ -486,7 +493,6 @@ public:
   }
 
 private:
-  // Adrian:
   const Backend* backend;
 
   enum { ncodim = dim+1 };
@@ -529,7 +535,6 @@ public:
                             > IndexSet;
   typedef typename IndexSet::IndexType IndexType;
   
-  // Adrian:
   Dune::shared_ptr<IndexSet> reorderedindexset; 
   
     // Copy (from base class) constructor
@@ -564,7 +569,6 @@ public:
 
   }
 
-  // Adrian:
   template<typename GFS_GW,typename VCType_GW>
   void update(
               const GFS_GW& gfs_gw,
