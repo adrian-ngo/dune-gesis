@@ -61,6 +61,8 @@
 
 #include <dune/gesis/yfield/generate_CR.hh>
 
+#include <dune/gesis/BVPs/totalMass.hh>
+
 
 extern CLogfile logger;
 
@@ -1267,6 +1269,17 @@ namespace Dune {
                                    true,
                                    0 );
 
+              REAL m0cg_negMass(0), m0cg_posMass(0), m0cg_totMass(0);
+              GridFunctionTools::totalMass( gfs_cg, vcM0_cg, m0cg_negMass, m0cg_posMass, m0cg_totMass );
+              if( helper.rank() == 0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
+                std::cout << "pos./neg. mass (L2) = " 
+                          << std::fixed << std::setprecision(5)
+                          << m0cg_posMass << " " << m0cg_negMass << std::endl;
+                std::cout << "tot. mass (L2) = " 
+                          << std::fixed << std::setprecision(5) 
+                          << m0cg_totMass << std::endl;
+              }
+
               VTKPlot::output2vtu( gfs_tp,
                                    vcM0_orig,
                                    dir.m0_orig_vtu[iSetup],
@@ -1274,9 +1287,16 @@ namespace Dune {
                                    inputdata.verbosity,
                                    true,
                                    std::max(0,pMAX-1) );
-
-
-
+              REAL m0dg_negMass(0), m0dg_posMass(0), m0dg_totMass(0);
+              GridFunctionTools::totalMass( gfs_tp, vcM0_orig, m0dg_negMass, m0dg_posMass, m0dg_totMass );
+              if( helper.rank() == 0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
+                std::cout << "pos./neg. mass (orig) = " 
+                          << std::fixed << std::setprecision(5)
+                          << m0dg_posMass << " " << m0dg_negMass  << std::endl;
+                std::cout << "tot. mass (orig) = " 
+                          << std::fixed << std::setprecision(5)
+                          << m0dg_totMass << std::endl;
+              }
 #ifdef LINE_PLOT_M0
               // *********************************
               // Plot over line for gnuplot:
