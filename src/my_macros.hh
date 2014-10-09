@@ -1,7 +1,7 @@
 #define MAJOR_VERSION 1
 #define MINOR_VERSION 3
 #define PDELAB_VERSION 21
-#define BUILD_VERSION 20140730
+#define BUILD_VERSION 20141009
 // release flags:
 // CXXFLAGS='-O3 -funroll-loops -DNDEBUG'
 // CXXFLAGS='-O3 -funroll-loops -fno-strict-aliasing -DNDEBUG'
