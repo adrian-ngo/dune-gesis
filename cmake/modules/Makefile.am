@@ -1,4 +1,4 @@
-MODULES = DuneGesisMacros.cmake
+MODULES = DuneGesisMacros.cmake FindFFTW3.cmake AddFFTW3Flags.cmake AddHDF5Flags.cmake
 modulesdir = $(datadir)/dune/cmake/modules
 dist_modules_DATA = ${MODULES}
 
