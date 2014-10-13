@@ -24,9 +24,12 @@ set(noinst_PROGRAMS  dune_gesis gesis2dDG gesis3dDG gesis2dFEM gesis3dFEM)
 
 # 2D DG version for YASP:
 add_executable(gesis2dDG  geo_inversion_2d.cc)
-add_dune_mpi_flags(gesis2dDG)
+target_link_libraries(gesis2dDG ${DUNE_LIBS})
 add_dune_superlu_flags(gesis2dDG)
 add_dune_boost_flags(gesis2dDG)
+add_dune_hdf5_flags(gesis2dDG)
+add_dune_fftw3_flags(gesis2dDG)
+add_dune_mpi_flags(gesis2dDG)
 set_property(TARGET gesis2dDG APPEND PROPERTY COMPILE_DEFINITIONS "USE_YASP")
 
 
