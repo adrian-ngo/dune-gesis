@@ -1960,12 +1960,12 @@ namespace Dune {
         // Get the conductivity field on the grid for the vtkwriter
         typedef typename GV::Grid GRIDTYPE; // get the grid-type out of the gridview-type
         //typedef typename GV::Grid::template Codim<0>::Entity Entity;
-        typedef typename GV::Grid::template Codim<0>::EntityPointer EntityPointer;
+        //typedef typename GV::Grid::template Codim<0>::EntityPointer EntityPointer;
 
         //typedef typename GV::Traits::template Codim < 0 > ::Iterator ElementLeafIterator;
         typedef typename GV::template Codim<0>::template Partition<Dune::All_Partition>::Iterator ElementLeafIterator;
 
-        typedef typename ElementLeafIterator::Entity::Geometry LeafGeometry;
+        //typedef typename ElementLeafIterator::Entity::Geometry LeafGeometry;
 
         // make a mapper for codim 0 entities in the leaf grid
         //Dune::LeafMultipleCodimMultipleGeomTypeMapper<GRIDTYPE, P0Layout>

@@ -142,7 +142,7 @@ public:
 
     Dune::Timer watch;
 
-    int processor_rank=gos.trialGridFunctionSpace().gridView().comm().rank();
+    //int processor_rank=gos.trialGridFunctionSpace().gridView().comm().rank();
 
     // assemble residual:
     typedef typename GOS::Traits::TrialGridFunctionSpace TrialGridFunctionSpace;

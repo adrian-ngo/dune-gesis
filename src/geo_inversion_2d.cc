@@ -196,7 +196,7 @@ int main(int argc, char** argv) {
 
     if( !bContinue && helper.rank()==0){
 
-      int tmp;
+      //int tmp;
       std::string cmdline;
 
       /*

@@ -131,7 +131,10 @@ namespace Dune {
         RF c_w   = inputdata.transport_parameters.heat_c_w;
         
         for( UINT i=0; i<nSources; i++ ) {
-          RF pumping_rate, temperature,injection_time, rho_s,c_s,porosity;
+          RF pumping_rate, temperature,injection_time;
+          RF rho_s=1.0;
+          RF c_s=1.0;
+          RF porosity(0.3);
           // Do something only if the pumping source is non-zero.
 
           pumping_rate = setupdata.pdlist.pointdata_vector[i].value;
@@ -212,7 +215,10 @@ namespace Dune {
 #endif
               ) {
             
-            RF rho_s,c_s,porosity;
+            RF rho_s=1.0;
+            RF c_s=1.0;
+            RF porosity(0.3);
+
             RF pumping_rate = setupdata.wdlist.pointdata_vector[i].well_rate;
             RF temperature = setupdata.wdlist.pointdata_vector[i].temperature;
             RF injection_time = setupdata.wdlist.pointdata_vector[i].temperature_injection_time;

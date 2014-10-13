@@ -96,7 +96,6 @@ namespace Dune {
 
 
       Dune::Timer watch;
-      REAL elapsed_time;
 
 
       // Total number of all cells required to resolve the parameter field
@@ -315,6 +314,8 @@ namespace Dune {
       Dune::StructuredGridFactory<GRID> structuredGridFactory;
       Dune::shared_ptr<GRID> gridptr =
         structuredGridFactory.createCubeGrid(LowerLeft, UpperRight, elements);
+
+      REAL elapsed_time;
       elapsed_time = watch.elapsed();
       std::cout << "=== Dune::StructuredGridFactory building 3D ALUGRID took "
                 << elapsed_time << " sec." << std::endl;

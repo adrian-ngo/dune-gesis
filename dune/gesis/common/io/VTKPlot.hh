@@ -53,8 +53,6 @@ namespace Dune {
         Dune::Timer watch;
         logger << "output2vtu: " << filename << std::endl;
 
-        REAL elapsed_time;
-
         typedef typename GFS::Traits::GridViewType GV;
         GV gv = gfs.gridView();
         typedef Dune::PDELab::DiscreteGridFunction<GFS,VCType> DGF;

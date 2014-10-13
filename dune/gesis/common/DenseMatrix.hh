@@ -46,7 +46,9 @@ private:
   {
 //    ComponentType max = A(r[row],col);
 // Korrektur 1: A(r[row],col) darf auch negativ sein. max sollte nur ungleich 0 sein!
-	ComponentType max = std::abs(A(r[row],col));
+
+    ComponentType max = std::abs(A(r[row],col));
+    
     int imax = row;
 
     for(int i=row+1; i<rows; ++i)
@@ -64,6 +66,8 @@ private:
 			imax = i;
 		}
     }
+    if( max < -1E-12 )
+      std::cout << "Warning: DenseMatrix::pivot_index(): max < 0" << std::endl;
     assert(max > 0.0);
     return imax;
   }

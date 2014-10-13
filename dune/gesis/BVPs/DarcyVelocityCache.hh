@@ -6,7 +6,6 @@
 #include<map>
 
 #include<dune/common/exceptions.hh>
-#include<dune/common/static_assert.hh>
 
 #include "dune/gesis/BVPs/DG/RT0flux.hh"
 

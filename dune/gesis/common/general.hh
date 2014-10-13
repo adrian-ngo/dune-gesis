@@ -1593,8 +1593,10 @@ namespace Dune {
 
       static void systemCall( const std::string cmdline ){
         Dune::Timer watch;
-        int tmp;
-        tmp = system( cmdline.c_str() );
+        int tmp = system( cmdline.c_str() );
+        if(tmp!=0)
+          std::cout << "Warning: systemCall to " << cmdline 
+                    << " returns " << tmp << std::endl;
         assert(tmp==0);
         std::stringstream jobtitle;
         jobtitle << "systemCall: " << cmdline;

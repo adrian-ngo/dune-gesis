@@ -182,10 +182,12 @@ namespace Dune {
         // for coefficient computation
         RF vn[2*dim];    // normal velocities
         //RF coeff[2*dim]; // RT0 coefficient
-        Dune::FieldMatrix<DF,dim,dim>
-          B = e.geometry().jacobianInverseTransposed(xlocal); // the transformation. Assume it is linear
+
 
 #ifdef OLD_RT0
+        // the transformation. Assume it is linear
+        Dune::FieldMatrix<DF,dim,dim> B 
+          = e.geometry().jacobianInverseTransposed(xlocal); 
         RF determinant = B.determinant();
 #endif
 

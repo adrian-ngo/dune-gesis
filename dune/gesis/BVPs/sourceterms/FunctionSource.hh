@@ -234,7 +234,9 @@ namespace Dune {
 
         for( UINT i=0; i<nSources; i++ ) {
 
-          RF input,injection_time,rho_s,c_s,porosity;
+          RF input,injection_time;
+          RF rho_s=1.0;
+          RF c_s=1.0;
           RF pumping_rate = setupdata.pdlist.pointdata_vector[i].value;
 
           if( equationMode == EQ::adjoint )
@@ -253,7 +255,8 @@ namespace Dune {
           else
             injection_time *= injection_time*0.5;  // Ask Ronnie: Why this?
 
-
+          
+          RF porosity(0.3); // just an initialization, overwritten later
 
           if( pumping_rate > GEO_EPSILON*0.5 && std::abs(input) >  GEO_EPSILON*0.5 ) {
 

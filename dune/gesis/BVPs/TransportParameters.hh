@@ -149,7 +149,7 @@ namespace Dune {
         typename Traits::RangeType xglobal
           = eg.geometry().global( xlocal );
 
-        REAL porosity;
+        REAL porosity(0.3); // just an initialization, overwritten by the next line
         General::zone_parameters( xglobal[dim-1], inputdata, porosity );
 
         const RF D_molecular = inputdata.transport_parameters.D_molecular;
@@ -190,7 +190,7 @@ namespace Dune {
         typename Traits::RangeType beta( velocity( e, xlocal, equationMode ) );
         typename Traits::DomainType xglobal = e.geometry().global( xlocal );
 
-        RF porosity;
+        RF porosity(0.3); // just an initialization, overwritten by the next line
         General::zone_parameters( xglobal[dim-1], inputdata, porosity );
 
         const RF a_l = inputdata.transport_parameters.a_longitudinal;

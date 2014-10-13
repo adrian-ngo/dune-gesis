@@ -70,12 +70,12 @@ namespace Dune {
 
         // save header:
 #ifdef DIMENSION3
-        const int dim = 3;
+        //const int dim = 3;
         hsize_t col = dims[2]; // x-direction
         hsize_t row = dims[1]; // y-direction
         hsize_t dep = dims[0]; // z-direction
 #else
-        const int dim = 2;
+        //const int dim = 2;
         hsize_t col = dims[1]; // x-direction
         hsize_t row = dims[0]; // y-direction
 #endif
@@ -267,13 +267,14 @@ namespace Dune {
           }
         }
 
-        
 
-        status = H5Pset_chunk( 
-                              plist_id
+        status = H5Pset_chunk( plist_id
                               , dim             // must be == rank of the dataset
                               , chunk_dims      // The values of the check_dims array define the size of the chunks to store the dataset's raw data. The unit of measure for check_dims values is dataset elements. 
                                );
+
+        if( status < 0 )
+          logger << "Warning : H5Pset_chunk() failed." << std::endl;
 
         assert( status > -1 );
         //logger << "write_sequential_to_HDF5: H5Pset_chunk() o.k." << std::endl;
@@ -599,6 +600,8 @@ namespace Dune {
         herr_t status = H5Pset_fapl_mpio( plist_id, gv.comm(), mpiInfo );
         //logger << "write_parallel_to_HDF5: H5Pset_fapl_mpio: status = " 
         // << status << std::endl;
+        if( status < 0 )
+          logger << "Warning : H5Pset_fapl_mpio() failed." << std::endl;
         assert( status > -1 );
   
         //  Create a new file collectively and release property list identifier.
@@ -705,7 +708,7 @@ namespace Dune {
   
         // Each process defines dataset in memory and writes it to the hyperslab in the file.
 
-        hid_t memspace_id;
+        hid_t memspace_id = -1;
         if(nAllLocalCells!=0){  // -> otherwise HDF5 warning, because of writing nothing!
           memspace_id = H5Screate_simple(dim, count, NULL);
           assert(memspace_id>-1);
@@ -964,7 +967,11 @@ namespace Dune {
    
         // get the size of the problem
         dims=(hsize_t*)malloc(dim * sizeof (hsize_t));
+
         status = H5Sget_simple_extent_dims( dataspace_id , dims, 0);
+        if( status < 0 )
+          logger << "Warning : H5Sget_simple_extent_dims() failed." << std::endl;
+
         assert( status > -1 );
  
         // file the return value. the local_count
@@ -1225,6 +1232,8 @@ namespace Dune {
 
         herr_t status;             /* Generic return value */
         status = H5Pset_fapl_mpio( access_pList, comm, mpiInfo ); // Take care, this requires the MPI version of hdf5!
+        if( status < 0 )
+          logger << "Warning : H5Pset_fapl_mpio() failed." << std::endl;
         assert( status > -1 );
         //logger << "access_pList set" << std::endl;
 
@@ -1555,18 +1564,28 @@ namespace Dune {
          * close everything
          */
         status = H5Sclose( dataspace_id );
+        if( status < 0 )
+          logger << "Warning : H5Sclose() failed." << std::endl;
         assert( status > -1 );
 
         status = H5Sclose( memspace_id );
+        if( status < 0 )
+          logger << "Warning : H5Sclose() failed." << std::endl;
         assert( status > -1 );
 
         status = H5Dclose( dataset_id );
+        if( status < 0 )
+          logger << "Warning : H5Dclose() failed." << std::endl;
         assert( status > -1 );
 
         status = H5Pclose( plist_id );
+        if( status < 0 )
+          logger << "Warning : H5Pclose() failed." << std::endl;
         assert( status > -1 );
 
         status = H5Fclose( file_id );
+        if( status < 0 )
+          logger << "Warning : H5Fclose() failed." << std::endl;
         assert( status > -1 );
       };
 
@@ -1615,6 +1634,8 @@ namespace Dune {
         // get the size of the problem
         dims=(hsize_t*)malloc(dim * sizeof (hsize_t));
         status = H5Sget_simple_extent_dims( dataspace_id , dims, 0);
+        if( status < 0 )
+          logger << "Warning : H5Sget_simple_extent_dims() failed." << std::endl;
         assert( status > -1 );
  
         UINT local_size=1;
@@ -1713,6 +1734,8 @@ namespace Dune {
   
         // Set up file access property list with parallel I/O access
         status=H5Pset_fapl_mpio(plist_id, communicator, mpiInfo);  //collcetive MPI!!! needs to be called on each processor of the communicator
+        if( status < 0 )
+          logger << "Warning : H5Pset_fapl_mpio() failed." << std::endl;
         assert(plist_id>-1);
    
         // Create a new file using default properties.
@@ -1880,6 +1903,8 @@ namespace Dune {
         herr_t status;             /* Generic return value */
         MPI_Info mpiInfo = MPI_INFO_NULL;
         status = H5Pset_fapl_mpio( access_pList, communicator, mpiInfo ); // Take care, this requires the MPI version of hdf5!
+        if( status < 0 )
+          logger << "Warning : H5Pset_fapl_mpio() failed." << std::endl;
         assert( status > -1 );
   
         // open the file for reading
@@ -1920,7 +1945,7 @@ namespace Dune {
           }
   
         // create the memory space, if something needes to be read on this processor
-        hid_t memspace_id;
+        hid_t memspace_id = -1; // just an initialization
         if(local_size!=0)
           memspace_id = H5Screate_simple (1, &local_size, NULL);
     
@@ -1940,13 +1965,14 @@ namespace Dune {
 
         // finally the reading from the file, only if something needes to be written
         if(local_size!=0){
-          status = H5Dread(                     dataset_id
-                                                , H5T_NATIVE_DOUBLE //image.DataType
-                                                , memspace_id
-                                                , dataspace_id // H5S_ALL // 
-                                                , xferPropList //H5P_DEFAULT // 
-                                                , &( local_data[0] )
-                                                );
+          status = H5Dread(
+                           dataset_id
+                           , H5T_NATIVE_DOUBLE //image.DataType
+                           , memspace_id
+                           , dataspace_id // H5S_ALL // 
+                           , xferPropList //H5P_DEFAULT // 
+                           , &( local_data[0] )
+                           );
           assert(status>-1);
         }
 
@@ -2005,6 +2031,8 @@ namespace Dune {
         herr_t status;             // Generic return value 
         MPI_Info mpiInfo = MPI_INFO_NULL;
         status = H5Pset_fapl_mpio( access_pList, communicator, mpiInfo ); // Take care, this requires the MPI version of hdf5!
+        if( status < 0 )
+          logger << "Warning : H5Pset_fapl_mpio() failed." << std::endl;
         assert( status > -1 );
   
         // open the file for reading
@@ -2181,7 +2209,10 @@ namespace Dune {
          * Set up file access property list with parallel I/O access
          */
         plist_id = H5Pcreate(H5P_FILE_ACCESS);
-        H5Pset_fapl_mpio(plist_id,gv.comm(),mpiInfo);
+        status = H5Pset_fapl_mpio(plist_id,gv.comm(),mpiInfo);
+        if( status < 0 )
+          logger << "Warning : H5Pset_fapl_mpio() failed." << std::endl;
+
 
         /*
          * Create a new file collectively and release property list identifier.
@@ -2442,7 +2473,9 @@ namespace Dune {
          * Set up file access property list with parallel I/O access
          */
         plist_id = H5Pcreate(H5P_FILE_ACCESS);
-        H5Pset_fapl_mpio(plist_id,gv.comm(),mpiInfo);
+        status = H5Pset_fapl_mpio(plist_id,gv.comm(),mpiInfo);
+        if( status < 0 )
+          logger << "Warning : H5Pset_fapl_mpio() failed." << std::endl;
 
         /* open the file collectively */
         file_id = H5Fopen( filename.c_str(), H5F_ACC_RDONLY, plist_id );

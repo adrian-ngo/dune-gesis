@@ -247,7 +247,7 @@ private:
                                  const Compare &compare)
   {
     //std::cout << "DEBUG: Generating reordered indices for codim = " << codim << std::endl;
-    typedef typename GridView::template Codim<0>::Geometry::GlobalCoordinate CoordType;
+    //typedef typename GridView::template Codim<0>::Geometry::GlobalCoordinate CoordType;
 
     typedef REAL PressureType;
     typedef typename std::pair<PressureType,IndexType> PositionIndex;

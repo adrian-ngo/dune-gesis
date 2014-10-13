@@ -159,7 +159,6 @@ namespace Dune {
          YFG,
          DIR,
          IDT
-         //, SDT
          > SensCl;
       
       //initalize the sensitivity class
@@ -222,8 +221,6 @@ namespace Dune {
        }
       */
 
-
-      typedef typename IDT::SDT SDT;
     
       //const FieldWrapperType log_sigma0_wrapper_world( inputdata, setupdata, log_electricalConductivity_world );    
       //const FieldWrapperType log_kappa_wrapper_world( inputdata, setupdata, log_kappafield_world );

@@ -1035,7 +1035,8 @@ namespace Dune {
         
         enum{ dim=GV_GW::dimension };
         Dune::Timer watch;
-        REAL time=0.0,max_time=0.0;
+        //REAL time=0.0;
+        //REAL max_time=0.0;
 
         std::vector<VCType_GW*> head_old(number_of_MPIPools);
         std::vector<VCType_CG*> soluteM0_old(number_of_MPIPools);
