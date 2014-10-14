@@ -109,7 +109,7 @@ namespace Dune {
       j( const typename Traits::IntersectionType& is
          , const typename Traits::IntersectionDomainType& x
          ) const {
-        typename Traits::RangeType xg = is.geometry().global(x);
+        //typename Traits::RangeType xg = is.geometry().global(x);
         return 0.0;
       }
 
@@ -117,7 +117,7 @@ namespace Dune {
       typename Traits::RangeFieldType
       c( const typename Traits::ElementType& e
          , const typename Traits::DomainType& x) const {
-        typename Traits::RangeType xg = e.geometry().global(x);
+        //typename Traits::RangeType xg = e.geometry().global(x);
         return 0.0; // no reaction term!
       }
 
@@ -125,7 +125,7 @@ namespace Dune {
       typename Traits::RangeFieldType
       f( const typename Traits::ElementType& e,
          const typename Traits::DomainType& x) const {
-        typename Traits::RangeType xg = e.geometry().global(x);
+        //typename Traits::RangeType xg = e.geometry().global(x);
         return 0.0;
       }
 

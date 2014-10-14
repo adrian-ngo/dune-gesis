@@ -41,3 +41,26 @@ add_dune_hdf5_flags(gesis2dFEM)
 add_dune_fftw3_flags(gesis2dFEM)
 add_dune_mpi_flags(gesis2dFEM)
 
+
+# 3D DG version for YASP:
+add_executable(gesis3dDG  geo_inversion_3d.cc)
+set_property(TARGET gesis3dDG APPEND PROPERTY COMPILE_DEFINITIONS "USE_YASP")
+target_link_libraries(gesis3dDG ${DUNE_LIBS})
+add_dune_superlu_flags(gesis3dDG)
+add_dune_boost_flags(gesis3dDG) 
+add_dune_hdf5_flags(gesis3dDG)
+add_dune_fftw3_flags(gesis3dDG)
+add_dune_mpi_flags(gesis3dDG)
+
+
+# 3D FEM version for YASP:
+add_executable(gesis3dFEM  geo_inversion_3d.cc)
+set_property(TARGET gesis3dFEM APPEND PROPERTY COMPILE_DEFINITIONS "USE_YASP")
+set_property(TARGET gesis3dFEM APPEND PROPERTY COMPILE_DEFINITIONS "USE_FEM")
+target_link_libraries(gesis3dFEM ${DUNE_LIBS})
+add_dune_superlu_flags(gesis3dFEM)
+add_dune_boost_flags(gesis3dFEM) 
+add_dune_hdf5_flags(gesis3dFEM)
+add_dune_fftw3_flags(gesis3dFEM)
+add_dune_mpi_flags(gesis3dFEM)
+

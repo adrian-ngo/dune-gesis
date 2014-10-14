@@ -458,12 +458,6 @@ namespace Dune {
 
 
 
-#ifdef USE_CUBE
-        const Dune::GeometryType::BasicType bt = Dune::GeometryType::cube;
-#else
-        const Dune::GeometryType::BasicType bt = Dune::GeometryType::simplex;
-#endif
-
         //pfem_cg    = Dune::make_shared<FEM_CG>(gv_tp);
 
         pool_Lambdas.resize(number_of_MPIPools);
@@ -642,6 +636,12 @@ namespace Dune {
 #ifdef USE_FEM
               pfem_ellip = Dune::make_shared<FEM_ELLIP>(gv_0);
 #else
+
+#ifdef USE_CUBE
+              const Dune::GeometryType::BasicType bt = Dune::GeometryType::cube;
+#else
+              const Dune::GeometryType::BasicType bt = Dune::GeometryType::simplex;
+#endif
               Dune::GeometryType gt = Dune::GeometryType(bt,dim);
               pfem_ellip = Dune::make_shared<FEM_ELLIP>(gt);
 #endif

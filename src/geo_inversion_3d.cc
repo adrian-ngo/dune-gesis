@@ -204,10 +204,9 @@ int main(int argc, char** argv) {
 
       if( !bContinue && helper.rank()==0){
 
-        int tmp;
-        std::string cmdline;
 
         /*
+        std::string cmdline;
         //delete buffer BUT keep the needed stuff if using_existing_Yold
         cmdline="test -f " + dir.Y_estimated_h5file;
         if(! system(cmdline.c_str())){

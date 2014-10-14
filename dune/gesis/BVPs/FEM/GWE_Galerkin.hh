@@ -176,7 +176,7 @@ public:
     Dune::Amg::Parameters amg_params;
     amg_params.setAccumulate( Dune::Amg::atOnceAccu );
     amg_params.setDebugLevel( ls_verbosity );
-    linearsolver.setparams(amg_params);
+    linearsolver.setParameters( amg_params );
     if( processor_rank==0 && inputdata.verbosity>=VERBOSITY_EQ_DETAILS )
       std::cout << "=== FEM: AMG with atOnceAccu" << std::endl;
 #endif

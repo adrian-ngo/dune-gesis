@@ -629,7 +629,7 @@ namespace Dune {
         // source term is some pumping source specified in the InputFile-XML (this case is not used here so far)
         //
 
-        // TODO: Adding Point-sources only! Check with DG implementation!
+
         if( sourceterm.source_nature == POINT_SOURCE
             ||
             sourceterm.source_nature == SOLUTE_PUMPING_SOURCES
@@ -657,21 +657,11 @@ namespace Dune {
         if( sourceterm.source_nature == FUNCTIONAL_SOURCE ||
             sourceterm.source_nature == GEP_FUNCTIONAL_SOURCE )
           {
-            const int dimw = EG::Geometry::dimensionworld;
             Dune::GeometryType gt = eg.geometry().type();
             
             // get the local meshsize h:
             RF meshsize = sqrt( eg.geometry().volume() );
             
-            //
-            // TODO: Adding Point-sources only! Check with DG implementation!
-            //if( sourceterm.source_nature == FUNCTIONAL_SOURCE ){
-            //  std::vector<RangeType> shapefunctions( lfsv.size() );
-            //  sourceterm.evaluate_residual_on_element( eg.entity(),
-            //                                           lfsv,
-            //                                           shapefunctions,
-            //                                           r );
-            //}
 
             if(flag_source==0){
               //logger<<"TP lambda_volume: "<<std::endl;
@@ -771,25 +761,16 @@ namespace Dune {
 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
 		typedef typename LFSU::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
-
-
-        //		typedef typename LFSU::Traits::GridFunctionSpaceType::Traits::BackendType B;
     
 
         // dimensions
         const int dim = IG::dimension;
-        const int dimw = IG::dimensionworld;
 
         Dune::GeometryType gtface = ig.geometryInInside().type();
-
-        //Dune::FieldVector<DF,dim-1> facecenterlocal = Dune::GenericReferenceElements<DF,dim-1>::general(gtface).position(0,0);
-        //Dune::FieldVector<DF,dim> facecenterinelement = ig.geometryInInside().global( facecenterlocal );
 
         typedef typename IG::EntityPointer CellEntityPointer;
         const CellEntityPointer eg = ig.inside();
 
-        // evaluate velocity
-        //typename TP::Traits::RangeType beta( tp.velocity( *eg, facecenterinelement ) );
 
         const int qorder = 2 * lfsu_s.finiteElement().localBasis().order();
         // select quadrature rule
@@ -857,7 +838,6 @@ namespace Dune {
 
         // dimensions
         const int dim = IG::dimension;
-        //const int dimw = IG::dimensionworld;
 
         const int qorder = 2 * lfsv.finiteElement().localBasis().order();
         // select quadrature rule
@@ -921,7 +901,6 @@ namespace Dune {
 
         // dimensions
         const unsigned int dim = EG::Geometry::dimension;
-        const unsigned int dimw = EG::Geometry::dimensionworld;
 
         Dune::GeometryType gt = eg.geometry().type();
 
@@ -939,12 +918,6 @@ namespace Dune {
           {
             // evaluate velocity at it->position(), because this function expects local coordinates!
             typename TP::Traits::RangeType beta( tp.velocity( eg.entity(), it->position(), equationMode ) );
-
-            // depth is needed to find the porosity of the right zone!
-            Dune::FieldVector<DF,dim> qPoint_global = eg.geometry().global( it->position() );
-            CTYPE depth = qPoint_global[dim-1];
-
-
 
             // the SDFEM delta:
             typename TP::Traits::RangeFieldType deltaSD
@@ -995,29 +968,6 @@ namespace Dune {
 				}
 
           } // loop over quadrature points
-
-
-
-        // Ask Ronnie: When will we need this point-source?
-        /*
-        if( equationMode == EQ::forward && 
-            ( sourceterm.source_nature == SOLUTE_PUMPING_SOURCES ||
-              sourceterm.source_nature == FUNCTIONAL_SOURCE ) 
-            ) {
-
-          UINT nWells = setupdata.wdlist.total;
-         
-          for( UINT iWell=0; iWell<nWells; iWell++ ) {
-            addPointSourceToJacobianVolumeMatrix(
-                                                 iWell, 
-                                                 eg, 
-                                                 lfsu,
-                                                 x, 
-                                                 mat
-                                                 );
-          }
-        }
-        */
           
         
         // Adding well contribution to the stiffness matrix:
@@ -1055,7 +1005,6 @@ namespace Dune {
 
         // dimensions
         const unsigned int dim = IG::dimension;
-        const unsigned int dimw = IG::dimensionworld;
 
         typedef typename IG::EntityPointer CellEntityPointer;
         const CellEntityPointer eg = ig.inside();

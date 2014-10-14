@@ -685,14 +685,6 @@ namespace Dune {
       //
       //**************************************************************
 
-#ifdef USE_CUBE
-      const Dune::GeometryType::BasicType bt = Dune::GeometryType::cube;
-#else
-      const Dune::GeometryType::BasicType bt = Dune::GeometryType::simplex;
-#endif
-
-      Dune::GeometryType gt = Dune::GeometryType(bt,dim);
-
 #ifdef USE_FEM
 
 
@@ -711,7 +703,13 @@ namespace Dune {
 
 #else
 
+#ifdef USE_CUBE
+      const Dune::GeometryType::BasicType bt = Dune::GeometryType::cube;
+#else
+      const Dune::GeometryType::BasicType bt = Dune::GeometryType::simplex;
+#endif
       // 1.) Groundwater Equation using CCFV
+      Dune::GeometryType gt = Dune::GeometryType(bt,dim);
       FEM_ELLIP fem_ellip(gt);
       logger << "FEM: Using P0FEM for the elliptic PDE" << std::endl;
       FEM_HYPER fem_hyper;
