@@ -6,7 +6,9 @@ dnl -*- autoconf -*-
 # Additional checks needed to build dune-gesis
 # This macro should be invoked by every module which depends on dune-gesis, as
 # well as by dune-gesis itself
-AC_DEFUN([DUNE_GESIS_CHECKS])
+AC_DEFUN([DUNE_GESIS_CHECKS],
+  [AC_REQUIRE([DUNE_PATH_HDF5])]
+)
 
 # Additional checks needed to find dune-gesis
 # This macro should be invoked by every module which depends on dune-gesis, but

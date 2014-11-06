@@ -1,4 +1,4 @@
-M4FILES = dune-gesis.m4
+M4FILES = dune-gesis.m4 hdf5.m4
 
 aclocaldir = $(datadir)/dune/aclocal
 aclocal_DATA = $(M4FILES)
