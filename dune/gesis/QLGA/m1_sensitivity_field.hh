@@ -32,7 +32,7 @@ namespace Dune {
 
       Dune::Timer watch;
 
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
       typedef typename GV_GW::IndexSet IdSet;
       typedef typename IdSet::IndexType Idx;
 #else
@@ -58,7 +58,7 @@ namespace Dune {
       for( ElementIterator e0it=gv_0.template begin<0,Dune::All_Partition>()
              ; e0it!=gv_0.template end<0,Dune::All_Partition>()
              ; ++e0it) {
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
         Idx idx = gv_0.indexSet().index(*e0it);
 #else
         Idx idx = gv_0.grid().localIdSet().id(*e0it);
@@ -71,7 +71,7 @@ namespace Dune {
              ; eit!=gv_gw.template end<0,Dune::All_Partition>()
              ; ++eit) {
     
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
         Idx idx = gv_gw.indexSet().index(*eit);
 #else
         Idx idx = gv_gw.grid().localIdSet().id(*eit);
@@ -83,7 +83,7 @@ namespace Dune {
           ElementPointer pAncestor = eit->father();
           while( pAncestor->level() > 0 )
             pAncestor = (*pAncestor).father();
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
           idx = gv_0.indexSet().index(*pAncestor);
 #else
           idx = gv_0.grid().localIdSet().id(*pAncestor);
@@ -278,7 +278,7 @@ namespace Dune {
              ; e0it!=gv_0.template end<0,Dune::All_Partition>()
              ; ++e0it) {
 
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
         Idx idx = gv_0.indexSet().index(*e0it);
 #else
         Idx idx = gv_0.grid().localIdSet().id(*e0it);

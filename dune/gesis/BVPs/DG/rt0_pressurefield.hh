@@ -32,7 +32,7 @@ public:
   // for an element index to be locally unique.
   //
 
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
   typedef typename GV::IndexSet IdSet;
   typedef typename IdSet::IndexType Idx;
 #else
@@ -70,7 +70,7 @@ public:
   template<typename MessageBuffer, typename EntityType>
   void gather( MessageBuffer& buff, const EntityType& e) const{
 
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
     Idx idx = gv.indexSet().index(e);
 #else
     Idx idx = gv.grid().localIdSet().id(e);
@@ -88,7 +88,7 @@ public:
   template<typename MessageBuffer, typename EntityType>
   void scatter( MessageBuffer& buff, const EntityType& e, size_t n){
 
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
     Idx idx = gv.indexSet().index(e);
 #else
     Idx idx = gv.grid().localIdSet().id(e);
@@ -114,7 +114,7 @@ class RT0_PressureField {
   typedef typename GV::Grid GRID;
   typedef typename GV::ctype DF;
 
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
   typedef typename GV::IndexSet IdSet;
   typedef typename IdSet::IndexType Idx;
 #else
@@ -155,7 +155,7 @@ class RT0_PressureField {
                          const Vector<REAL>& coefficients ){
 
 
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
     Idx idx = gv.indexSet().index(e);
 #else
     Idx idx = gv.grid().localIdSet().id(e);
@@ -319,7 +319,7 @@ class RT0_PressureField {
             darcyflux_dgf.evaluate( *eit, faceElementLocal, flux );
             //std::cout << "DEBUG: flux = " << flux << std::endl;
 
-            // This is maybe not such a bad idea:
+            // This maybe not such a bad idea:
             for(int i=0;i<dim;i++)
               normal[i] *= normal[i];
             //std::cout << "DEBUG: normalized normal = " << normal << std::endl;
@@ -402,23 +402,24 @@ class RT0_PressureField {
     gv.communicate( datahandle, Dune::InteriorBorder_All_Interface, Dune::ForwardCommunication);
     logger << "RT0_pf: gv.communicate() done." << std::endl;
 
-    elapsed_time = watch.elapsed();
-    logger << "RT0_pf: time past = " << elapsed_time << std::endl;
-    if(gv.comm().rank()==0)
-      std::cout << "=== RT0_pf: reconstruction (and communication) took " 
-                << elapsed_time << " sec." << std::endl;
 
+    std::stringstream jobtitle;
+    jobtitle << "Reconstructing Q2 potential field from RT0 flux on (locally refined) grid.";
+    General::log_elapsed_time( watch.elapsed(),
+                               gv.comm(),
+                               General::verbosity,
+                               "RGV",
+                               jobtitle.str() );
   }
 
 
 
-  void evaluate(
-                const ElementType& e, 
-                const Dune::FieldVector<REAL,dim>& x, // element-local coordinate
-                Dune::FieldVector<REAL,1>& y
+  void evaluate( const ElementType& e, 
+                 const Dune::FieldVector<REAL,dim>& x, // element-local coordinate
+                 Dune::FieldVector<REAL,1>& y
                  ) const {
 
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
     Idx idx = gv.indexSet().index(e);
 #else
     Idx idx = gv.grid().localIdSet().id(e);
@@ -579,29 +580,29 @@ face6: x6,y6,z6 with normal (0,0,-1)
 	(a*x1 + b) = - qx(face1) / K1
 
 
-2.) -K2 (c*y1 + d) = qy (face2)  
+2.) -K2 (c*y1 + d) = qy (face1)  
 	=>
-	(c*y1 + d) = - qy(face2) / K2
+	(c*y1 + d) = - qy(face1) / K2
 
 
-3.) -K3 (e*z1 + f) = qz (face3)  
+3.) -K3 (e*z1 + f) = qz (face1)  
 	=>
-	(e*z1 + f) = - qz(face3) / K3
+	(e*z1 + f) = - qz(face1) / K3
 
 
-4.) -K4 (a*x2 + b) = qx (face4)  
+4.) -K4 (a*x2 + b) = qx (face2)  
 	=>
-	(a*x2 + b) = - qx(face4) / K4
+	(a*x2 + b) = - qx(face2) / K4
 
 
-5.) -K5 (c*y2 + d) = qy (face5)  
+5.) -K5 (c*y2 + d) = qy (face2)  
 	=>
-	(c*y2 + d) = - qy(face5) / K5
+	(c*y2 + d) = - qy(face2) / K5
 
 
-6.) -K6 (e*z2 + f) = qz (face6)  
+6.) -K6 (e*z2 + f) = qz (face2)  
 	=>
-	(e*z2 + f) = - qz(face6) / K6
+	(e*z2 + f) = - qz(face2) / K6
 
 
 7.) phi(x0,y0,z0) = a*x0²+b*x0+c*y0²+d*y0+e*z0²+f*z0+g = h(x0,y0,z0)

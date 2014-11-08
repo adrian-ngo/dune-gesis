@@ -32,7 +32,7 @@ namespace Dune{
 
         Dune::Timer watch;
 
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
         typedef typename GV::IndexSet IdSet;
         typedef typename IdSet::IndexType Idx;
 #else
@@ -56,7 +56,7 @@ namespace Dune{
         for( ElementIterator eit=gv.template begin<0,Dune::All_Partition>()
                ; eit != gv.template end<0,Dune::All_Partition>(); ++eit) {
 
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
           Idx idx = gv.indexSet().index(*eit);
 #else
           Idx idx = gv.grid().localIdSet().id(*eit);
@@ -118,7 +118,7 @@ namespace Dune{
                ; eit!=gv.template end<0,Dune::All_Partition>()
                ; ++eit) {
 
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
           Idx idx = gv.indexSet().index(*eit);
 #else
           Idx idx = gv.grid().localIdSet().id(*eit);

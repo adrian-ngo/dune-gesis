@@ -30,7 +30,7 @@ public:
   // will remain on the partition and won't get changed indices.
   // Here we can use gv.indexSet().index(e).
   // 
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
   typedef typename GV::IndexSet IdSet;
   typedef typename IdSet::IndexType Idx;
 #else
@@ -63,20 +63,16 @@ public:
   template<typename MessageBuffer, typename EntityType>
   void gather( MessageBuffer& buff, const EntityType& e) const{
 
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
     Idx idx = gv.indexSet().index(e);
 #else
     Idx idx = gv.grid().localIdSet().id(e);
 #endif
 
 
-#ifdef USE_YASP
     typename ContainerType::const_iterator it =
       data_container.find( idx );
-#else
-    typename ContainerType::const_iterator it =
-      data_container.find( idx );
-#endif
+
     if(it != data_container.end())
       buff.write(it->second);
   }
@@ -85,18 +81,14 @@ public:
   template<typename MessageBuffer, typename EntityType>
   void scatter( MessageBuffer& buff, const EntityType& e, size_t n){
 
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
     Idx idx = gv.indexSet().index(e);
 #else
     Idx idx = gv.grid().localIdSet().id(e);
 #endif
     REAL x;
     buff.read(x);
-#ifdef USE_YASP
     data_container[ idx ] = x;
-#else
-    data_container[ idx ] = x;
-#endif
   }
 
 };

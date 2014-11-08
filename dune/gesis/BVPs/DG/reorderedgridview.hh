@@ -63,7 +63,7 @@ void outputGridviewIndexToDGF( const GV& gv,
 
 
   for (unsigned int i=0;i<u0.flatsize();i++) {
-    u0.base()[i] = 1.0*i/(u0.flatsize()-1);
+    u0.base()[i] = REAL(i)/(u0.flatsize()-1);
     // plot the processor rank for debugging purposes:
     // u0[i] = gv.comm().rank();
   }
@@ -251,7 +251,8 @@ private:
 
     typedef REAL PressureType;
     typedef typename std::pair<PressureType,IndexType> PositionIndex;
-    typedef typename std::list<PositionIndex> IndexList;
+    //typedef typename std::list<PositionIndex> IndexList;
+    typedef typename std::vector<PositionIndex> IndexList;
 
     // Loop over all entities it and generate a list of pairs 
     // {v(it),index(it)} where v(it) is the center of the entity
@@ -300,7 +301,9 @@ private:
     PositionIndexCompare<PressureType,Compare> comparePairs(compare);
 
     // Sort list according to first entry in each pair
-    indexlist.sort(comparePairs);
+    // indexlist.sort(comparePairs);
+    std::sort( indexlist.begin(), indexlist.end(), comparePairs );
+
     UINT indexListSize = indexlist.size();
     reorderedindices.resize( indexListSize );
 

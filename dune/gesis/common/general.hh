@@ -101,6 +101,7 @@ namespace Dune {
 
       template<typename BVEC, typename VEC>
       inline static void copy_to_std( const BVEC& backend_vector, VEC& standard_vector ){
+        standard_vector.resize(0);
         for( auto it = backend_vector.begin(); it!=backend_vector.end(); ++it )
           standard_vector.push_back(*it);
       }
@@ -970,13 +971,19 @@ namespace Dune {
                                    UType & u1, 
                                    UType & u2 
                                    ){
-  
+        /*
         for(std::size_t j=0; j<gfs.globalSize(); j++){
-          u1[j] = xpower[powergfs.subMap(0,j)];
+          u1.base()[j] = xpower.base()[j];
         }
   
         for(std::size_t j=0; j<gfs.globalSize(); j++){
-          u2[j] = xpower[powergfs.subMap(1,j)];
+          u2.base()[j] = xpower.base()[gfs.size()+j];
+        }
+        */
+
+        for(std::size_t j=0; j<gfs.globalSize(); j++){
+          u1.base()[j] = xpower.base()[powergfs.ordering().blockOffset(0)+j];
+          u2.base()[j] = xpower.base()[powergfs.ordering().blockOffset(1)+j];
         }
 
       }

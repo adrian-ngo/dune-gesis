@@ -26,7 +26,7 @@ private:
   typedef typename GFS_GW::Traits::GridViewType GV_GW;
   typedef typename GFS_TP::Traits::GridViewType GV_TP;
 
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
   typedef typename GV_GW::IndexSet IdSet;
   typedef typename IdSet::IndexType Idx;
 #else
@@ -91,7 +91,7 @@ public:
            ; eit!=gv_gw.template end<0,Dune::All_Partition>()
            ; ++eit) {
 
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
       Idx idx = gv_gw.indexSet().index(*eit);
 #else
       Idx idx = gv_gw.grid().localIdSet().id(*eit);
@@ -187,7 +187,7 @@ public:
            ; eit!=gv_gw.template end<0,Dune::All_Partition>()
            ; ++eit) {
 
-#ifdef USE_YASP
+#ifndef USE_ALUGRID
       Idx idx = gv_gw.indexSet().index(*eit);
 #else
       Idx idx = gv_gw.grid().localIdSet().id(*eit);

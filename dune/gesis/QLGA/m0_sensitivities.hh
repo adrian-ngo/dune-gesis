@@ -316,7 +316,7 @@ namespace Dune {
                * solve for m0 adjoint
                */
               VCType_TP vc_m0adj( gfs_tp, 0.0 );
-#ifdef ADJ_SMEARING_OFF // TODO: Ask Ronnie!
+#ifdef ADJ_SMEARING_OFF 
               if(SV_procedure[0] 
 #ifdef DIMENSION3
                  &&
@@ -359,7 +359,7 @@ namespace Dune {
                      << std::endl;
               */
 
-              // TODO: maybe, we must add option to set setSV here:
+              // Maybe, we must add option to set setSV here:
               tpe_m0_adj.solve_adjoint( measure_location, vc_m0adj );
 
               if( gv_gw.comm().rank()==0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY )
@@ -373,7 +373,7 @@ namespace Dune {
 
               //if(CommunicatorPool[meas_point%nComm].get_size()>1)
               //  MPI_Barrier(CommunicatorPool[meas_point%nComm].get_comm());
-#ifdef ADJ_SMEARING_OFF // TODO: Ask Ronnie!
+#ifdef ADJ_SMEARING_OFF
               if(SV_procedure[0] 
 #ifdef DIMENSION3
                  &&
@@ -679,7 +679,6 @@ namespace Dune {
 
             // Adrian: switch off SV_loop_flag for the time being
             SV_loop_flag = 0;
-            // TODO: Ask Ronnie about SV_loop_flag 
 
           }//END: while(SV_loop_flag)
         }//END: if(CommunicatorPool[meas_point%nComm].I_am_in())
