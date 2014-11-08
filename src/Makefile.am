@@ -1,10 +1,6 @@
 #
 # Some variables pointing to the locations of external libs:
 #
-# Paths to HFD5
-HDF5_LIBS = -L$(HOME)/Software/hdf5-1.8.13/lib -lhdf5
-HDF5_INCL = -I$(HOME)/Software/hdf5-1.8.13/include -DH5_USE_16_API
-#
 # Paths to FFTW3
 FFTW3_LIBS = -L$(HOME)/Software/fftw-3.3.4/lib -lfftw3_mpi -lfftw3
 FFTW3_INCL = -I$(HOME)/Software/fftw-3.3.4/include
@@ -20,13 +16,16 @@ BOOST_INCL = -I$(HOME)/Software/boost_1_47_0
 ##############################################################
 SUBDIRS =
 
-noinst_PROGRAMS = dune_gesis gesis2dDG gesis3dDG gesis2dFEM gesis3dFEM 
+noinst_PROGRAMS = \
+	gesis2dDG gesis2dFEM \
+	gesis3dDG  gesis3dFEM \
+	dune_gesis
 
 # 2D DG version for YASP:
 gesis2dDG_SOURCES = geo_inversion_2d.cc
 
 gesis2dDG_CPPFLAGS = $(AM_CPPFLAGS) -DUSE_YASP \
-	$(HDF5_INCL) \
+	$(HDF5_CPPFLAGS) -DH5_USE_16_API \
 	$(FFTW3_INCL) \
 	$(BOOST_INCL) \
 	$(PARMETIS_CPPFLAGS) \
@@ -52,7 +51,7 @@ gesis2dDG_LDFLAGS = $(AM_LDFLAGS) \
 gesis3dDG_SOURCES = geo_inversion_3d.cc
 
 gesis3dDG_CPPFLAGS = $(AM_CPPFLAGS) -DUSE_YASP \
-	$(HDF5_INCL) \
+	$(HDF5_CPPFLAGS) -DH5_USE_16_API \
 	$(FFTW3_INCL) \
 	$(BOOST_INCL) \
 	$(PARMETIS_CPPFLAGS) \
@@ -77,7 +76,7 @@ gesis3dDG_LDFLAGS = $(AM_LDFLAGS) \
 gesis2dFEM_SOURCES = geo_inversion_2d.cc
 
 gesis2dFEM_CPPFLAGS = $(AM_CPPFLAGS) -DUSE_YASP -DUSE_FEM \
-	$(HDF5_INCL) \
+	$(HDF5_CPPFLAGS) -DH5_USE_16_API \
 	$(FFTW3_INCL) \
 	$(BOOST_INCL) \
 	$(PARMETIS_CPPFLAGS) \
@@ -102,7 +101,7 @@ gesis2dFEM_LDFLAGS = $(AM_LDFLAGS) \
 gesis3dFEM_SOURCES = geo_inversion_3d.cc
 
 gesis3dFEM_CPPFLAGS = $(AM_CPPFLAGS) -DUSE_YASP -DUSE_FEM \
-	$(HDF5_INCL) \
+	$(HDF5_CPPFLAGS) -DH5_USE_16_API \
 	$(FFTW3_INCL) \
 	$(BOOST_INCL) \
 	$(PARMETIS_CPPFLAGS) \
@@ -170,3 +169,6 @@ EXTRA_DIST = CMakeLists.txt
 
 include $(top_srcdir)/am/global-rules
 
+all: all-recursive
+clear:
+	-rm -v *.vtu *.log *.h5 *.xmf *.pvd

@@ -9,6 +9,10 @@
 
 extern CLogfile logger;
 
+
+namespace Dune{
+  namespace Gesis{
+
 template<
   typename GV,
   typename ContainerType
@@ -546,6 +550,9 @@ class RT0_PressureField {
 
 
 }; // class RT0_PressureField
+
+  }
+}
 
 #endif // DUNE_GESIS_RT0_PRESSUREFIELD_HH
 
