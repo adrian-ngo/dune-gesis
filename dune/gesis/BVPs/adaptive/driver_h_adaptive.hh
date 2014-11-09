@@ -415,7 +415,8 @@ void adaptiveDrive_h_rgv( GRID& grid,
                 << " All DOFs = " << allDOFs
                 << " minimum = " << u_minimum
                 << " maximum = " << u_maximum
-                << " " << tpe_m0.show_ls_result()
+                << std::endl;
+      std::cout << tpe_m0.show_ls_result()
                 << std::endl;
     }
 
