@@ -47,7 +47,7 @@
   <!-- ***************************************** -->
   <domain_data>
     <extensions>51.2   51.2   5</extensions>
-    <virtual_nCells>64  64  16</virtual_nCells>
+    <virtual_nCells>128  128  16</virtual_nCells>
     <lineplot>
       <startpoint>0.0  0.0  0.0</startpoint>
       <endpoint>10.0  10.0  10.0</endpoint>
