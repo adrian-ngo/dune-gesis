@@ -347,7 +347,7 @@ namespace Dune {
           REAL baselevel_factor = std::pow(2.0,baselevel);
           REAL level_diff = eg.entity().level() - baselevel;
 
-          //REAL refinement_factor_dim = std::pow(2.0,level_diff*(dim-1)); // dim is important here: one level =  four cells in 2D, or 8 cells in 3D
+          REAL refinement_factor_dim = std::pow(2.0,level_diff*(dim-1)); // dim is important here: one level =  four cells in 2D, or 8 cells in 3D
           REAL refinement_factor = std::pow(2.0,level_diff);
           REAL dz = inputdata.domain_data.baselevel_gridsizes[dim-1] / refinement_factor;
           //Dune::FieldVector<REAL,dim> cellcenter = eg.geometry().center();
@@ -383,10 +383,9 @@ namespace Dune {
 
             //fval *= baselevel_factor; // works for outflow well with tracer coming from Dirichlet BC
             if( eg.entity().level() > (int)baselevel ){
-              // fval *= (refinement_factor_dim / baselevel_factor);
-              fval /= refinement_factor / baselevel_factor;  // for refinement of gv_tp
-              //if( dim>2 )
-              //fval /= refinement_factor / baselevel_factor;  // 3D: 1 block refined gives 4 blocks in the horizontal
+
+              fval /= (refinement_factor / baselevel_factor);  // for refinement of gv_tp
+
             }
             //if( eg.entity().level() > baselevel )
             //fval *= (refinement_factor_dim / baselevel_factor);  // for refinement of gv_tp
@@ -1405,7 +1404,7 @@ namespace Dune {
           REAL baselevel_factor = std::pow(2.0,baselevel ); // good without *dim
           REAL level_diff = eg.entity().level() - baselevel;
 
-          //REAL refinement_factor_dim = std::pow(2.0,level_diff*(dim-1)); // dim is important here: one level =  four cells in 2D, or 8 cells in 3D
+          REAL refinement_factor_dim = std::pow(2.0,level_diff*(dim-1)); // dim is important here: one level =  four cells in 2D, or 8 cells in 3D
           REAL refinement_factor = std::pow(2.0,level_diff); 
           const REAL dz = inputdata.domain_data.baselevel_gridsizes[dim-1] / refinement_factor;
 
@@ -1453,11 +1452,9 @@ namespace Dune {
 
             //fval *= baselevel_factor;
             if( eg.entity().level() > (int)baselevel ){
-              //fval /= (refinement_factor_dim / baselevel_factor);
 
-              fval /= refinement_factor / baselevel_factor;  // for refinement of gv_tp
-              //if( dim>2 )
-              //fval /= refinement_factor / baselevel_factor;  // 3D: 1 block refined gives 4 blocks in the horizontal
+              fval /= (refinement_factor_dim / baselevel_factor); // for refinement of gv_tp
+
             }
 
             for (size_type i=0; i<lfsv.size(); i++){
