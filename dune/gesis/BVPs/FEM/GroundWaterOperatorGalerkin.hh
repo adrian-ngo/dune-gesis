@@ -250,7 +250,7 @@ namespace Dune {
         
           // evaluate Y-field tensor at cell center, assume it is constant over elements
           Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
-          typename GWP::Traits::DiffusionTensorType tensor(gwp.DiffusionTensor(eg.entity(),localcenter));
+          // typename GWP::Traits::DiffusionTensorType tensor(gwp.DiffusionTensor(eg.entity(),localcenter));
 
           // loop over quadrature points
           for( typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin()

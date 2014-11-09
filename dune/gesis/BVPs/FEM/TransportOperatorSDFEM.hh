@@ -901,7 +901,7 @@ namespace Dune {
         Dune::GeometryType gt = eg.geometry().type();
 
         // get the local meshsize h:
-        RF meshsize = sqrt( eg.geometry().volume() );
+        // RF meshsize = sqrt( eg.geometry().volume() );
 
         const int qorder = 2 * lfsu.finiteElement().localBasis().order();
         // select quadrature rule
