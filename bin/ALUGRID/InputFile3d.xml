@@ -1,0 +1,2375 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+<?xml-stylesheet href="InputFile.xsl" type="text/xsl"?>
+-->
+<!--
+#define VERBOSITY_SILENT          0
+#define VERBOSITY_INVERSION       1
+#define VERBOSITY_TIMER_SUMMARY   2
+#define VERBOSITY_TIMER_DETAILS   3
+#define VERBOSITY_EQ_SUMMARY      4
+#define VERBOSITY_EQ_DETAILS      5
+#define VERBOSITY_LS_SUMMARY      6
+#define VERBOSITY_LS_DETAILS      7
+#define VERBOSITY_L_CONTRIB       8
+#define VERBOSITY_DEBUG_LEVEL     9
+-->
+<inputfile verbosity="7">
+  <!-- ***************************************** -->
+  <!-- General switches: -->
+  <!-- ***************************************** -->
+  <problem_types
+      new_YField="no"
+      new_Eigenvalues="no"
+      synthetic="yes"
+      head_forward="off"
+      using_existing_Yold="yes"
+      refine_estimate="0"
+      transport_forward="off"
+      heat_forward="off"
+      moments_geoeletric_potential_forward="off"
+      lnK_inversion="off"
+      head_inversion="on"
+      transport_inversion_m0="on"
+      transport_inversion_m1="on"
+      heat_mean_arrival_time_inversion="off"
+      moments_geoeletric_potential_inversion="off"
+      conditional_realization="off"
+      estimation_variance_only="off"
+      generate_measurement_data="on"
+      />
+  <!-- ***************************************** -->
+  <!-- Domain Data: -->
+  <!-- 
+       <virtual_nCells>512  512  100</virtual_nCells>
+       <virtual_nCells>256  256  50</virtual_nCells>
+  -->
+  <!-- ***************************************** -->
+  <domain_data>
+    <extensions>51.2   51.2   5</extensions>
+    <virtual_nCells>32  32  16</virtual_nCells>
+    <lineplot>
+      <startpoint>0.0  0.0  0.0</startpoint>
+      <endpoint>10.0  10.0  10.0</endpoint>
+    </lineplot>
+    <chunks>16 16 16</chunks>
+    <partitions> 4 4 1</partitions>
+    <yasp_grid baselevel="0" maxlevel="0" overlap="1"></yasp_grid>
+    <alu_grid
+        globalrefine="0"
+        baselevel="0"
+        maxsteps="7"
+        refinementfraction="0.95"
+        coarseningfraction="0.05"
+        TOL="1E-12"
+        strategy="1"/>
+  </domain_data>
+  <!-- *********************************************** -->
+  <!-- Geo-statistical properties of the random field  -->
+  <!-- *********************************************** -->
+  <yfield_properties vertical_zones="1" well_type="cell" random_seed="9128">
+    <zone 
+        model="spherical"
+        bottom="8" 
+        variance="1.0" 
+        beta="-6.0" 
+        qbb_y="0.1" 
+        embedding_factor="2.0"
+        porosity="0.3"
+        rho="2560"
+        heat_capactity="800"
+        thermal_conductivity="1.5"
+        kappa="0.045"
+        sigma0="0.03">
+      <correlationlengths>1   1   0.5</correlationlengths>
+    </zone>
+  </yfield_properties>
+
+  <!-- ***************************************** -->
+  <!-- Transport Problem: -->
+  <!-- ***************************************** -->
+  <transport_parameters
+      a_l="1E-3"
+      a_t="1E-4"
+      D_m="1E-9"
+      deltaSD_factor="1.0"
+      refined_diffusion="0.0"
+      tolerance="1.0"
+      l2_diffusion="1.0"
+      l2_diffusion_adjoint="1.0"
+      dg_method="SIPG"
+      dg_weights="on"
+      dg_gamma="2.0"
+      istl_max_iter="1000"
+      istl_reduction="1e-8"
+      istl_atOnceAccu="on"
+      point_smearing="2.125"
+      />
+
+  <!-- ***************************************** -->
+  <!-- HEAT Transport Problem: -->
+  <!-- ***************************************** -->
+  <heat_transport_parameters
+      a_l="1.0"
+      a_t="0.1"
+      rho_water="1000"
+      thermal_conductivity_water="0.58"
+      heat_capacity_water="4190"
+      deltaSD_factor="1"
+      />
+
+  <!-- -->
+  <!-- -->
+  <!-- ***************************************** -->
+  <!-- Inverse Problem: -->
+  <!-- ***************************************** -->
+  <!-- -->
+  <!-- -->
+  <!-- -->
+  <inversion_parameters
+      L_prior="on"
+      max_iter="2"
+      lim_stepsize="0.75"
+      weighting_lim="1E-3"
+      dY_lim="0.01"
+      dL_lim_fac="0.02"
+      L_accept_confidence_interval="0.95"
+      histogram_bins="25"
+      disturbance="0.05"
+      m1relerror="0.005"
+      />
+  <!-- -->
+  <!-- -->
+  <!-- ***************************************** -->
+  <!-- Parallel calculations fine tuning parameters: -->
+  <!-- ***************************************** -->
+  <!-- -->
+  <!-- -->
+  <parallel_fine_tuning
+      maxNComm="1"
+      JQJ_max="4096"
+      JQJ_slices="1"
+      />
+  <!-- -->
+  <!-- -->
+  <!-- ***************************************** -->
+  <!-- Conditional realizations(CR) parameters : -->
+  <!-- ***************************************** -->
+  <CR_parameters
+      total="3"
+      start_counting="1"
+      max_iterations="2"
+      />
+  <!-- ***************************************** -->
+  <!-- Setups for the calculations:              -->
+  <!-- ***************************************** -->
+  <Setups total_setups="1">
+    <!-- -->
+    <!-- -->
+    <!-- ***************************************** -->
+    <!-- Setup #0: -->
+    <!-- ***************************************** -->
+    <Setup>
+      <!-- ***************************************** -->
+      <!-- Groundwater Flow BCs: -->
+      <!-- ***************************************** -->
+      <flow_equation recycle_matrix_hierarchy="yes">
+        <boundary orientation="west" bctype="1"> 
+          <stripe value="100.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="east" bctype="1">
+          <stripe value="99.90" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="bottom" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="top" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+      </flow_equation>
+      <!-- ***************************************** -->
+      <!-- Concentration BCs: -->
+      <!-- ***************************************** -->
+      <transport_equation recycle_matrix_hierarchy="no" injection_time="100">
+        <boundary orientation="west" bctype="1">
+          <stripe value="0.0" regularization_factor="0.0" regularization_type="dynamic">
+            <startpoint>20   3</startpoint>
+            <endpoint>30     7</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="east" bctype="-1">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="bottom" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="top" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+      </transport_equation>
+
+      <!-- ***************************************** -->
+      <!-- Heat BCs: -->
+      <!-- ***************************************** -->
+      <heat_transport_equation recycle_matrix_hierarchy="no" injection_time="100">
+        <boundary orientation="west" bctype="1">
+          <stripe value="0" regularization_factor="2.0" regularization_type="dynamic">
+            <startpoint>20   4</startpoint>
+            <endpoint>30     6</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="east" bctype="-1">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="bottom" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="top" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+      </heat_transport_equation>
+
+      <!-- ***************************************** -->
+      <!-- Geoelectrical Potential BCs: -->
+      <!-- ***************************************** -->
+      <geoelectrical_potential_equation recycle_matrix_hierarchy="no">
+        <boundary orientation="west" bctype="1">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="east" bctype="1">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="bottom" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="top" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+      </geoelectrical_potential_equation>
+
+      <!-- -->
+      <!-- -->
+      <!-- ***************************************** -->
+      <!-- Pumping Data: point source(pumping data) and well data -->
+      <!-- ***************************************** -->
+      <!-- Doing tests with well data : Setup #0 -->
+      <well_data total="6" datafile="">
+        <!-- Well data format: -->
+        <!-- x,y        = position of the well along the x,y-plane -->
+        <!-- zTop       = (upper) z-coordinate at which the notches of the well start -->
+        <!-- zBottom    = (lower) z-coordinate at the location of the well-bottom -->
+        <!-- k_well     = choose a very high conductivity inside the well, e.g. 10.0 -->
+        <!-- flow_rate  = negative for pumping or positive for injection -->
+        <!-- One line per well: -->
+        <!-- x      y            zTop    zBottom   k_well    flow_rate   T    t_inject   c   injection_time  -->
+        25.0001       10.01           4.49     0.51       1.0      8.0e-3        0    100        0   100
+        25.0001       17.01           4.49     3.51       1.0      2.0e-3        0    100        0   100
+        25.0001       17.01           2.99     2.01       1.0      2.0e-3        1    100        1   100
+        25.0001       17.01           1.49     0.51       1.0      2.0e-3        0    100        0   100
+        25.0001       33.01           4.49     0.51       1.0      -9.0e-3       0    100        0   100
+        25.0001       40.01           4.49     0.51       1.0      -10.0e-3       0    100        0   100
+      </well_data>
+      <!-- -->
+      <!-- -->
+      <!-- ******************* -->
+      <!-- lnK data            -->
+      <!-- ******************* -->
+      <lnk_inversion_data>
+        <!-- Direct measurements of hydraulic conductivity K: -->
+        <lnk_measurements total="3" datafile="">
+          <!-- This data (one line per location) must have exactly the following format: -->
+          <!-- x, y, z, abs_error, rel_error, value (seperated by blank or tab) -->
+          5.0   5.0   5.0  0.0 0.05    0.0
+          8.0   4.0   5.0  0.0 0.05    0.0
+          7.0   6.0   5.0  0.0 0.05    0.0
+          4.0   8.0   5.0  0.0 0.05    0.0
+        </lnk_measurements>
+      </lnk_inversion_data>
+      <!-- -->
+      <!-- -->
+      <!-- ******************* -->
+      <!-- hydraulic head data (setup 0) -->
+      <!-- ******************* -->
+      <head_inversion_data regularization_factor="1e-6" regularization_type="dynamic">
+        <head_measurements total="64" datafile="">
+          <!-- (one line per location) must have exactly the following format: -->
+          <!-- x, y, z, abs_error, rel_error, value (seperated by blank or tab) -->
+          20.501    20.501     1.001    0.005    0   0
+          23.501    20.501     1.001    0.005    0   0
+          26.501    20.501     1.001    0.005    0   0
+          29.501    20.501     1.001    0.005    0   0
+          20.501     23.501    1.001    0.005    0   0
+          23.501     23.501    1.001    0.005    0   0
+          26.501     23.501    1.001    0.005    0   0
+          29.501     23.501    1.001    0.005    0   0
+          20.501    26.501     1.001    0.005    0   0
+          23.501    26.501     1.001    0.005    0   0
+          26.501    26.501     1.001    0.005    0   0
+          29.501    26.501     1.001    0.005    0   0
+          20.501     29.501    1.001    0.005    0   0
+          23.501     29.501    1.001    0.005    0   0
+          26.501     29.501    1.001    0.005    0   0
+          29.501     29.501    1.001    0.005    0   0
+          20.501    20.501      2.001    0.005    0   0
+          23.501    20.501      2.001    0.005    0   0
+          26.501    20.501      2.001    0.005    0   0
+          29.501    20.501      2.001    0.005    0   0
+          20.501     23.501     2.001    0.005    0   0
+          23.501     23.501     2.001    0.005    0   0
+          26.501     23.501     2.001    0.005    0   0
+          29.501     23.501     2.001    0.005    0   0
+          20.501    26.501      2.001    0.005    0   0
+          23.501    26.501      2.001    0.005    0   0
+          26.501    26.501      2.001    0.005    0   0
+          29.501    26.501      2.001    0.005    0   0
+          20.501     29.501     2.001    0.005    0   0
+          23.501     29.501     2.001    0.005    0   0
+          26.501     29.501     2.001    0.005    0   0
+          29.501     29.501     2.001    0.005    0   0
+          20.501    20.501     3.001    0.005    0   0
+          23.501    20.501     3.001    0.005    0   0
+          26.501    20.501     3.001    0.005    0   0
+          29.501    20.501     3.001    0.005    0   0
+          20.501     23.501    3.001    0.005    0   0
+          23.501     23.501    3.001    0.005    0   0
+          26.501     23.501    3.001    0.005    0   0
+          29.501     23.501    3.001    0.005    0   0
+          20.501    26.501     3.001    0.005    0   0
+          23.501    26.501     3.001    0.005    0   0
+          26.501    26.501     3.001    0.005    0   0
+          29.501    26.501     3.001    0.005    0   0
+          20.501     29.501    3.001    0.005    0   0
+          23.501     29.501    3.001    0.005    0   0
+          26.501     29.501    3.001    0.005    0   0
+          29.501     29.501    3.001    0.005    0   0
+          20.501    20.501      4.001    0.005    0   0
+          23.501    20.501      4.001    0.005    0   0
+          26.501    20.501      4.001    0.005    0   0
+          29.501    20.501      4.001    0.005    0   0
+          20.501     23.501     4.001    0.005    0   0
+          23.501     23.501     4.001    0.005    0   0
+          26.501     23.501     4.001    0.005    0   0
+          29.501     23.501     4.001    0.005    0   0
+          20.501    26.501      4.001    0.005    0   0
+          23.501    26.501      4.001    0.005    0   0
+          26.501    26.501      4.001    0.005    0   0
+          29.501    26.501      4.001    0.005    0   0
+          20.501     29.501     4.001    0.005    0   0
+          23.501     29.501     4.001    0.005    0   0
+          26.501     29.501     4.001    0.005    0   0
+          29.501     29.501     4.001    0.005    0   0
+        </head_measurements>
+      </head_inversion_data>
+      <!-- -->
+      <!-- -->
+      <!-- ******************************************** -->
+      <!-- measurements of solute concentration         -->
+      <!-- ******************************************** -->
+      <solute_concentration_inversion_data regularization_factor="1E-6" regularization_type="dynamic">
+        <!-- ******************************************** -->
+        <!-- m0 = zeroth temporal moment of concentration -->
+        <!-- Setup #0 -->
+        <!-- ******************************************** -->
+        <m0_inversion_data sampling_volume="0.0 0.0 0.0" SV_max="0.0 0.0 0.0" SV_step="3.0 4.0 2" SV_limit="30">
+          <m0_measurements total="64" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, z, abs_error, rel_error, value (seperated by blank or tab) -->
+          20.501    20.501     1.001    5.001    0.05   0
+          23.501    20.501     1.001    5.001    0.05   0
+          26.501    20.501     1.001    5.001    0.05   0
+          29.501    20.501     1.001    5.001    0.05   0
+          20.501     23.501    1.001    5.001    0.05   0
+          23.501     23.501    1.001    5.001    0.05   0
+          26.501     23.501    1.001    5.001    0.05   0
+          29.501     23.501    1.001    5.001    0.05   0
+          20.501    26.501     1.001    5.001    0.05   0
+          23.501    26.501     1.001    5.001    0.05   0
+          26.501    26.501     1.001    5.001    0.05   0
+          29.501    26.501     1.001    5.001    0.05   0
+          20.501     29.501    1.001    5.001    0.05   0
+          23.501     29.501    1.001    5.001    0.05   0
+          26.501     29.501    1.001    5.001    0.05   0
+          29.501     29.501    1.001    5.001    0.05   0
+          20.501    20.501      2.001    5.001    0.05   0
+          23.501    20.501      2.001    5.001    0.05   0
+          26.501    20.501      2.001    5.001    0.05   0
+          29.501    20.501      2.001    5.001    0.05   0
+          20.501     23.501     2.001    5.001    0.05   0
+          23.501     23.501     2.001    5.001    0.05   0
+          26.501     23.501     2.001    5.001    0.05   0
+          29.501     23.501     2.001    5.001    0.05   0
+          20.501    26.501      2.001    5.001    0.05   0
+          23.501    26.501      2.001    5.001    0.05   0
+          26.501    26.501      2.001    5.001    0.05   0
+          29.501    26.501      2.001    5.001    0.05   0
+          20.501     29.501     2.001    5.001    0.05   0
+          23.501     29.501     2.001    5.001    0.05   0
+          26.501     29.501     2.001    5.001    0.05   0
+          29.501     29.501     2.001    5.001    0.05   0
+          20.501    20.501     3.001    5.001    0.05   0
+          23.501    20.501     3.001    5.001    0.05   0
+          26.501    20.501     3.001    5.001    0.05   0
+          29.501    20.501     3.001    5.001    0.05   0
+          20.501     23.501    3.001    5.001    0.05   0
+          23.501     23.501    3.001    5.001    0.05   0
+          26.501     23.501    3.001    5.001    0.05   0
+          29.501     23.501    3.001    5.001    0.05   0
+          20.501    26.501     3.001    5.001    0.05   0
+          23.501    26.501     3.001    5.001    0.05   0
+          26.501    26.501     3.001    5.001    0.05   0
+          29.501    26.501     3.001    5.001    0.05   0
+          20.501     29.501    3.001    5.001    0.05   0
+          23.501     29.501    3.001    5.001    0.05   0
+          26.501     29.501    3.001    5.001    0.05   0
+          29.501     29.501    3.001    5.001    0.05   0
+          20.501    20.501      4.001    5.001    0.05   0
+          23.501    20.501      4.001    5.001    0.05   0
+          26.501    20.501      4.001    5.001    0.05   0
+          29.501    20.501      4.001    5.001    0.05   0
+          20.501     23.501     4.001    5.001    0.05   0
+          23.501     23.501     4.001    5.001    0.05   0
+          26.501     23.501     4.001    5.001    0.05   0
+          29.501     23.501     4.001    5.001    0.05   0
+          20.501    26.501      4.001    5.001    0.05   0
+          23.501    26.501      4.001    5.001    0.05   0
+          26.501    26.501      4.001    5.001    0.05   0
+          29.501    26.501      4.001    5.001    0.05   0
+          20.501     29.501     4.001    5.001    0.05   0
+          23.501     29.501     4.001    5.001    0.05   0
+          26.501     29.501     4.001    5.001    0.05   0
+          29.501     29.501     4.001    5.001    0.05   0
+          </m0_measurements>
+        </m0_inversion_data>
+        <!-- -->
+        <!-- -->
+        <!-- ******************************************** -->
+        <!-- m1 = first temporal moment of concentration (setup 0) -->
+        <!-- ******************************************** -->
+        <m1_inversion_data sampling_volume="0.0 0.0 0.0">
+          <m1_measurements total="64" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, z, abs_error, rel_error, value (seperated by blank or tab) -->
+          20.501    20.501     1.001    1.3e6    0.05   0
+          23.501    20.501     1.001    1.3e6    0.05   0
+          26.501    20.501     1.001    1.3e6    0.05   0
+          29.501    20.501     1.001    1.3e6    0.05   0
+          20.501     23.501    1.001    1.3e6    0.05   0
+          23.501     23.501    1.001    1.3e6    0.05   0
+          26.501     23.501    1.001    1.3e6    0.05   0
+          29.501     23.501    1.001    1.3e6    0.05   0
+          20.501    26.501     1.001    1.3e6    0.05   0
+          23.501    26.501     1.001    1.3e6    0.05   0
+          26.501    26.501     1.001    1.3e6    0.05   0
+          29.501    26.501     1.001    1.3e6    0.05   0
+          20.501     29.501    1.001    1.3e6    0.05   0
+          23.501     29.501    1.001    1.3e6    0.05   0
+          26.501     29.501    1.001    1.3e6    0.05   0
+          29.501     29.501    1.001    1.3e6    0.05   0
+          20.501    20.501      2.001    1.3e6    0.05   0
+          23.501    20.501      2.001    1.3e6    0.05   0
+          26.501    20.501      2.001    1.3e6    0.05   0
+          29.501    20.501      2.001    1.3e6    0.05   0
+          20.501     23.501     2.001    1.3e6    0.05   0
+          23.501     23.501     2.001    1.3e6    0.05   0
+          26.501     23.501     2.001    1.3e6    0.05   0
+          29.501     23.501     2.001    1.3e6    0.05   0
+          20.501    26.501      2.001    1.3e6    0.05   0
+          23.501    26.501      2.001    1.3e6    0.05   0
+          26.501    26.501      2.001    1.3e6    0.05   0
+          29.501    26.501      2.001    1.3e6    0.05   0
+          20.501     29.501     2.001    1.3e6    0.05   0
+          23.501     29.501     2.001    1.3e6    0.05   0
+          26.501     29.501     2.001    1.3e6    0.05   0
+          29.501     29.501     2.001    1.3e6    0.05   0
+          20.501    20.501     3.001    1.3e6    0.05   0
+          23.501    20.501     3.001    1.3e6    0.05   0
+          26.501    20.501     3.001    1.3e6    0.05   0
+          29.501    20.501     3.001    1.3e6    0.05   0
+          20.501     23.501    3.001    1.3e6    0.05   0
+          23.501     23.501    3.001    1.3e6    0.05   0
+          26.501     23.501    3.001    1.3e6    0.05   0
+          29.501     23.501    3.001    1.3e6    0.05   0
+          20.501    26.501     3.001    1.3e6    0.05   0
+          23.501    26.501     3.001    1.3e6    0.05   0
+          26.501    26.501     3.001    1.3e6    0.05   0
+          29.501    26.501     3.001    1.3e6    0.05   0
+          20.501     29.501    3.001    1.3e6    0.05   0
+          23.501     29.501    3.001    1.3e6    0.05   0
+          26.501     29.501    3.001    1.3e6    0.05   0
+          29.501     29.501    3.001    1.3e6    0.05   0
+          20.501    20.501      4.001    1.3e6    0.05   0
+          23.501    20.501      4.001    1.3e6    0.05   0
+          26.501    20.501      4.001    1.3e6    0.05   0
+          29.501    20.501      4.001    1.3e6    0.05   0
+          20.501     23.501     4.001    1.3e6    0.05   0
+          23.501     23.501     4.001    1.3e6    0.05   0
+          26.501     23.501     4.001    1.3e6    0.05   0
+          29.501     23.501     4.001    1.3e6    0.05   0
+          20.501    26.501      4.001    1.3e6    0.05   0
+          23.501    26.501      4.001    1.3e6    0.05   0
+          26.501    26.501      4.001    1.3e6    0.05   0
+          29.501    26.501      4.001    1.3e6    0.05   0
+          20.501     29.501     4.001    1.3e6    0.05   0
+          23.501     29.501     4.001    1.3e6    0.05   0
+          26.501     29.501     4.001    1.3e6    0.05   0
+          29.501     29.501     4.001    1.3e6    0.05   0
+          </m1_measurements>
+        </m1_inversion_data>
+        <!-- -->
+        <!-- -->
+      </solute_concentration_inversion_data>
+      <!-- -->
+      <!-- -->
+      <!-- ***************** -->
+      <!-- temperature  data -->
+      <!-- -->
+      <!-- -->
+      <heat_inversion_data regularization_factor="0.1" regularization_type="fixed">
+        <m0_measurements total="27" datafile="">
+          <!-- (one line per location) must have exactly the following format: -->
+          <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+          1.5   2.0   0.8  0.01   0.2   0
+          1.5   1.51  0.8  0.01   0.2   0
+          1.5   1.0   0.8  0.01   0.2   0
+          1.5   2.0   0.5  0.01   0.2   0
+          1.5   1.51  0.5  0.01   0.2   0
+          1.5   1.0   0.5  0.01   0.2   0
+          1.5   2.0   0.2  0.01   0.2   0
+          1.5   1.51  0.2  0.01   0.2   0
+          1.5   1.0   0.2  0.01   0.2   0
+          2.5   2.0   0.8  0.01   0.2   0
+          2.5   1.51  0.8  0.01   0.2   0
+          2.5   1.0   0.8  0.01   0.2   0
+          2.5   2.0   0.5  0.01   0.2   0
+          2.5   1.51  0.5  0.01   0.2   0
+          2.5   1.0   0.5  0.01   0.2   0
+          2.5   2.0   0.2  0.01   0.2   0
+          2.5   1.51  0.2  0.01   0.2   0
+          2.5   1.0   0.2  0.01   0.2   0
+          3.5   2.0   0.8  0.01   0.2   0
+          3.5   1.51  0.8  0.01   0.2   0
+          3.5   1.0   0.8  0.01   0.2   0
+          3.5   2.0   0.5  0.01   0.2   0
+          3.5   1.51  0.5  0.01   0.2   0
+          3.5   1.0   0.5  0.01   0.2   0
+          3.5   2.0   0.2  0.01   0.2   0
+          3.5   1.51  0.2  0.01   0.2   0
+          3.5   1.0   0.2  0.01   0.2   0
+          4.5   1.51  0.5  0.01   0.2   0
+        </m0_measurements>
+        <m1_measurements total="2" datafile="">
+          <!-- (one line per location) must have exactly the following format: -->
+          <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+          1.5   2.0   0.8  0.01   0.2   0
+          1.5   1.51  0.8  0.01   0.2   0
+          1.5   1.0   0.8  0.01   0.2   0
+          1.5   2.0   0.5  0.01   0.2   0
+          1.5   1.51  0.5  0.01   0.2   0
+          1.5   1.0   0.5  0.01   0.2   0
+          1.5   2.0   0.2  0.01   0.2   0
+          1.5   1.51  0.2  0.01   0.2   0
+          1.5   1.0   0.2  0.01   0.2   0
+          2.5   2.0   0.8  0.01   0.2   0
+          2.5   1.51  0.8  0.01   0.2   0
+          2.5   1.0   0.8  0.01   0.2   0
+          2.5   2.0   0.5  0.01   0.2   0
+          2.5   1.51  0.5  0.01   0.2   0
+          2.5   1.0   0.5  0.01   0.2   0
+          2.5   2.0   0.2  0.01   0.2   0
+          2.5   1.51  0.2  0.01   0.2   0
+          2.5   1.0   0.2  0.01   0.2   0
+          3.5   2.0   0.8  0.01   0.2   0
+          3.5   1.51  0.8  0.01   0.2   0
+          3.5   1.0   0.8  0.01   0.2   0
+          3.5   2.0   0.5  0.01   0.2   0
+          3.5   1.51  0.5  0.01   0.2   0
+          3.5   1.0   0.5  0.01   0.2   0
+          3.5   2.0   0.2  0.01   0.2   0
+          3.5   1.51  0.2  0.01   0.2   0
+          3.5   1.0   0.2  0.01   0.2   0
+          4.5   1.51  0.5  0.01   0.2   0
+        </m1_measurements>
+      </heat_inversion_data>
+
+      <!-- -->
+      <!-- -->
+      <!-- ***************** -->
+      <!-- geoelectrical potential data -->
+      <!-- ******************* -->
+      <geoelectrical_potential_data total_configs="1" kappa_hdf5_file="" sigma0_hdf5_file="">
+        <!-- kappa and sigma0 as hdf5 file not yet implemented! -->
+        <!-- -->
+        <!-- -->
+        <!-- configuration 1 -->
+        <geoelectrical_potential_configuration>
+          <!-- -->
+          <!-- -->
+          <inout_location total="1" datafile="">
+            <!-- in out dipole injection. Must have this structure! -->
+            <!-- x   y    z (for injection location) and x  y  z (for extraction location)     value  (value for the extraction)-->
+            2.5    0.2   0.5   2.5  2.7  0.5  1
+          </inout_location>
+          <m0_measurements total="1" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, z, x2, y2, z2, abs_error, rel_error, value (seperated by blank or tab) -->
+            2.5    1.5    0.3   2.5  1.5   0.7   2.0    0.1    0
+          </m0_measurements>
+          <m1_measurements total="1" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, z, x2, y2, z2, abs_error, rel_error, value (seperated by blank or tab) -->
+            <!-- error of m1 will be used for m1/m0 -->
+            2.5    1.5    0.3   2.5  1.5   0.7   2.0    0.1    0
+          </m1_measurements>
+        </geoelectrical_potential_configuration>
+      </geoelectrical_potential_data>
+      <!-- -->
+      <!-- -->
+    </Setup>
+    <!-- -->
+    <!-- -->
+    <!-- ***************************************** -->
+    <!-- Setup #1: -->
+    <!-- ***************************************** -->
+    <Setup>
+      <!-- ***************************************** -->
+      <!-- Groundwater Flow BCs: -->
+      <!-- ***************************************** -->
+      <flow_equation recycle_matrix_hierarchy="yes">
+        <boundary orientation="west" bctype="1"> 
+          <stripe value="100.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="east" bctype="1">
+          <stripe value="99.90" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="bottom" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="top" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+      </flow_equation>
+      <!-- ***************************************** -->
+      <!-- Concentration BCs: -->
+      <!-- ***************************************** -->
+      <transport_equation recycle_matrix_hierarchy="no" injection_time="100">
+        <boundary orientation="west" bctype="1">
+          <stripe value="0.0" regularization_factor="2.0" regularization_type="dynamic">
+            <startpoint>20   4</startpoint>
+            <endpoint>30     6</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="east" bctype="-1">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="bottom" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="top" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+      </transport_equation>
+
+      <!-- ***************************************** -->
+      <!-- Heat BCs: -->
+      <!-- ***************************************** -->
+      <heat_transport_equation recycle_matrix_hierarchy="no" injection_time="100">
+        <boundary orientation="west" bctype="1">
+          <stripe value="0" regularization_factor="2.0" regularization_type="dynamic">
+            <startpoint>20   4</startpoint>
+            <endpoint>30     6</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="east" bctype="-1">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="bottom" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="top" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+      </heat_transport_equation>
+
+      <!-- ***************************************** -->
+      <!-- Geoelectrical Potential BCs: -->
+      <!-- ***************************************** -->
+      <geoelectrical_potential_equation recycle_matrix_hierarchy="no">
+        <boundary orientation="west" bctype="1">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="east" bctype="1">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="bottom" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="top" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+      </geoelectrical_potential_equation>
+
+      <!-- -->
+      <!-- -->
+      <!-- ***************************************** -->
+      <!-- Pumping Data: point source(pumping data) and well data -->
+      <!-- ***************************************** -->
+      <!-- Doing tests with well data : Setup #1 -->
+      <well_data total="6" datafile="">
+        <!-- Well data format: -->
+        <!-- x,y        = position of the well along the x,y-plane -->
+        <!-- zTop       = (upper) z-coordinate at which the notches of the well start -->
+        <!-- zBottom    = (lower) z-coordinate at the location of the well-bottom -->
+        <!-- k_well     = choose a very high conductivity inside the well, e.g. 10.0 -->
+        <!-- flow_rate  = negative for pumping or positive for injection -->
+        <!-- One line per well: -->
+        <!-- x      y            zTop    zBottom   k_well    flow_rate   T    t_inject   c   injection_time  -->
+        40.01     25.0001      4.49     0.51       1.0      8.0e-3        0    100        0   100
+        33.01     25.0001      4.49     3.51       1.0      2.0e-3        0    100        0   100
+        33.01     25.0001      2.99     2.01       1.0      2.0e-3        1    100        1   100
+        33.01     25.0001      1.49     0.51       1.0      2.0e-3        0    100        0   100
+        17.01     25.0001      4.49     0.51       1.0      -9.0e-3       0    100        0   100
+        10.01     25.0001      4.49     0.51       1.0      -10.0e-3       0    100        0   100
+      </well_data>
+      <!-- -->
+      <!-- -->
+      <!-- ******************* -->
+      <!-- lnK data            -->
+      <!-- ******************* -->
+      <lnk_inversion_data>
+        <!-- Direct measurements of hydraulic conductivity K: -->
+        <lnk_measurements total="3" datafile="">
+          <!-- This data (one line per location) must have exactly the following format: -->
+          <!-- x, y, z, abs_error, rel_error, value (seperated by blank or tab) -->
+          5.0   5.0   5.0  0.0 0.05    0.0
+          8.0   4.0   5.0  0.0 0.05    0.0
+          7.0   6.0   5.0  0.0 0.05    0.0
+          4.0   8.0   5.0  0.0 0.05    0.0
+        </lnk_measurements>
+      </lnk_inversion_data>
+      <!-- -->
+      <!-- -->
+      <!-- ******************* -->
+      <!-- hydraulic head data ( setup 1 )-->
+      <!-- ******************* -->
+      <head_inversion_data regularization_factor="1e-6" regularization_type="dynamic">
+        <head_measurements total="64" datafile="">
+          <!-- (one line per location) must have exactly the following format: -->
+          <!-- x, y, z, abs_error, rel_error, value (seperated by blank or tab) -->
+          20.501    20.501     1.001    0.005    0   0
+          23.501    20.501     1.001    0.005    0   0
+          26.501    20.501     1.001    0.005    0   0
+          29.501    20.501     1.001    0.005    0   0
+          20.501     23.501    1.001    0.005    0   0
+          23.501     23.501    1.001    0.005    0   0
+          26.501     23.501    1.001    0.005    0   0
+          29.501     23.501    1.001    0.005    0   0
+          20.501    26.501     1.001    0.005    0   0
+          23.501    26.501     1.001    0.005    0   0
+          26.501    26.501     1.001    0.005    0   0
+          29.501    26.501     1.001    0.005    0   0
+          20.501     29.501    1.001    0.005    0   0
+          23.501     29.501    1.001    0.005    0   0
+          26.501     29.501    1.001    0.005    0   0
+          29.501     29.501    1.001    0.005    0   0
+          20.501    20.501      2.001    0.005    0   0
+          23.501    20.501      2.001    0.005    0   0
+          26.501    20.501      2.001    0.005    0   0
+          29.501    20.501      2.001    0.005    0   0
+          20.501     23.501     2.001    0.005    0   0
+          23.501     23.501     2.001    0.005    0   0
+          26.501     23.501     2.001    0.005    0   0
+          29.501     23.501     2.001    0.005    0   0
+          20.501    26.501      2.001    0.005    0   0
+          23.501    26.501      2.001    0.005    0   0
+          26.501    26.501      2.001    0.005    0   0
+          29.501    26.501      2.001    0.005    0   0
+          20.501     29.501     2.001    0.005    0   0
+          23.501     29.501     2.001    0.005    0   0
+          26.501     29.501     2.001    0.005    0   0
+          29.501     29.501     2.001    0.005    0   0
+          20.501    20.501     3.001    0.005    0   0
+          23.501    20.501     3.001    0.005    0   0
+          26.501    20.501     3.001    0.005    0   0
+          29.501    20.501     3.001    0.005    0   0
+          20.501     23.501    3.001    0.005    0   0
+          23.501     23.501    3.001    0.005    0   0
+          26.501     23.501    3.001    0.005    0   0
+          29.501     23.501    3.001    0.005    0   0
+          20.501    26.501     3.001    0.005    0   0
+          23.501    26.501     3.001    0.005    0   0
+          26.501    26.501     3.001    0.005    0   0
+          29.501    26.501     3.001    0.005    0   0
+          20.501     29.501    3.001    0.005    0   0
+          23.501     29.501    3.001    0.005    0   0
+          26.501     29.501    3.001    0.005    0   0
+          29.501     29.501    3.001    0.005    0   0
+          20.501    20.501      4.001    0.005    0   0
+          23.501    20.501      4.001    0.005    0   0
+          26.501    20.501      4.001    0.005    0   0
+          29.501    20.501      4.001    0.005    0   0
+          20.501     23.501     4.001    0.005    0   0
+          23.501     23.501     4.001    0.005    0   0
+          26.501     23.501     4.001    0.005    0   0
+          29.501     23.501     4.001    0.005    0   0
+          20.501    26.501      4.001    0.005    0   0
+          23.501    26.501      4.001    0.005    0   0
+          26.501    26.501      4.001    0.005    0   0
+          29.501    26.501      4.001    0.005    0   0
+          20.501     29.501     4.001    0.005    0   0
+          23.501     29.501     4.001    0.005    0   0
+          26.501     29.501     4.001    0.005    0   0
+          29.501     29.501     4.001    0.005    0   0
+        </head_measurements>
+      </head_inversion_data>
+      <!-- -->
+      <!-- -->
+      <!-- ******************************************** -->
+      <!-- measurements of solute concentration         -->
+      <!-- ******************************************** -->
+      <solute_concentration_inversion_data regularization_factor="1E-6" regularization_type="dynamic">
+        <!-- ******************************************** -->
+        <!-- m0 = zeroth temporal moment of concentration -->
+        <!-- Setup #1 -->
+        <!-- ******************************************** -->
+        <m0_inversion_data sampling_volume="0.0 0.0 0.0" SV_max="0.0 0.0 0.0" SV_step="3.0 4.0 2" SV_limit="30">
+          <m0_measurements total="64" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, z, abs_error, rel_error, value (seperated by blank or tab) -->
+          20.501    20.501     1.001    5.001    0.05   0
+          23.501    20.501     1.001    5.001    0.05   0
+          26.501    20.501     1.001    5.001    0.05   0
+          29.501    20.501     1.001    5.001    0.05   0
+          20.501     23.501    1.001    5.001    0.05   0
+          23.501     23.501    1.001    5.001    0.05   0
+          26.501     23.501    1.001    5.001    0.05   0
+          29.501     23.501    1.001    5.001    0.05   0
+          20.501    26.501     1.001    5.001    0.05   0
+          23.501    26.501     1.001    5.001    0.05   0
+          26.501    26.501     1.001    5.001    0.05   0
+          29.501    26.501     1.001    5.001    0.05   0
+          20.501     29.501    1.001    5.001    0.05   0
+          23.501     29.501    1.001    5.001    0.05   0
+          26.501     29.501    1.001    5.001    0.05   0
+          29.501     29.501    1.001    5.001    0.05   0
+          20.501    20.501      2.001    5.001    0.05   0
+          23.501    20.501      2.001    5.001    0.05   0
+          26.501    20.501      2.001    5.001    0.05   0
+          29.501    20.501      2.001    5.001    0.05   0
+          20.501     23.501     2.001    5.001    0.05   0
+          23.501     23.501     2.001    5.001    0.05   0
+          26.501     23.501     2.001    5.001    0.05   0
+          29.501     23.501     2.001    5.001    0.05   0
+          20.501    26.501      2.001    5.001    0.05   0
+          23.501    26.501      2.001    5.001    0.05   0
+          26.501    26.501      2.001    5.001    0.05   0
+          29.501    26.501      2.001    5.001    0.05   0
+          20.501     29.501     2.001    5.001    0.05   0
+          23.501     29.501     2.001    5.001    0.05   0
+          26.501     29.501     2.001    5.001    0.05   0
+          29.501     29.501     2.001    5.001    0.05   0
+          20.501    20.501     3.001    5.001    0.05   0
+          23.501    20.501     3.001    5.001    0.05   0
+          26.501    20.501     3.001    5.001    0.05   0
+          29.501    20.501     3.001    5.001    0.05   0
+          20.501     23.501    3.001    5.001    0.05   0
+          23.501     23.501    3.001    5.001    0.05   0
+          26.501     23.501    3.001    5.001    0.05   0
+          29.501     23.501    3.001    5.001    0.05   0
+          20.501    26.501     3.001    5.001    0.05   0
+          23.501    26.501     3.001    5.001    0.05   0
+          26.501    26.501     3.001    5.001    0.05   0
+          29.501    26.501     3.001    5.001    0.05   0
+          20.501     29.501    3.001    5.001    0.05   0
+          23.501     29.501    3.001    5.001    0.05   0
+          26.501     29.501    3.001    5.001    0.05   0
+          29.501     29.501    3.001    5.001    0.05   0
+          20.501    20.501      4.001    5.001    0.05   0
+          23.501    20.501      4.001    5.001    0.05   0
+          26.501    20.501      4.001    5.001    0.05   0
+          29.501    20.501      4.001    5.001    0.05   0
+          20.501     23.501     4.001    5.001    0.05   0
+          23.501     23.501     4.001    5.001    0.05   0
+          26.501     23.501     4.001    5.001    0.05   0
+          29.501     23.501     4.001    5.001    0.05   0
+          20.501    26.501      4.001    5.001    0.05   0
+          23.501    26.501      4.001    5.001    0.05   0
+          26.501    26.501      4.001    5.001    0.05   0
+          29.501    26.501      4.001    5.001    0.05   0
+          20.501     29.501     4.001    5.001    0.05   0
+          23.501     29.501     4.001    5.001    0.05   0
+          26.501     29.501     4.001    5.001    0.05   0
+          29.501     29.501     4.001    5.001    0.05   0
+          </m0_measurements>
+        </m0_inversion_data>
+        <!-- -->
+        <!-- -->
+        <!-- ******************************************** -->
+        <!-- m1 = first temporal moment of concentration (setup 1) -->
+        <!-- ******************************************** -->
+        <m1_inversion_data sampling_volume="0.0 0.0 0.0">
+          <m1_measurements total="64" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, z, abs_error, rel_error, value (seperated by blank or tab) -->
+          20.501    20.501     1.001    1.5e6    0.05   0
+          23.501    20.501     1.001    1.5e6    0.05   0
+          26.501    20.501     1.001    1.5e6    0.05   0
+          29.501    20.501     1.001    1.5e6    0.05   0
+          20.501     23.501    1.001    1.5e6    0.05   0
+          23.501     23.501    1.001    1.5e6    0.05   0
+          26.501     23.501    1.001    1.5e6    0.05   0
+          29.501     23.501    1.001    1.5e6    0.05   0
+          20.501    26.501     1.001    1.5e6    0.05   0
+          23.501    26.501     1.001    1.5e6    0.05   0
+          26.501    26.501     1.001    1.5e6    0.05   0
+          29.501    26.501     1.001    1.5e6    0.05   0
+          20.501     29.501    1.001    1.5e6    0.05   0
+          23.501     29.501    1.001    1.5e6    0.05   0
+          26.501     29.501    1.001    1.5e6    0.05   0
+          29.501     29.501    1.001    1.5e6    0.05   0
+          20.501    20.501      2.001    1.5e6    0.05   0
+          23.501    20.501      2.001    1.5e6    0.05   0
+          26.501    20.501      2.001    1.5e6    0.05   0
+          29.501    20.501      2.001    1.5e6    0.05   0
+          20.501     23.501     2.001    1.5e6    0.05   0
+          23.501     23.501     2.001    1.5e6    0.05   0
+          26.501     23.501     2.001    1.5e6    0.05   0
+          29.501     23.501     2.001    1.5e6    0.05   0
+          20.501    26.501      2.001    1.5e6    0.05   0
+          23.501    26.501      2.001    1.5e6    0.05   0
+          26.501    26.501      2.001    1.5e6    0.05   0
+          29.501    26.501      2.001    1.5e6    0.05   0
+          20.501     29.501     2.001    1.5e6    0.05   0
+          23.501     29.501     2.001    1.5e6    0.05   0
+          26.501     29.501     2.001    1.5e6    0.05   0
+          29.501     29.501     2.001    1.5e6    0.05   0
+          20.501    20.501     3.001    1.5e6    0.05   0
+          23.501    20.501     3.001    1.5e6    0.05   0
+          26.501    20.501     3.001    1.5e6    0.05   0
+          29.501    20.501     3.001    1.5e6    0.05   0
+          20.501     23.501    3.001    1.5e6    0.05   0
+          23.501     23.501    3.001    1.5e6    0.05   0
+          26.501     23.501    3.001    1.5e6    0.05   0
+          29.501     23.501    3.001    1.5e6    0.05   0
+          20.501    26.501     3.001    1.5e6    0.05   0
+          23.501    26.501     3.001    1.5e6    0.05   0
+          26.501    26.501     3.001    1.5e6    0.05   0
+          29.501    26.501     3.001    1.5e6    0.05   0
+          20.501     29.501    3.001    1.5e6    0.05   0
+          23.501     29.501    3.001    1.5e6    0.05   0
+          26.501     29.501    3.001    1.5e6    0.05   0
+          29.501     29.501    3.001    1.5e6    0.05   0
+          20.501    20.501      4.001    1.5e6    0.05   0
+          23.501    20.501      4.001    1.5e6    0.05   0
+          26.501    20.501      4.001    1.5e6    0.05   0
+          29.501    20.501      4.001    1.5e6    0.05   0
+          20.501     23.501     4.001    1.5e6    0.05   0
+          23.501     23.501     4.001    1.5e6    0.05   0
+          26.501     23.501     4.001    1.5e6    0.05   0
+          29.501     23.501     4.001    1.5e6    0.05   0
+          20.501    26.501      4.001    1.5e6    0.05   0
+          23.501    26.501      4.001    1.5e6    0.05   0
+          26.501    26.501      4.001    1.5e6    0.05   0
+          29.501    26.501      4.001    1.5e6    0.05   0
+          20.501     29.501     4.001    1.5e6    0.05   0
+          23.501     29.501     4.001    1.5e6    0.05   0
+          26.501     29.501     4.001    1.5e6    0.05   0
+          29.501     29.501     4.001    1.5e6    0.05   0
+          </m1_measurements>
+        </m1_inversion_data>
+        <!-- -->
+        <!-- -->
+      </solute_concentration_inversion_data>
+      <!-- -->
+      <!-- -->
+      <!-- ***************** -->
+      <!-- temperature  data -->
+      <!-- -->
+      <!-- -->
+      <heat_inversion_data regularization_factor="0.1" regularization_type="fixed">
+        <m0_measurements total="27" datafile="">
+          <!-- (one line per location) must have exactly the following format: -->
+          <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+          1.5   2.0   0.8  0.01   0.2   0
+          1.5   1.51  0.8  0.01   0.2   0
+          1.5   1.0   0.8  0.01   0.2   0
+          1.5   2.0   0.5  0.01   0.2   0
+          1.5   1.51  0.5  0.01   0.2   0
+          1.5   1.0   0.5  0.01   0.2   0
+          1.5   2.0   0.2  0.01   0.2   0
+          1.5   1.51  0.2  0.01   0.2   0
+          1.5   1.0   0.2  0.01   0.2   0
+          2.5   2.0   0.8  0.01   0.2   0
+          2.5   1.51  0.8  0.01   0.2   0
+          2.5   1.0   0.8  0.01   0.2   0
+          2.5   2.0   0.5  0.01   0.2   0
+          2.5   1.51  0.5  0.01   0.2   0
+          2.5   1.0   0.5  0.01   0.2   0
+          2.5   2.0   0.2  0.01   0.2   0
+          2.5   1.51  0.2  0.01   0.2   0
+          2.5   1.0   0.2  0.01   0.2   0
+          3.5   2.0   0.8  0.01   0.2   0
+          3.5   1.51  0.8  0.01   0.2   0
+          3.5   1.0   0.8  0.01   0.2   0
+          3.5   2.0   0.5  0.01   0.2   0
+          3.5   1.51  0.5  0.01   0.2   0
+          3.5   1.0   0.5  0.01   0.2   0
+          3.5   2.0   0.2  0.01   0.2   0
+          3.5   1.51  0.2  0.01   0.2   0
+          3.5   1.0   0.2  0.01   0.2   0
+          4.5   1.51  0.5  0.01   0.2   0
+        </m0_measurements>
+        <m1_measurements total="2" datafile="">
+          <!-- (one line per location) must have exactly the following format: -->
+          <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+          1.5   2.0   0.8  0.01   0.2   0
+          1.5   1.51  0.8  0.01   0.2   0
+          1.5   1.0   0.8  0.01   0.2   0
+          1.5   2.0   0.5  0.01   0.2   0
+          1.5   1.51  0.5  0.01   0.2   0
+          1.5   1.0   0.5  0.01   0.2   0
+          1.5   2.0   0.2  0.01   0.2   0
+          1.5   1.51  0.2  0.01   0.2   0
+          1.5   1.0   0.2  0.01   0.2   0
+          2.5   2.0   0.8  0.01   0.2   0
+          2.5   1.51  0.8  0.01   0.2   0
+          2.5   1.0   0.8  0.01   0.2   0
+          2.5   2.0   0.5  0.01   0.2   0
+          2.5   1.51  0.5  0.01   0.2   0
+          2.5   1.0   0.5  0.01   0.2   0
+          2.5   2.0   0.2  0.01   0.2   0
+          2.5   1.51  0.2  0.01   0.2   0
+          2.5   1.0   0.2  0.01   0.2   0
+          3.5   2.0   0.8  0.01   0.2   0
+          3.5   1.51  0.8  0.01   0.2   0
+          3.5   1.0   0.8  0.01   0.2   0
+          3.5   2.0   0.5  0.01   0.2   0
+          3.5   1.51  0.5  0.01   0.2   0
+          3.5   1.0   0.5  0.01   0.2   0
+          3.5   2.0   0.2  0.01   0.2   0
+          3.5   1.51  0.2  0.01   0.2   0
+          3.5   1.0   0.2  0.01   0.2   0
+          4.5   1.51  0.5  0.01   0.2   0
+        </m1_measurements>
+      </heat_inversion_data>
+
+      <!-- -->
+      <!-- -->
+      <!-- ***************** -->
+      <!-- geoelectrical potential data -->
+      <!-- ******************* -->
+      <geoelectrical_potential_data total_configs="1" kappa_hdf5_file="" sigma0_hdf5_file="">
+        <!-- kappa and sigma0 as hdf5 file not yet implemented! -->
+        <!-- -->
+        <!-- -->
+        <!-- configuration 1 -->
+        <geoelectrical_potential_configuration>
+          <!-- -->
+          <!-- -->
+          <inout_location total="1" datafile="">
+            <!-- in out dipole injection. Must have this structure! -->
+            <!-- x   y    z (for injection location) and x  y  z (for extraction location)     value  (value for the extraction)-->
+            2.5    0.2   0.5   2.5  2.7  0.5  1
+          </inout_location>
+          <m0_measurements total="1" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, z, x2, y2, z2, abs_error, rel_error, value (seperated by blank or tab) -->
+            2.5    1.5    0.3   2.5  1.5   0.7   2.0    0.1    0
+          </m0_measurements>
+          <m1_measurements total="1" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, z, x2, y2, z2, abs_error, rel_error, value (seperated by blank or tab) -->
+            <!-- error of m1 will be used for m1/m0 -->
+            2.5    1.5    0.3   2.5  1.5   0.7   2.0    0.1    0
+          </m1_measurements>
+        </geoelectrical_potential_configuration>
+      </geoelectrical_potential_data>
+      <!-- -->
+      <!-- -->
+    </Setup>
+    <!-- -->
+    <!-- -->
+    <!-- ***************************************** -->
+    <!-- Setup #2: -->
+    <!-- ***************************************** -->
+    <Setup>
+      <!-- ***************************************** -->
+      <!-- Groundwater Flow BCs: -->
+      <!-- ***************************************** -->
+      <flow_equation recycle_matrix_hierarchy="yes">
+        <boundary orientation="west" bctype="1"> 
+          <stripe value="100.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="east" bctype="1">
+          <stripe value="99.90" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="bottom" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="top" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+      </flow_equation>
+      <!-- ***************************************** -->
+      <!-- Concentration BCs: -->
+      <!-- ***************************************** -->
+      <transport_equation recycle_matrix_hierarchy="no" injection_time="100">
+        <boundary orientation="west" bctype="1">
+          <stripe value="0.0" regularization_factor="2.0" regularization_type="dynamic">
+            <startpoint>20   4</startpoint>
+            <endpoint>30     6</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="east" bctype="-1">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="bottom" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="top" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+      </transport_equation>
+
+      <!-- ***************************************** -->
+      <!-- Heat BCs: -->
+      <!-- ***************************************** -->
+      <heat_transport_equation recycle_matrix_hierarchy="no" injection_time="100">
+        <boundary orientation="west" bctype="1">
+          <stripe value="0" regularization_factor="2.0" regularization_type="dynamic">
+            <startpoint>20   4</startpoint>
+            <endpoint>30     6</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="east" bctype="-1">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="bottom" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="top" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+      </heat_transport_equation>
+
+      <!-- ***************************************** -->
+      <!-- Geoelectrical Potential BCs: -->
+      <!-- ***************************************** -->
+      <geoelectrical_potential_equation recycle_matrix_hierarchy="no">
+        <boundary orientation="west" bctype="1">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="east" bctype="1">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="bottom" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="top" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+      </geoelectrical_potential_equation>
+
+      <!-- -->
+      <!-- -->
+      <!-- ***************************************** -->
+      <!-- Pumping Data: point source(pumping data) and well data -->
+      <!-- ***************************************** -->
+      <!-- Doing tests with well data : Setup #2 -->
+      <well_data total="6" datafile="">
+        <!-- Well data format: -->
+        <!-- x,y        = position of the well along the x,y-plane -->
+        <!-- zTop       = (upper) z-coordinate at which the notches of the well start -->
+        <!-- zBottom    = (lower) z-coordinate at the location of the well-bottom -->
+        <!-- k_well     = choose a very high conductivity inside the well, e.g. 10.0 -->
+        <!-- flow_rate  = negative for pumping or positive for injection -->
+        <!-- One line per well: -->
+        <!-- x      y            zTop    zBottom   k_well    flow_rate   T    t_inject   c   injection_time  -->
+        25.0001       40.01           4.49     0.51       1.0      8.0e-3        0    100        0   100
+        25.0001       33.01           4.49     3.51       1.0      2.0e-3        0    100        0   100
+        25.0001       33.01           2.99     2.01       1.0      2.0e-3        1    100        1   100
+        25.0001       33.01           1.49     0.51       1.0      2.0e-3        0    100        0   100
+        25.0001       17.01           4.49     0.51       1.0      -9.0e-3       0    100        0   100
+        25.0001       10.01           4.49     0.51       1.0      -10.0e-3       0    100        0   100
+      </well_data>
+      <!-- -->
+      <!-- -->
+      <!-- ******************* -->
+      <!-- lnK data            -->
+      <!-- ******************* -->
+      <lnk_inversion_data>
+        <!-- Direct measurements of hydraulic conductivity K: -->
+        <lnk_measurements total="3" datafile="">
+          <!-- This data (one line per location) must have exactly the following format: -->
+          <!-- x, y, z, abs_error, rel_error, value (seperated by blank or tab) -->
+          5.0   5.0   5.0  0.0 0.05    0.0
+          8.0   4.0   5.0  0.0 0.05    0.0
+          7.0   6.0   5.0  0.0 0.05    0.0
+          4.0   8.0   5.0  0.0 0.05    0.0
+        </lnk_measurements>
+      </lnk_inversion_data>
+      <!-- -->
+      <!-- -->
+      <!-- ******************* -->
+      <!-- hydraulic head data (setup 2) -->
+      <!-- ******************* -->
+      <head_inversion_data regularization_factor="1e-6" regularization_type="dynamic">
+        <head_measurements total="64" datafile="">
+          <!-- (one line per location) must have exactly the following format: -->
+          <!-- x, y, z, abs_error, rel_error, value (seperated by blank or tab) -->
+          20.501    20.501     1.001    0.005    0   0
+          23.501    20.501     1.001    0.005    0   0
+          26.501    20.501     1.001    0.005    0   0
+          29.501    20.501     1.001    0.005    0   0
+          20.501     23.501    1.001    0.005    0   0
+          23.501     23.501    1.001    0.005    0   0
+          26.501     23.501    1.001    0.005    0   0
+          29.501     23.501    1.001    0.005    0   0
+          20.501    26.501     1.001    0.005    0   0
+          23.501    26.501     1.001    0.005    0   0
+          26.501    26.501     1.001    0.005    0   0
+          29.501    26.501     1.001    0.005    0   0
+          20.501     29.501    1.001    0.005    0   0
+          23.501     29.501    1.001    0.005    0   0
+          26.501     29.501    1.001    0.005    0   0
+          29.501     29.501    1.001    0.005    0   0
+          20.501    20.501      2.001    0.005    0   0
+          23.501    20.501      2.001    0.005    0   0
+          26.501    20.501      2.001    0.005    0   0
+          29.501    20.501      2.001    0.005    0   0
+          20.501     23.501     2.001    0.005    0   0
+          23.501     23.501     2.001    0.005    0   0
+          26.501     23.501     2.001    0.005    0   0
+          29.501     23.501     2.001    0.005    0   0
+          20.501    26.501      2.001    0.005    0   0
+          23.501    26.501      2.001    0.005    0   0
+          26.501    26.501      2.001    0.005    0   0
+          29.501    26.501      2.001    0.005    0   0
+          20.501     29.501     2.001    0.005    0   0
+          23.501     29.501     2.001    0.005    0   0
+          26.501     29.501     2.001    0.005    0   0
+          29.501     29.501     2.001    0.005    0   0
+          20.501    20.501     3.001    0.005    0   0
+          23.501    20.501     3.001    0.005    0   0
+          26.501    20.501     3.001    0.005    0   0
+          29.501    20.501     3.001    0.005    0   0
+          20.501     23.501    3.001    0.005    0   0
+          23.501     23.501    3.001    0.005    0   0
+          26.501     23.501    3.001    0.005    0   0
+          29.501     23.501    3.001    0.005    0   0
+          20.501    26.501     3.001    0.005    0   0
+          23.501    26.501     3.001    0.005    0   0
+          26.501    26.501     3.001    0.005    0   0
+          29.501    26.501     3.001    0.005    0   0
+          20.501     29.501    3.001    0.005    0   0
+          23.501     29.501    3.001    0.005    0   0
+          26.501     29.501    3.001    0.005    0   0
+          29.501     29.501    3.001    0.005    0   0
+          20.501    20.501      4.001    0.005    0   0
+          23.501    20.501      4.001    0.005    0   0
+          26.501    20.501      4.001    0.005    0   0
+          29.501    20.501      4.001    0.005    0   0
+          20.501     23.501     4.001    0.005    0   0
+          23.501     23.501     4.001    0.005    0   0
+          26.501     23.501     4.001    0.005    0   0
+          29.501     23.501     4.001    0.005    0   0
+          20.501    26.501      4.001    0.005    0   0
+          23.501    26.501      4.001    0.005    0   0
+          26.501    26.501      4.001    0.005    0   0
+          29.501    26.501      4.001    0.005    0   0
+          20.501     29.501     4.001    0.005    0   0
+          23.501     29.501     4.001    0.005    0   0
+          26.501     29.501     4.001    0.005    0   0
+          29.501     29.501     4.001    0.005    0   0
+        </head_measurements>
+      </head_inversion_data>
+      <!-- -->
+      <!-- -->
+      <!-- ******************************************** -->
+      <!-- measurements of solute concentration         -->
+      <!-- ******************************************** -->
+      <solute_concentration_inversion_data regularization_factor="1E-6" regularization_type="dynamic">
+        <!-- ******************************************** -->
+        <!-- m0 = zeroth temporal moment of concentration -->
+        <!-- Setup #2 -->
+        <!-- ******************************************** -->
+        <m0_inversion_data sampling_volume="0.0 0.0 0.0" SV_max="0.0 0.0 0.0" SV_step="3.0 4.0 2" SV_limit="30">
+          <m0_measurements total="64" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, z, abs_error, rel_error, value (seperated by blank or tab) -->
+          20.501    20.501     1.001    5.001    0.05   0
+          23.501    20.501     1.001    5.001    0.05   0
+          26.501    20.501     1.001    5.001    0.05   0
+          29.501    20.501     1.001    5.001    0.05   0
+          20.501     23.501    1.001    5.001    0.05   0
+          23.501     23.501    1.001    5.001    0.05   0
+          26.501     23.501    1.001    5.001    0.05   0
+          29.501     23.501    1.001    5.001    0.05   0
+          20.501    26.501     1.001    5.001    0.05   0
+          23.501    26.501     1.001    5.001    0.05   0
+          26.501    26.501     1.001    5.001    0.05   0
+          29.501    26.501     1.001    5.001    0.05   0
+          20.501     29.501    1.001    5.001    0.05   0
+          23.501     29.501    1.001    5.001    0.05   0
+          26.501     29.501    1.001    5.001    0.05   0
+          29.501     29.501    1.001    5.001    0.05   0
+          20.501    20.501      2.001    5.001    0.05   0
+          23.501    20.501      2.001    5.001    0.05   0
+          26.501    20.501      2.001    5.001    0.05   0
+          29.501    20.501      2.001    5.001    0.05   0
+          20.501     23.501     2.001    5.001    0.05   0
+          23.501     23.501     2.001    5.001    0.05   0
+          26.501     23.501     2.001    5.001    0.05   0
+          29.501     23.501     2.001    5.001    0.05   0
+          20.501    26.501      2.001    5.001    0.05   0
+          23.501    26.501      2.001    5.001    0.05   0
+          26.501    26.501      2.001    5.001    0.05   0
+          29.501    26.501      2.001    5.001    0.05   0
+          20.501     29.501     2.001    5.001    0.05   0
+          23.501     29.501     2.001    5.001    0.05   0
+          26.501     29.501     2.001    5.001    0.05   0
+          29.501     29.501     2.001    5.001    0.05   0
+          20.501    20.501     3.001    5.001    0.05   0
+          23.501    20.501     3.001    5.001    0.05   0
+          26.501    20.501     3.001    5.001    0.05   0
+          29.501    20.501     3.001    5.001    0.05   0
+          20.501     23.501    3.001    5.001    0.05   0
+          23.501     23.501    3.001    5.001    0.05   0
+          26.501     23.501    3.001    5.001    0.05   0
+          29.501     23.501    3.001    5.001    0.05   0
+          20.501    26.501     3.001    5.001    0.05   0
+          23.501    26.501     3.001    5.001    0.05   0
+          26.501    26.501     3.001    5.001    0.05   0
+          29.501    26.501     3.001    5.001    0.05   0
+          20.501     29.501    3.001    5.001    0.05   0
+          23.501     29.501    3.001    5.001    0.05   0
+          26.501     29.501    3.001    5.001    0.05   0
+          29.501     29.501    3.001    5.001    0.05   0
+          20.501    20.501      4.001    5.001    0.05   0
+          23.501    20.501      4.001    5.001    0.05   0
+          26.501    20.501      4.001    5.001    0.05   0
+          29.501    20.501      4.001    5.001    0.05   0
+          20.501     23.501     4.001    5.001    0.05   0
+          23.501     23.501     4.001    5.001    0.05   0
+          26.501     23.501     4.001    5.001    0.05   0
+          29.501     23.501     4.001    5.001    0.05   0
+          20.501    26.501      4.001    5.001    0.05   0
+          23.501    26.501      4.001    5.001    0.05   0
+          26.501    26.501      4.001    5.001    0.05   0
+          29.501    26.501      4.001    5.001    0.05   0
+          20.501     29.501     4.001    5.001    0.05   0
+          23.501     29.501     4.001    5.001    0.05   0
+          26.501     29.501     4.001    5.001    0.05   0
+          29.501     29.501     4.001    5.001    0.05   0
+          </m0_measurements>
+        </m0_inversion_data>
+        <!-- -->
+        <!-- -->
+        <!-- ******************************************** -->
+        <!-- m1 = first temporal moment of concentration (setup 2) -->
+        <!-- ******************************************** -->
+        <m1_inversion_data sampling_volume="0.0 0.0 0.0">
+          <m1_measurements total="64" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, z, abs_error, rel_error, value (seperated by blank or tab) -->
+          20.501    20.501     1.001    1.2e6    0.05   0
+          23.501    20.501     1.001    1.2e6    0.05   0
+          26.501    20.501     1.001    1.2e6    0.05   0
+          29.501    20.501     1.001    1.2e6    0.05   0
+          20.501     23.501    1.001    1.2e6    0.05   0
+          23.501     23.501    1.001    1.2e6    0.05   0
+          26.501     23.501    1.001    1.2e6    0.05   0
+          29.501     23.501    1.001    1.2e6    0.05   0
+          20.501    26.501     1.001    1.2e6    0.05   0
+          23.501    26.501     1.001    1.2e6    0.05   0
+          26.501    26.501     1.001    1.2e6    0.05   0
+          29.501    26.501     1.001    1.2e6    0.05   0
+          20.501     29.501    1.001    1.2e6    0.05   0
+          23.501     29.501    1.001    1.2e6    0.05   0
+          26.501     29.501    1.001    1.2e6    0.05   0
+          29.501     29.501    1.001    1.2e6    0.05   0
+          20.501    20.501      2.001    1.2e6    0.05   0
+          23.501    20.501      2.001    1.2e6    0.05   0
+          26.501    20.501      2.001    1.2e6    0.05   0
+          29.501    20.501      2.001    1.2e6    0.05   0
+          20.501     23.501     2.001    1.2e6    0.05   0
+          23.501     23.501     2.001    1.2e6    0.05   0
+          26.501     23.501     2.001    1.2e6    0.05   0
+          29.501     23.501     2.001    1.2e6    0.05   0
+          20.501    26.501      2.001    1.2e6    0.05   0
+          23.501    26.501      2.001    1.2e6    0.05   0
+          26.501    26.501      2.001    1.2e6    0.05   0
+          29.501    26.501      2.001    1.2e6    0.05   0
+          20.501     29.501     2.001    1.2e6    0.05   0
+          23.501     29.501     2.001    1.2e6    0.05   0
+          26.501     29.501     2.001    1.2e6    0.05   0
+          29.501     29.501     2.001    1.2e6    0.05   0
+          20.501    20.501     3.001    1.2e6    0.05   0
+          23.501    20.501     3.001    1.2e6    0.05   0
+          26.501    20.501     3.001    1.2e6    0.05   0
+          29.501    20.501     3.001    1.2e6    0.05   0
+          20.501     23.501    3.001    1.2e6    0.05   0
+          23.501     23.501    3.001    1.2e6    0.05   0
+          26.501     23.501    3.001    1.2e6    0.05   0
+          29.501     23.501    3.001    1.2e6    0.05   0
+          20.501    26.501     3.001    1.2e6    0.05   0
+          23.501    26.501     3.001    1.2e6    0.05   0
+          26.501    26.501     3.001    1.2e6    0.05   0
+          29.501    26.501     3.001    1.2e6    0.05   0
+          20.501     29.501    3.001    1.2e6    0.05   0
+          23.501     29.501    3.001    1.2e6    0.05   0
+          26.501     29.501    3.001    1.2e6    0.05   0
+          29.501     29.501    3.001    1.2e6    0.05   0
+          20.501    20.501      4.001    1.2e6    0.05   0
+          23.501    20.501      4.001    1.2e6    0.05   0
+          26.501    20.501      4.001    1.2e6    0.05   0
+          29.501    20.501      4.001    1.2e6    0.05   0
+          20.501     23.501     4.001    1.2e6    0.05   0
+          23.501     23.501     4.001    1.2e6    0.05   0
+          26.501     23.501     4.001    1.2e6    0.05   0
+          29.501     23.501     4.001    1.2e6    0.05   0
+          20.501    26.501      4.001    1.2e6    0.05   0
+          23.501    26.501      4.001    1.2e6    0.05   0
+          26.501    26.501      4.001    1.2e6    0.05   0
+          29.501    26.501      4.001    1.2e6    0.05   0
+          20.501     29.501     4.001    1.2e6    0.05   0
+          23.501     29.501     4.001    1.2e6    0.05   0
+          26.501     29.501     4.001    1.2e6    0.05   0
+          29.501     29.501     4.001    1.2e6    0.05   0
+          </m1_measurements>
+        </m1_inversion_data>
+        <!-- -->
+        <!-- -->
+      </solute_concentration_inversion_data>
+      <!-- -->
+      <!-- ***************** -->
+      <!-- temperature  data -->
+      <!-- -->
+      <!-- -->
+      <heat_inversion_data regularization_factor="0.1" regularization_type="fixed">
+        <m0_measurements total="27" datafile="">
+          <!-- (one line per location) must have exactly the following format: -->
+          <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+          1.5   2.0   0.8  0.01   0.2   0
+          1.5   1.51  0.8  0.01   0.2   0
+          1.5   1.0   0.8  0.01   0.2   0
+          1.5   2.0   0.5  0.01   0.2   0
+          1.5   1.51  0.5  0.01   0.2   0
+          1.5   1.0   0.5  0.01   0.2   0
+          1.5   2.0   0.2  0.01   0.2   0
+          1.5   1.51  0.2  0.01   0.2   0
+          1.5   1.0   0.2  0.01   0.2   0
+          2.5   2.0   0.8  0.01   0.2   0
+          2.5   1.51  0.8  0.01   0.2   0
+          2.5   1.0   0.8  0.01   0.2   0
+          2.5   2.0   0.5  0.01   0.2   0
+          2.5   1.51  0.5  0.01   0.2   0
+          2.5   1.0   0.5  0.01   0.2   0
+          2.5   2.0   0.2  0.01   0.2   0
+          2.5   1.51  0.2  0.01   0.2   0
+          2.5   1.0   0.2  0.01   0.2   0
+          3.5   2.0   0.8  0.01   0.2   0
+          3.5   1.51  0.8  0.01   0.2   0
+          3.5   1.0   0.8  0.01   0.2   0
+          3.5   2.0   0.5  0.01   0.2   0
+          3.5   1.51  0.5  0.01   0.2   0
+          3.5   1.0   0.5  0.01   0.2   0
+          3.5   2.0   0.2  0.01   0.2   0
+          3.5   1.51  0.2  0.01   0.2   0
+          3.5   1.0   0.2  0.01   0.2   0
+          4.5   1.51  0.5  0.01   0.2   0
+        </m0_measurements>
+        <m1_measurements total="2" datafile="">
+          <!-- (one line per location) must have exactly the following format: -->
+          <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+          1.5   2.0   0.8  0.01   0.2   0
+          1.5   1.51  0.8  0.01   0.2   0
+          1.5   1.0   0.8  0.01   0.2   0
+          1.5   2.0   0.5  0.01   0.2   0
+          1.5   1.51  0.5  0.01   0.2   0
+          1.5   1.0   0.5  0.01   0.2   0
+          1.5   2.0   0.2  0.01   0.2   0
+          1.5   1.51  0.2  0.01   0.2   0
+          1.5   1.0   0.2  0.01   0.2   0
+          2.5   2.0   0.8  0.01   0.2   0
+          2.5   1.51  0.8  0.01   0.2   0
+          2.5   1.0   0.8  0.01   0.2   0
+          2.5   2.0   0.5  0.01   0.2   0
+          2.5   1.51  0.5  0.01   0.2   0
+          2.5   1.0   0.5  0.01   0.2   0
+          2.5   2.0   0.2  0.01   0.2   0
+          2.5   1.51  0.2  0.01   0.2   0
+          2.5   1.0   0.2  0.01   0.2   0
+          3.5   2.0   0.8  0.01   0.2   0
+          3.5   1.51  0.8  0.01   0.2   0
+          3.5   1.0   0.8  0.01   0.2   0
+          3.5   2.0   0.5  0.01   0.2   0
+          3.5   1.51  0.5  0.01   0.2   0
+          3.5   1.0   0.5  0.01   0.2   0
+          3.5   2.0   0.2  0.01   0.2   0
+          3.5   1.51  0.2  0.01   0.2   0
+          3.5   1.0   0.2  0.01   0.2   0
+          4.5   1.51  0.5  0.01   0.2   0
+        </m1_measurements>
+      </heat_inversion_data>
+
+      <!-- -->
+      <!-- -->
+      <!-- ***************** -->
+      <!-- geoelectrical potential data -->
+      <!-- ******************* -->
+      <geoelectrical_potential_data total_configs="1" kappa_hdf5_file="" sigma0_hdf5_file="">
+        <!-- kappa and sigma0 as hdf5 file not yet implemented! -->
+        <!-- -->
+        <!-- -->
+        <!-- configuration 1 -->
+        <geoelectrical_potential_configuration>
+          <!-- -->
+          <!-- -->
+          <inout_location total="1" datafile="">
+            <!-- in out dipole injection. Must have this structure! -->
+            <!-- x   y    z (for injection location) and x  y  z (for extraction location)     value  (value for the extraction)-->
+            2.5    0.2   0.5   2.5  2.7  0.5  1
+          </inout_location>
+          <m0_measurements total="1" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, z, x2, y2, z2, abs_error, rel_error, value (seperated by blank or tab) -->
+            2.5    1.5    0.3   2.5  1.5   0.7   2.0    0.1    0
+          </m0_measurements>
+          <m1_measurements total="1" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, z, x2, y2, z2, abs_error, rel_error, value (seperated by blank or tab) -->
+            <!-- error of m1 will be used for m1/m0 -->
+            2.5    1.5    0.3   2.5  1.5   0.7   2.0    0.1    0
+          </m1_measurements>
+        </geoelectrical_potential_configuration>
+      </geoelectrical_potential_data>
+      <!-- -->
+      <!-- -->
+    </Setup>
+    <!-- -->
+    <!-- -->
+    <!-- ***************************************** -->
+    <!-- Setup #3: -->
+    <!-- ***************************************** -->
+    <Setup>
+      <!-- ***************************************** -->
+      <!-- Groundwater Flow BCs: -->
+      <!-- ***************************************** -->
+      <flow_equation recycle_matrix_hierarchy="yes">
+        <boundary orientation="west" bctype="1"> 
+          <stripe value="100.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="east" bctype="1">
+          <stripe value="99.90" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="bottom" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="top" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+      </flow_equation>
+      <!-- ***************************************** -->
+      <!-- Concentration BCs: -->
+      <!-- ***************************************** -->
+      <transport_equation recycle_matrix_hierarchy="no" injection_time="100">
+        <boundary orientation="west" bctype="1">
+          <stripe value="0.0" regularization_factor="2.0" regularization_type="dynamic">
+            <startpoint>20   4</startpoint>
+            <endpoint>30     6</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="east" bctype="-1">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="bottom" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="top" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+      </transport_equation>
+
+      <!-- ***************************************** -->
+      <!-- Heat BCs: -->
+      <!-- ***************************************** -->
+      <heat_transport_equation recycle_matrix_hierarchy="no" injection_time="100">
+        <boundary orientation="west" bctype="1">
+          <stripe value="0" regularization_factor="2.0" regularization_type="dynamic">
+            <startpoint>20   4</startpoint>
+            <endpoint>30     6</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="east" bctype="-1">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="bottom" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="top" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+      </heat_transport_equation>
+
+      <!-- ***************************************** -->
+      <!-- Geoelectrical Potential BCs: -->
+      <!-- ***************************************** -->
+      <geoelectrical_potential_equation recycle_matrix_hierarchy="no">
+        <boundary orientation="west" bctype="1">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="east" bctype="1">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="bottom" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="top" bctype="0">
+          <stripe value="0.0" >
+            <startpoint>0.0 0.0</startpoint>
+            <endpoint>50.0 10.0</endpoint>
+          </stripe>
+        </boundary>
+      </geoelectrical_potential_equation>
+
+      <!-- -->
+      <!-- -->
+      <!-- ***************************************** -->
+      <!-- Pumping Data: point source(pumping data) and well data -->
+      <!-- ***************************************** -->
+      <!-- Doing tests with well data : Setup #3 -->
+      <well_data total="6" datafile="">
+        <!-- Well data format: -->
+        <!-- x,y        = position of the well along the x,y-plane -->
+        <!-- zTop       = (upper) z-coordinate at which the notches of the well start -->
+        <!-- zBottom    = (lower) z-coordinate at the location of the well-bottom -->
+        <!-- k_well     = choose a very high conductivity inside the well, e.g. 10.0 -->
+        <!-- flow_rate  = negative for pumping or positive for injection -->
+        <!-- One line per well: -->
+        <!-- x      y            zTop    zBottom   k_well    flow_rate   T    t_inject   c   injection_time  -->
+        10.01     25.0001      4.49     0.51       1.0      8.0e-3        0    100        0   100
+        17.01     25.0001      4.49     3.51       1.0      2.0e-3        0    100        0   100
+        17.01     25.0001      2.99     2.01       1.0      2.0e-3        1    100        1   100
+        17.01     25.0001      1.49     0.51       1.0      2.0e-3        0    100        0   100
+        33.01     25.0001      4.49     0.51       1.0      -9.0e-3       0    100        0   100
+        40.01     25.0001      4.49     0.51       1.0      -10.0e-3       0    100        0   100
+      </well_data>
+      <!-- -->
+      <!-- -->
+      <!-- ******************* -->
+      <!-- lnK data            -->
+      <!-- ******************* -->
+      <lnk_inversion_data>
+        <!-- Direct measurements of hydraulic conductivity K: -->
+        <lnk_measurements total="3" datafile="">
+          <!-- This data (one line per location) must have exactly the following format: -->
+          <!-- x, y, z, abs_error, rel_error, value (seperated by blank or tab) -->
+          5.0   5.0   5.0  0.0 0.05    0.0
+          8.0   4.0   5.0  0.0 0.05    0.0
+          7.0   6.0   5.0  0.0 0.05    0.0
+          4.0   8.0   5.0  0.0 0.05    0.0
+        </lnk_measurements>
+      </lnk_inversion_data>
+
+      <!-- -->
+      <!-- -->
+      <!-- ******************* -->
+      <!-- hydraulic head data (setup 3) -->
+      <!-- ******************* -->
+      <head_inversion_data regularization_factor="1e-6" regularization_type="dynamic">
+        <head_measurements total="64" datafile="">
+          <!-- (one line per location) must have exactly the following format: -->
+          <!-- x, y, z, abs_error, rel_error, value (seperated by blank or tab) -->
+          20.501    20.501     1.001    0.005    0   0
+          23.501    20.501     1.001    0.005    0   0
+          26.501    20.501     1.001    0.005    0   0
+          29.501    20.501     1.001    0.005    0   0
+          20.501     23.501    1.001    0.005    0   0
+          23.501     23.501    1.001    0.005    0   0
+          26.501     23.501    1.001    0.005    0   0
+          29.501     23.501    1.001    0.005    0   0
+          20.501    26.501     1.001    0.005    0   0
+          23.501    26.501     1.001    0.005    0   0
+          26.501    26.501     1.001    0.005    0   0
+          29.501    26.501     1.001    0.005    0   0
+          20.501     29.501    1.001    0.005    0   0
+          23.501     29.501    1.001    0.005    0   0
+          26.501     29.501    1.001    0.005    0   0
+          29.501     29.501    1.001    0.005    0   0
+          20.501    20.501      2.001    0.005    0   0
+          23.501    20.501      2.001    0.005    0   0
+          26.501    20.501      2.001    0.005    0   0
+          29.501    20.501      2.001    0.005    0   0
+          20.501     23.501     2.001    0.005    0   0
+          23.501     23.501     2.001    0.005    0   0
+          26.501     23.501     2.001    0.005    0   0
+          29.501     23.501     2.001    0.005    0   0
+          20.501    26.501      2.001    0.005    0   0
+          23.501    26.501      2.001    0.005    0   0
+          26.501    26.501      2.001    0.005    0   0
+          29.501    26.501      2.001    0.005    0   0
+          20.501     29.501     2.001    0.005    0   0
+          23.501     29.501     2.001    0.005    0   0
+          26.501     29.501     2.001    0.005    0   0
+          29.501     29.501     2.001    0.005    0   0
+          20.501    20.501     3.001    0.005    0   0
+          23.501    20.501     3.001    0.005    0   0
+          26.501    20.501     3.001    0.005    0   0
+          29.501    20.501     3.001    0.005    0   0
+          20.501     23.501    3.001    0.005    0   0
+          23.501     23.501    3.001    0.005    0   0
+          26.501     23.501    3.001    0.005    0   0
+          29.501     23.501    3.001    0.005    0   0
+          20.501    26.501     3.001    0.005    0   0
+          23.501    26.501     3.001    0.005    0   0
+          26.501    26.501     3.001    0.005    0   0
+          29.501    26.501     3.001    0.005    0   0
+          20.501     29.501    3.001    0.005    0   0
+          23.501     29.501    3.001    0.005    0   0
+          26.501     29.501    3.001    0.005    0   0
+          29.501     29.501    3.001    0.005    0   0
+          20.501    20.501      4.001    0.005    0   0
+          23.501    20.501      4.001    0.005    0   0
+          26.501    20.501      4.001    0.005    0   0
+          29.501    20.501      4.001    0.005    0   0
+          20.501     23.501     4.001    0.005    0   0
+          23.501     23.501     4.001    0.005    0   0
+          26.501     23.501     4.001    0.005    0   0
+          29.501     23.501     4.001    0.005    0   0
+          20.501    26.501      4.001    0.005    0   0
+          23.501    26.501      4.001    0.005    0   0
+          26.501    26.501      4.001    0.005    0   0
+          29.501    26.501      4.001    0.005    0   0
+          20.501     29.501     4.001    0.005    0   0
+          23.501     29.501     4.001    0.005    0   0
+          26.501     29.501     4.001    0.005    0   0
+          29.501     29.501     4.001    0.005    0   0
+        </head_measurements>
+      </head_inversion_data>
+      <!-- -->
+      <!-- -->
+      <!-- ******************************************** -->
+      <!-- measurements of solute concentration         -->
+      <!-- ******************************************** -->
+      <solute_concentration_inversion_data regularization_factor="1E-6" regularization_type="dynamic">
+        <!-- ******************************************** -->
+        <!-- m0 = zeroth temporal moment of concentration -->
+        <!-- Setup #3 -->
+        <!-- ******************************************** -->
+        <m0_inversion_data sampling_volume="0.0 0.0 0.0" SV_max="0.0 0.0 0.0" SV_step="3.0 4.0 2" SV_limit="30">
+          <m0_measurements total="64" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, z, abs_error, rel_error, value (seperated by blank or tab) -->
+          20.501    20.501     1.001    5.001    0.05   0
+          23.501    20.501     1.001    5.001    0.05   0
+          26.501    20.501     1.001    5.001    0.05   0
+          29.501    20.501     1.001    5.001    0.05   0
+          20.501     23.501    1.001    5.001    0.05   0
+          23.501     23.501    1.001    5.001    0.05   0
+          26.501     23.501    1.001    5.001    0.05   0
+          29.501     23.501    1.001    5.001    0.05   0
+          20.501    26.501     1.001    5.001    0.05   0
+          23.501    26.501     1.001    5.001    0.05   0
+          26.501    26.501     1.001    5.001    0.05   0
+          29.501    26.501     1.001    5.001    0.05   0
+          20.501     29.501    1.001    5.001    0.05   0
+          23.501     29.501    1.001    5.001    0.05   0
+          26.501     29.501    1.001    5.001    0.05   0
+          29.501     29.501    1.001    5.001    0.05   0
+          20.501    20.501      2.001    5.001    0.05   0
+          23.501    20.501      2.001    5.001    0.05   0
+          26.501    20.501      2.001    5.001    0.05   0
+          29.501    20.501      2.001    5.001    0.05   0
+          20.501     23.501     2.001    5.001    0.05   0
+          23.501     23.501     2.001    5.001    0.05   0
+          26.501     23.501     2.001    5.001    0.05   0
+          29.501     23.501     2.001    5.001    0.05   0
+          20.501    26.501      2.001    5.001    0.05   0
+          23.501    26.501      2.001    5.001    0.05   0
+          26.501    26.501      2.001    5.001    0.05   0
+          29.501    26.501      2.001    5.001    0.05   0
+          20.501     29.501     2.001    5.001    0.05   0
+          23.501     29.501     2.001    5.001    0.05   0
+          26.501     29.501     2.001    5.001    0.05   0
+          29.501     29.501     2.001    5.001    0.05   0
+          20.501    20.501     3.001    5.001    0.05   0
+          23.501    20.501     3.001    5.001    0.05   0
+          26.501    20.501     3.001    5.001    0.05   0
+          29.501    20.501     3.001    5.001    0.05   0
+          20.501     23.501    3.001    5.001    0.05   0
+          23.501     23.501    3.001    5.001    0.05   0
+          26.501     23.501    3.001    5.001    0.05   0
+          29.501     23.501    3.001    5.001    0.05   0
+          20.501    26.501     3.001    5.001    0.05   0
+          23.501    26.501     3.001    5.001    0.05   0
+          26.501    26.501     3.001    5.001    0.05   0
+          29.501    26.501     3.001    5.001    0.05   0
+          20.501     29.501    3.001    5.001    0.05   0
+          23.501     29.501    3.001    5.001    0.05   0
+          26.501     29.501    3.001    5.001    0.05   0
+          29.501     29.501    3.001    5.001    0.05   0
+          20.501    20.501      4.001    5.001    0.05   0
+          23.501    20.501      4.001    5.001    0.05   0
+          26.501    20.501      4.001    5.001    0.05   0
+          29.501    20.501      4.001    5.001    0.05   0
+          20.501     23.501     4.001    5.001    0.05   0
+          23.501     23.501     4.001    5.001    0.05   0
+          26.501     23.501     4.001    5.001    0.05   0
+          29.501     23.501     4.001    5.001    0.05   0
+          20.501    26.501      4.001    5.001    0.05   0
+          23.501    26.501      4.001    5.001    0.05   0
+          26.501    26.501      4.001    5.001    0.05   0
+          29.501    26.501      4.001    5.001    0.05   0
+          20.501     29.501     4.001    5.001    0.05   0
+          23.501     29.501     4.001    5.001    0.05   0
+          26.501     29.501     4.001    5.001    0.05   0
+          29.501     29.501     4.001    5.001    0.05   0
+          </m0_measurements>
+        </m0_inversion_data>
+        <!-- -->
+        <!-- -->
+        <!-- ******************************************** -->
+        <!-- m1 = first temporal moment of concentration (setup 3) -->
+        <!-- ******************************************** -->
+        <m1_inversion_data sampling_volume="0.0 0.0 0.0">
+          <m1_measurements total="64" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, z, abs_error, rel_error, value (seperated by blank or tab) -->
+          20.501    20.501     1.001    2.0e6    0.05   0
+          23.501    20.501     1.001    2.0e6    0.05   0
+          26.501    20.501     1.001    2.0e6    0.05   0
+          29.501    20.501     1.001    2.0e6    0.05   0
+          20.501     23.501    1.001    2.0e6    0.05   0
+          23.501     23.501    1.001    2.0e6    0.05   0
+          26.501     23.501    1.001    2.0e6    0.05   0
+          29.501     23.501    1.001    2.0e6    0.05   0
+          20.501    26.501     1.001    2.0e6    0.05   0
+          23.501    26.501     1.001    2.0e6    0.05   0
+          26.501    26.501     1.001    2.0e6    0.05   0
+          29.501    26.501     1.001    2.0e6    0.05   0
+          20.501     29.501    1.001    2.0e6    0.05   0
+          23.501     29.501    1.001    2.0e6    0.05   0
+          26.501     29.501    1.001    2.0e6    0.05   0
+          29.501     29.501    1.001    2.0e6    0.05   0
+          20.501    20.501      2.001    2.0e6    0.05   0
+          23.501    20.501      2.001    2.0e6    0.05   0
+          26.501    20.501      2.001    2.0e6    0.05   0
+          29.501    20.501      2.001    2.0e6    0.05   0
+          20.501     23.501     2.001    2.0e6    0.05   0
+          23.501     23.501     2.001    2.0e6    0.05   0
+          26.501     23.501     2.001    2.0e6    0.05   0
+          29.501     23.501     2.001    2.0e6    0.05   0
+          20.501    26.501      2.001    2.0e6    0.05   0
+          23.501    26.501      2.001    2.0e6    0.05   0
+          26.501    26.501      2.001    2.0e6    0.05   0
+          29.501    26.501      2.001    2.0e6    0.05   0
+          20.501     29.501     2.001    2.0e6    0.05   0
+          23.501     29.501     2.001    2.0e6    0.05   0
+          26.501     29.501     2.001    2.0e6    0.05   0
+          29.501     29.501     2.001    2.0e6    0.05   0
+          20.501    20.501     3.001    2.0e6    0.05   0
+          23.501    20.501     3.001    2.0e6    0.05   0
+          26.501    20.501     3.001    2.0e6    0.05   0
+          29.501    20.501     3.001    2.0e6    0.05   0
+          20.501     23.501    3.001    2.0e6    0.05   0
+          23.501     23.501    3.001    2.0e6    0.05   0
+          26.501     23.501    3.001    2.0e6    0.05   0
+          29.501     23.501    3.001    2.0e6    0.05   0
+          20.501    26.501     3.001    2.0e6    0.05   0
+          23.501    26.501     3.001    2.0e6    0.05   0
+          26.501    26.501     3.001    2.0e6    0.05   0
+          29.501    26.501     3.001    2.0e6    0.05   0
+          20.501     29.501    3.001    2.0e6    0.05   0
+          23.501     29.501    3.001    2.0e6    0.05   0
+          26.501     29.501    3.001    2.0e6    0.05   0
+          29.501     29.501    3.001    2.0e6    0.05   0
+          20.501    20.501      4.001    2.0e6    0.05   0
+          23.501    20.501      4.001    2.0e6    0.05   0
+          26.501    20.501      4.001    2.0e6    0.05   0
+          29.501    20.501      4.001    2.0e6    0.05   0
+          20.501     23.501     4.001    2.0e6    0.05   0
+          23.501     23.501     4.001    2.0e6    0.05   0
+          26.501     23.501     4.001    2.0e6    0.05   0
+          29.501     23.501     4.001    2.0e6    0.05   0
+          20.501    26.501      4.001    2.0e6    0.05   0
+          23.501    26.501      4.001    2.0e6    0.05   0
+          26.501    26.501      4.001    2.0e6    0.05   0
+          29.501    26.501      4.001    2.0e6    0.05   0
+          20.501     29.501     4.001    2.0e6    0.05   0
+          23.501     29.501     4.001    2.0e6    0.05   0
+          26.501     29.501     4.001    2.0e6    0.05   0
+          29.501     29.501     4.001    2.0e6    0.05   0
+          </m1_measurements>
+        </m1_inversion_data>
+        <!-- -->
+        <!-- -->
+      </solute_concentration_inversion_data>
+      <!-- -->
+      <!-- -->
+      <!-- -->
+      <!-- ***************** -->
+      <!-- temperature  data -->
+      <!-- -->
+      <!-- -->
+      <heat_inversion_data regularization_factor="0.1" regularization_type="fixed">
+        <m0_measurements total="27" datafile="">
+          <!-- (one line per location) must have exactly the following format: -->
+          <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+          1.5   2.0   0.8  0.01   0.2   0
+          1.5   1.51  0.8  0.01   0.2   0
+          1.5   1.0   0.8  0.01   0.2   0
+          1.5   2.0   0.5  0.01   0.2   0
+          1.5   1.51  0.5  0.01   0.2   0
+          1.5   1.0   0.5  0.01   0.2   0
+          1.5   2.0   0.2  0.01   0.2   0
+          1.5   1.51  0.2  0.01   0.2   0
+          1.5   1.0   0.2  0.01   0.2   0
+          2.5   2.0   0.8  0.01   0.2   0
+          2.5   1.51  0.8  0.01   0.2   0
+          2.5   1.0   0.8  0.01   0.2   0
+          2.5   2.0   0.5  0.01   0.2   0
+          2.5   1.51  0.5  0.01   0.2   0
+          2.5   1.0   0.5  0.01   0.2   0
+          2.5   2.0   0.2  0.01   0.2   0
+          2.5   1.51  0.2  0.01   0.2   0
+          2.5   1.0   0.2  0.01   0.2   0
+          3.5   2.0   0.8  0.01   0.2   0
+          3.5   1.51  0.8  0.01   0.2   0
+          3.5   1.0   0.8  0.01   0.2   0
+          3.5   2.0   0.5  0.01   0.2   0
+          3.5   1.51  0.5  0.01   0.2   0
+          3.5   1.0   0.5  0.01   0.2   0
+          3.5   2.0   0.2  0.01   0.2   0
+          3.5   1.51  0.2  0.01   0.2   0
+          3.5   1.0   0.2  0.01   0.2   0
+          4.5   1.51  0.5  0.01   0.2   0
+        </m0_measurements>
+        <m1_measurements total="2" datafile="">
+          <!-- (one line per location) must have exactly the following format: -->
+          <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+          1.5   2.0   0.8  0.01   0.2   0
+          1.5   1.51  0.8  0.01   0.2   0
+          1.5   1.0   0.8  0.01   0.2   0
+          1.5   2.0   0.5  0.01   0.2   0
+          1.5   1.51  0.5  0.01   0.2   0
+          1.5   1.0   0.5  0.01   0.2   0
+          1.5   2.0   0.2  0.01   0.2   0
+          1.5   1.51  0.2  0.01   0.2   0
+          1.5   1.0   0.2  0.01   0.2   0
+          2.5   2.0   0.8  0.01   0.2   0
+          2.5   1.51  0.8  0.01   0.2   0
+          2.5   1.0   0.8  0.01   0.2   0
+          2.5   2.0   0.5  0.01   0.2   0
+          2.5   1.51  0.5  0.01   0.2   0
+          2.5   1.0   0.5  0.01   0.2   0
+          2.5   2.0   0.2  0.01   0.2   0
+          2.5   1.51  0.2  0.01   0.2   0
+          2.5   1.0   0.2  0.01   0.2   0
+          3.5   2.0   0.8  0.01   0.2   0
+          3.5   1.51  0.8  0.01   0.2   0
+          3.5   1.0   0.8  0.01   0.2   0
+          3.5   2.0   0.5  0.01   0.2   0
+          3.5   1.51  0.5  0.01   0.2   0
+          3.5   1.0   0.5  0.01   0.2   0
+          3.5   2.0   0.2  0.01   0.2   0
+          3.5   1.51  0.2  0.01   0.2   0
+          3.5   1.0   0.2  0.01   0.2   0
+          4.5   1.51  0.5  0.01   0.2   0
+        </m1_measurements>
+      </heat_inversion_data>
+
+      <!-- -->
+      <!-- -->
+      <!-- ***************** -->
+      <!-- geoelectrical potential data -->
+      <!-- ******************* -->
+      <geoelectrical_potential_data total_configs="1" kappa_hdf5_file="" sigma0_hdf5_file="">
+        <!-- kappa and sigma0 as hdf5 file not yet implemented! -->
+        <!-- -->
+        <!-- -->
+        <!-- configuration 1 -->
+        <geoelectrical_potential_configuration>
+          <!-- -->
+          <!-- -->
+          <inout_location total="1" datafile="">
+            <!-- in out dipole injection. Must have this structure! -->
+            <!-- x   y    z (for injection location) and x  y  z (for extraction location)     value  (value for the extraction)-->
+            2.5    0.2   0.5   2.5  2.7  0.5  1
+          </inout_location>
+          <m0_measurements total="1" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, z, x2, y2, z2, abs_error, rel_error, value (seperated by blank or tab) -->
+            2.5    1.5    0.3   2.5  1.5   0.7   2.0    0.1    0
+          </m0_measurements>
+          <m1_measurements total="1" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, z, x2, y2, z2, abs_error, rel_error, value (seperated by blank or tab) -->
+            <!-- error of m1 will be used for m1/m0 -->
+            2.5    1.5    0.3   2.5  1.5   0.7   2.0    0.1    0
+          </m1_measurements>
+        </geoelectrical_potential_configuration>
+      </geoelectrical_potential_data>
+      <!-- -->
+      <!-- -->
+    </Setup>
+  </Setups>
+
+</inputfile>
+

@@ -20,6 +20,7 @@ noinst_PROGRAMS = \
 	gesis2dDG gesis2dFEM \
 	gesisUG2dDG \
 	gesis3dDG  gesis3dFEM \
+	gesisALU3dDG \
 	dune_gesis
 
 # 2D DG version for YASP:
@@ -99,6 +100,32 @@ gesis3dDG_LDADD = \
 gesis3dDG_LDFLAGS = $(AM_LDFLAGS) \
 	$(SUPERLU_LDFLAGS) \
 	$(DUNE_LDFLAGS)
+
+# 3D DG version for ALUGrid:
+gesisALU3dDG_SOURCES = alugrid_3d.cc
+
+gesisALU3dDG_CPPFLAGS = $(AM_CPPFLAGS) -DUSE_ALUGRID \
+	$(HDF5_CPPFLAGS) -DH5_USE_16_API \
+	$(FFTW3_INCL) \
+	$(BOOST_INCL) \
+	$(PARMETIS_CPPFLAGS) \
+	$(SUPERLU_CPPFLAGS) \
+	$(DUNEMPICPPFLAGS)
+
+gesisALU3dDG_LDADD = \
+	$(DUNEMPILDFLAGS) \
+	$(DUNEMPILIBS)	\
+	$(HDF5_LIBS) \
+	$(FFTW3_LIBS) \
+	$(PARMETIS_LIBS) \
+	$(SUPERLU_LIBS) \
+	$(DUNE_LDFLAGS) $(DUNE_LIBS) \
+	$(LDADD)
+
+gesisALU3dDG_LDFLAGS = $(AM_LDFLAGS) \
+	$(SUPERLU_LDFLAGS) \
+	$(DUNE_LDFLAGS)
+
 
 # 2D FEM version for YASP:
 gesis2dFEM_SOURCES = geo_inversion_2d.cc
