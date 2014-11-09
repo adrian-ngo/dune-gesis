@@ -190,7 +190,7 @@ class RT0_PressureField {
     data_container.clear();
 
     Dune::Timer watch;
-    REAL elapsed_time;
+
     watch.reset();
 
     if(gv.comm().rank()==0)

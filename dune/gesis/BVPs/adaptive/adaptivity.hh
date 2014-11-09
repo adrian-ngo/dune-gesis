@@ -781,7 +781,7 @@ namespace Dune {
       // reorder updated gridview
       gv.update( gfs_gw,
                  vc_h,
-                 grid.leafView()
+                 grid.leafGridView()
                  //grid.levelView( grid.maxLevel() )
                  );
 

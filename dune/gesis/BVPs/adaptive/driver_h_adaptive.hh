@@ -140,10 +140,10 @@ void adaptiveDrive_h_rgv( GRID& grid,
 #endif
 
 
-  GV_TP gv_tp( grid.leafView(), rt0_pressurefield, comparefunctor );
+  GV_TP gv_tp( grid.leafGridView(), rt0_pressurefield, comparefunctor );
 
   //Dune::shared_ptr<GV_TP> pgv_tp
-  //  = Dune::make_shared<GV_TP>( grid.leafView(), 
+  //  = Dune::make_shared<GV_TP>( grid.leafGridView(), 
   //                              //grid.levelView(0),
   //                              rt0_pressurefield,
   //                              comparefunctor );
