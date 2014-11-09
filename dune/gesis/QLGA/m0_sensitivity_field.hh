@@ -51,8 +51,6 @@ namespace Dune {
       typedef typename GV_GW::Traits::template Codim<0>::template Partition<Dune::All_Partition>::Iterator ElementIterator;
       typedef typename GV_GW::Traits::template Codim<0>::Entity ElementType;
 
-
-      Idx idx;
       // loop over the Level0-grid
       for( ElementIterator e0it=gv_0.template begin<0,Dune::All_Partition>()
              ; e0it!=gv_0.template end<0,Dune::All_Partition>()

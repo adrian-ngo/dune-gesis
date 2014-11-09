@@ -1395,8 +1395,6 @@ namespace Dune {
         for(UINT iSetup=0; iSetup<inputdata.setups.size(); iSetup++){
           for(UINT iWell=0; iWell<inputdata.setups[iSetup].wdlist.pointdata_vector.size(); iWell++){
 
-            std::size_t myIndex = 0;
-
             /* 
                Translate the global coordinate '(x,y,z)' into its corresponding Yfield-tensor-index 'global_index'. 
                This requires only the virtual gridsize of the virtual Yfield grid. 

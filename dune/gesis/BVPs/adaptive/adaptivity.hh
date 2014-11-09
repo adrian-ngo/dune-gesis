@@ -335,7 +335,7 @@ namespace Dune {
         LFSU lfsu(gfsu);
         DGF dgf(gfsu,u);
         const FEM& fem = gfsu.finiteElementMap();
-        IB ib = IB();
+        // IB ib = IB();
         std::vector<typename U::ElementType> ul;
 
         // iterate over all elems

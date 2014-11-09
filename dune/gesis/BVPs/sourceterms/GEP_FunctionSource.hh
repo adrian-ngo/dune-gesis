@@ -181,7 +181,7 @@ namespace Dune {
           = Dune::ReferenceElements<DF,dim>::general( ig.inside()->type() ).position(0,0);
 
         typename KAPPA_FIELD::Traits::DiffusionTensorType tensor_inside(kappa_field.DiffusionTensor(*(ig.inside()),localcenter_inside));
-        RF A_eff = tensor_inside[0][0];
+        // RF A_eff = tensor_inside[0][0];
 
         DRGF dgf_1( gfs_cg, vc_source_1 ); // m0_adj
         DARCY_FLUX_DGF dgf_2( kappa_field, gfs_gw, vc_source_2 /*, well_flag*/ ); // -K*grad(psi_m0)
@@ -198,7 +198,7 @@ namespace Dune {
 
             // position of quadrature point in local coordinates of element 
             Dune::FieldVector<DF,dim> local = ig.geometryInInside().global( qPoint_local );
-            RF factor = it->weight() * ig.geometry().integrationElement( qPoint_local );
+            // RF factor = it->weight() * ig.geometry().integrationElement( qPoint_local );
 
             Dune::FieldVector<RF, 1> m0_adj_s(0.0);
             dgf_1.evaluate_on_leaf( maxGridLevel, *(ig.inside()), local, m0_adj_s );

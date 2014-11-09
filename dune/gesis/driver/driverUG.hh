@@ -437,7 +437,7 @@ namespace Dune {
       GFS_GW gfs_gw(gv_gw,fem_ellip,con_gw);
 
 
-      CONSTRAINTS con_tp;
+      // CONSTRAINTS con_tp;
 
 #if defined USE_FEM && defined PARALLEL && defined USE_NOVLP_MODE
       con_gw.compute_ghosts( gfs_gw );

@@ -658,10 +658,6 @@ namespace Dune {
             sourceterm.source_nature == GEP_FUNCTIONAL_SOURCE )
           {
             Dune::GeometryType gt = eg.geometry().type();
-            
-            // get the local meshsize h:
-            RF meshsize = sqrt( eg.geometry().volume() );
-            
 
             if(flag_source==0){
               //logger<<"TP lambda_volume: "<<std::endl;

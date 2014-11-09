@@ -537,7 +537,7 @@ public:
     REAL injection_time = setupdata.transport_equation.injection_time;
     REAL concentration = setupdata.transport_equation.boundaries[0].stripes[0].value;
     REAL maxValue = injection_time * concentration;
-    REAL minValue=0.0;
+    // REAL minValue=0.0;
 
     if( std::abs(minimum) < 0.05*maxValue && maximum < 1.05*maxValue ){
       if(gv.comm().rank()==0)

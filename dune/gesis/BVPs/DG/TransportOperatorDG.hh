@@ -322,8 +322,8 @@ namespace Dune {
             well_rate > 1e-12 )
           return; // inflow is taken care of by addWellTo_Lambda_Volume()
         
-        RF concentration = 1;
-        RF injectiontime = 1;
+        // RF concentration = 1;
+        // RF injectiontime = 1;
 
 
         if( w_outside != 
