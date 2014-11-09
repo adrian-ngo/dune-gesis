@@ -383,8 +383,8 @@ namespace Dune {
 
             //fval *= baselevel_factor; // works for outflow well with tracer coming from Dirichlet BC
             if( eg.entity().level() > (int)baselevel ){
-              fval *= (refinement_factor_dim / baselevel_factor);
-              //fval /= refinement_factor / baselevel_factor;  // for refinement of gv_tp
+              // fval *= (refinement_factor_dim / baselevel_factor);
+              fval /= refinement_factor / baselevel_factor;  // for refinement of gv_tp
               //if( dim>2 )
               //fval /= refinement_factor / baselevel_factor;  // 3D: 1 block refined gives 4 blocks in the horizontal
             }
@@ -494,7 +494,7 @@ namespace Dune {
 
       }
 
-#endif // USE_NUMDIFF
+#endif // not USE_NUMDIFF
 
 
 

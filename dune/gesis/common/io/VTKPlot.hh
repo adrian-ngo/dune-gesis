@@ -1,8 +1,8 @@
 /* 
- * File:   output2vtu.hh
- * Author: ngo
+ * File:   VTKPlot.hh
+ * Author: A. Ngo
  *
- * Created on July 8, 2010, 1:32 PM
+ * 2010-2014
  */
 
 #ifndef DUNE_GESIS_VTU_ROUTINES_HH
@@ -28,17 +28,20 @@ namespace Dune {
 
     public:
 
-      //
-      // Take care!
       // There are three functions with different signatures serving 
       // different input types 
       // 
-      // 1.) output2vtu:            VCType ---> vertex data
-      // 2.) output_vector_to_vtu:  VECTOR ---> cell-data
-      // 3.) output_dgf_to_vtu:     DGF ---> vertex-data
-      //
+      // 1.) output2vtu:                    VCType    ---> vertex data
+      // 2.) output_vector_to_vtu:          VECTOR    ---> cell-data / vertex data
+      // 3.) output_dgf_to_vtu:             DGF       ---> vertex-data
+      // 4.) output_hdf5data_to_gridview    HDF5 file ---> cell-data / vertex data
+      // 5.) plotDataToRefinedGrid          HDF5 file ---> HDF5 file
+      // 
 
-      // Version 1:
+
+      // *******************************************************************
+      // 1.) output2vtu:                    VCType    ---> vertex data
+      // *******************************************************************
       template<typename GFS,typename VCType>
       static void output2vtu( const GFS& gfs
                               , const VCType& xSolution
@@ -57,10 +60,6 @@ namespace Dune {
         GV gv = gfs.gridView();
         typedef Dune::PDELab::DiscreteGridFunction<GFS,VCType> DGF;
         DGF dgf(gfs,xSolution);
-
-        //std::cout << "DEBUG: xSolution.flatsize() = " << xSolution.flatsize() << std::endl;
-        //std::cout << "DEBUG: gfs.size() = " << gfs.size() << std::endl;
-        //std::cout << "DEBUG: gridview.size(0) = " << gv.size(0) << std::endl;
 
         if( gv.comm().rank()==0 
             &&
@@ -149,7 +148,9 @@ namespace Dune {
 
 
 
-      // Take care: This output will not work, if there is a mismatch between the resolution of the used grid and the virtual grid!
+      // *************************************************************************
+      // 2.) output_vector_to_vtu:          VECTOR    ---> cell-data / vertex data
+      // *************************************************************************
       template<typename GV, typename VECTOR >
       static void output_vector_to_vtu( 
                                        const GV& gv
@@ -173,7 +174,6 @@ namespace Dune {
 
         if(bSubSampling){
 
-          // Adrian (2012-05-02): 
           // This will plot the cell data as they are, 
           // namely in a non-conforming way.
 
@@ -182,10 +182,10 @@ namespace Dune {
           typedef Dune::PDELab::NoConstraints NOCONS;
           typedef Dune::PDELab::ISTLVectorBackend<> VBE1;
     
-#ifdef USE_CUBE
-          P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::cube,dim));
-#else
+#ifdef USE_SIMPLEX
           P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
+#else
+          P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::cube,dim));
 #endif
 
           typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,NOCONS,VBE1> P0GFS;
@@ -258,18 +258,21 @@ namespace Dune {
       }
 
 
-      // Version 3:
+
+      // *******************************************************************
+      // 3.) output_dgf_to_vtu:             DGF       ---> vertex-data
+      // *******************************************************************
       template<typename GV, typename GFS, typename DGF >
       static void output_dgf_to_vtu( 
-                             const GV& gv
-                             , const GFS& gfs
-                             , const DGF& dgf
-                             , const std::string filename
-                             , const std::string title 
-                             , const int verbosity=0
-                             , bool bSubSampling = false
-                             , int nSubSampling = 0
-                              )
+                                    const GV& gv
+                                    , const GFS& gfs
+                                    , const DGF& dgf
+                                    , const std::string filename
+                                    , const std::string title 
+                                    , const int verbosity=0
+                                    , bool bSubSampling = false
+                                    , int nSubSampling = 0
+                                     )
       {
 
         Dune::Timer watch;
@@ -353,19 +356,20 @@ namespace Dune {
 
       }
 
-      /*
-       * function for writing the Y_old to vtu on Level-0 grid
-       */
+
+
+      // *************************************************************************
+      // 4.) output_hdf5data_to_gridview    HDF5 file ---> cell-data / vertex data
+      // *************************************************************************
       template<typename GV,typename YFG>
-      inline static void output_hdf5data_to_gridview
-      ( const GV &gv_0,
-        const CInputData& inputdata,
-        const std::string & vtu_filename,
-        const std::string & Y_old_filename,
-        const std::string & hd5_data_name,
-        YFG& yfg_Y_old,
-        const int verbosity=0
-        ){
+      inline static void output_hdf5data_to_gridview( const GV &gv_0,
+                                                      const CInputData& inputdata,
+                                                      const std::string & vtu_filename,
+                                                      const std::string & Y_old_filename,
+                                                      const std::string & hd5_data_name,
+                                                      YFG& yfg_Y_old,
+                                                      const int verbosity=0
+                                                      ){
 
         Dune::Timer watch;
         logger << "output_hdf5data_to_gridview: " << vtu_filename << std::endl;
@@ -373,15 +377,17 @@ namespace Dune {
 
         Vector<REAL> local_Y_old;
         Vector<UINT> local_count,local_offset;
-        HDF5Tools::
-          read_parallel_from_HDF5( gv_0
-                                   , inputdata
-                                   , local_Y_old
-                                   , hd5_data_name
-                                   , local_count
-                                   , local_offset
-                                   , Y_old_filename
-                                   );
+
+        HDF5Tools::blob();
+
+        HDF5Tools::read_parallel_from_HDF5( gv_0
+                                            , inputdata
+                                            , local_Y_old
+                                            , hd5_data_name
+                                            , local_count
+                                            , local_offset
+                                            , Y_old_filename
+                                            );
 
         if( gv_0.comm().size() > 1 ){
           yfg_Y_old.parallel_import_from_local_vector( local_Y_old,
@@ -404,6 +410,107 @@ namespace Dune {
                                    jobtitle.str() );
 
       }
+
+
+
+
+
+
+      // *******************************************************************
+      // 5.) plotDataToRefinedGrid          HDF5 file ---> HDF5 file
+      // *******************************************************************
+      template< typename GRID,
+                typename GV_GW,
+                typename IDT,
+                typename DIR,
+                typename YFG
+                >
+      static void plotDataToRefinedGrid( GRID& theGrid,
+                                         const GV_GW& gv_0,
+                                         const std::string filename1,
+                                         const std::string filename2,
+                                         const std::string groupname,
+                                         const IDT& inputdata,
+                                         const DIR& dir
+                                         ) {
+      
+        //const int dim = GV_GW::dimension;
+        // What is this good for? This is for step 3 of ...
+        // Idea:
+        // 1.) Generate measurements on grid level L1.
+        // 2.) Copy the measurement data from BUFFER into DATA sub-dir.
+        // 3.) Run a first inversion on a coarse grid level L0 with refine_estimate = "1". This will produce "Y_estimated_2.h5" with "/Y_est".
+        // 4a) mv Y_estimated_2.h5 Y_estimated.h5
+        // 4b) rm L_prior.h5 (very important: Its value from L0 will be too small for L1.)
+        // 5.) Run a second inversion on level L1 with using_existing_Yold="yes" and start geo_inversion with -c.
+        // 
+        // Background: Step 3) works as a speeded up the generation of an initial estimation for step 5)
+        // For example, one can start with head inversion in step 3) and carry on with m0m1 inversion in step 5)
+        //
+          
+        Vector<UINT> local_count,local_offset;
+        Vector<REAL> Y_est_parallel;
+
+        HDF5Tools::
+          read_parallel_from_HDF5( gv_0
+                                 , inputdata
+                                 , Y_est_parallel
+                                 , groupname
+                                 , local_count
+                                 , local_offset
+                                 , filename1
+                                 , 1 // P0 blocksize
+                                 , FEMType::DG // P0
+                                 , 0 // structure is on grid level 0
+                                 );
+        YFG yfg_Y_est( inputdata, dir, gv_0.comm() );
+
+        if( gv_0.comm().size() > 1 )
+          yfg_Y_est.parallel_import_from_local_vector( Y_est_parallel,
+                                                       local_count,
+                                                       local_offset );
+        else
+          yfg_Y_est.import_from_vector( Y_est_parallel );
+
+        theGrid.globalRefine( 1 );
+        const GV_GW& gv_1 = theGrid.levelGridView(1);
+        Vector<REAL> Y_est2;
+        Vector<REAL> Y_est2_well; // dummy, not used
+
+        yfg_Y_est.export_field_to_vector_on_grid( gv_1,
+                                                  Y_est2,
+                                                  Y_est2_well, // dummy
+                                                  1 // grid level for mapper
+                                                  );
+
+
+        VTKPlot::output_vector_to_vtu( gv_1, 
+                                       Y_est2,
+                                       dir.vtudir + "/Y_est2",
+                                       "Y_est2",
+                                       inputdata.verbosity,
+                                       true, // subsampling
+                                       0 // subsampling degree
+                                       );
+
+
+        HDF5Tools::
+          write_parallel_to_HDF5(
+                                 gv_1
+                               , inputdata
+                               , Y_est2
+                               , groupname
+                               , inputdata.domain_data.nCells
+                               , filename2
+                               , 1
+                               , FEMType::DG
+                               , 1
+                               , true
+                               );
+        theGrid.globalRefine(-1);
+
+      } // end of void plotDataToRefinedGrid
+
 
     }; // class VTKPlot
 

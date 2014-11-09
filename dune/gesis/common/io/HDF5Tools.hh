@@ -29,7 +29,10 @@ namespace Dune {
 
     public:
 
-#ifdef USE_HDF5
+      inline static void blob(){
+      };
+
+      //#if HAVE_HDF5
       /*
        * Note that in hdf5, all array indices are ordered the other way round!
        *
@@ -1112,7 +1115,8 @@ namespace Dune {
       // void write_parallel_to_HDF5( )
       // void write_sequential_to_HDF5( )
       //
-      template<typename GV,Dune::PartitionIteratorType partitiontype = Dune::All_Partition>
+      template<typename GV,
+               Dune::PartitionIteratorType partitiontype = Dune::All_Partition>
       static void read_parallel_from_HDF5( const GV& gv,
                                            const CInputData& inputdata,
                                            Vector<REAL>& local_data,
@@ -2807,100 +2811,7 @@ namespace Dune {
 
 
 
-
-
-    template< typename GRID,
-              typename GV_GW,
-              typename IDT,
-              typename DIR,
-              typename YFG
-              >
-    static void plotDataToRefinedGrid( GRID& theGrid,
-                                       const GV_GW& gv_0,
-                                       const std::string filename1,
-                                       const std::string filename2,
-                                       const std::string groupname,
-                                       const IDT& inputdata,
-                                       const DIR& dir
-                                       ) {
-      
-      //const int dim = GV_GW::dimension;
-      // What is this good for? This is for step 3 of ...
-      // Idea:
-      // 1.) Generate measurements on grid level L1.
-      // 2.) Copy the measurement data from BUFFER into DATA sub-dir.
-      // 3.) Run a first inversion on a coarse grid level L0 with refine_estimate = "1". This will produce "Y_estimated_2.h5" with "/Y_est".
-      // 4a) mv Y_estimated_2.h5 Y_estimated.h5
-      // 4b) rm L_prior.h5 (very important: Its value from L0 will be too small for L1.)
-      // 5.) Run a second inversion on level L1 with using_existing_Yold="yes" and start geo_inversion with -c.
-      // 
-      // Background: Step 3) works as a speeded up the generation of an initial estimation for step 5)
-      // For example, one can start with head inversion in step 3) and carry on with m0m1 inversion in step 5)
-      //
-          
-      Vector<UINT> local_count,local_offset;
-      Vector<REAL> Y_est_parallel;
-      read_parallel_from_HDF5<GV_GW,Dune::All_Partition>( gv_0
-                                                          , inputdata
-                                                          , Y_est_parallel
-                                                          , groupname
-                                                          , local_count
-                                                          , local_offset
-                                                          , filename1
-                                                          , 1 // P0 blocksize
-                                                          , FEMType::DG // P0
-                                                          , 0 // structure is on grid level 0
-                                                          );
-      YFG yfg_Y_est( inputdata, dir, gv_0.comm() );
-
-      if( gv_0.comm().size() > 1 )
-        yfg_Y_est.parallel_import_from_local_vector( Y_est_parallel,
-                                                     local_count,
-                                                     local_offset );
-      else
-        yfg_Y_est.import_from_vector( Y_est_parallel );
-
-      theGrid.globalRefine( 1 );
-      const GV_GW& gv_1 = theGrid.levelGridView(1);
-      Vector<REAL> Y_est2;
-      Vector<REAL> Y_est2_well; // dummy, not used
-
-      yfg_Y_est.export_field_to_vector_on_grid( gv_1,
-                                                Y_est2,
-                                                Y_est2_well, // dummy
-                                                1 // grid level for mapper
-                                                );
-      /*
-      VTKPlot::output_vector_to_vtu( gv_1, 
-                                     Y_est2,
-                                     dir.vtudir + "/Y_est2",
-                                     "Y_est2",
-                                     inputdata.verbosity,
-                                     true, // subsampling
-                                     0 // subsampling degree
-                                     );
-      */
-
-      write_parallel_to_HDF5(
-                             gv_1
-                             , inputdata
-                             , Y_est2
-                             , groupname
-                             , inputdata.domain_data.nCells
-                             , filename2
-                             , 1
-                             , FEMType::DG
-                             , 1
-                             , true
-                             );
-      theGrid.globalRefine(-1);
-
-    } // end of void plotDataToRefinedGrid
-
-
-
-
-#endif // USE_HDF5
+      //#endif // HAVE_HDF5
 
     }; // class HDF5Tools
 

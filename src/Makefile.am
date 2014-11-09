@@ -18,6 +18,7 @@ SUBDIRS =
 
 noinst_PROGRAMS = \
 	gesis2dDG gesis2dFEM \
+	gesisUG2dDG \
 	gesis3dDG  gesis3dFEM \
 	dune_gesis
 
@@ -43,6 +44,33 @@ gesis2dDG_LDADD = \
 	$(LDADD)
 
 gesis2dDG_LDFLAGS = $(AM_LDFLAGS) \
+	$(SUPERLU_LDFLAGS) \
+	$(DUNE_LDFLAGS)
+
+# 2D DG version for UG:
+gesisUG2dDG_SOURCES = ug_2d.cc
+
+gesisUG2dDG_CPPFLAGS = $(AM_CPPFLAGS) -DUSE_UG \
+	$(HDF5_CPPFLAGS) -DH5_USE_16_API \
+	$(FFTW3_INCL) \
+	$(BOOST_INCL) \
+	$(PARMETIS_CPPFLAGS) \
+	$(SUPERLU_CPPFLAGS) \
+	$(UG_CPPFLAGS) \
+	$(DUNEMPICPPFLAGS)
+
+gesisUG2dDG_LDADD = \
+	$(DUNEMPILDFLAGS) \
+	$(DUNEMPILIBS)	\
+	$(HDF5_LIBS) \
+	$(FFTW3_LIBS) \
+	$(PARMETIS_LIBS) \
+	$(SUPERLU_LIBS) \
+	$(UG_LIBS) \
+	$(DUNE_LDFLAGS) $(DUNE_LIBS) \
+	$(LDADD)
+
+gesisUG2dDG_LDFLAGS = $(AM_LDFLAGS) \
 	$(SUPERLU_LDFLAGS) \
 	$(DUNE_LDFLAGS)
 

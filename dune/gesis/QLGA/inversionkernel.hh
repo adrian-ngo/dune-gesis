@@ -454,7 +454,7 @@ namespace Dune {
       if( inputdata.problem_types.refine_estimate ){
 
         if( General::bFileExists( dir.Y_old_h5file ) ){
-          HDF5Tools::
+          VTKPlot::
             plotDataToRefinedGrid< GRID,
                                    GV_GW,
                                    IDT,
@@ -470,7 +470,7 @@ namespace Dune {
         }
 
         if( General::bFileExists( dir.estimation_variance_h5file ) ){
-          HDF5Tools::
+          VTKPlot::
             plotDataToRefinedGrid< GRID,
                                    GV_GW,
                                    IDT,
@@ -1508,7 +1508,7 @@ namespace Dune {
         }
 
         if( inputdata.problem_types.refine_estimate ){
-          HDF5Tools::
+          VTKPlot::
             plotDataToRefinedGrid< GRID,
                                    GV_GW,
                                    IDT,
