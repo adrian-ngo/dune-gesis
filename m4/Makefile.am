@@ -1,4 +1,5 @@
-M4FILES = dune-gesis.m4
+M4FILES = dune-gesis.m4 \
+	boost_property_tree.m4
 
 aclocaldir = $(datadir)/dune/aclocal
 aclocal_DATA = $(M4FILES)

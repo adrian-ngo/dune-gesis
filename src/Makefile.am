@@ -6,7 +6,7 @@ FFTW3_LIBS = -L$(HOME)/Software/fftw-3.3.4/lib -lfftw3_mpi -lfftw3
 FFTW3_INCL = -I$(HOME)/Software/fftw-3.3.4/include
 # 
 #
-BOOST_INCL = -I$(HOME)/Software/boost_1_47_0
+# BOOST_INCL = -I$(HOME)/Software/boost_1_47_0
 #
 #
 ##############################################################
@@ -29,7 +29,6 @@ gesis2dDG_SOURCES = geo_inversion_2d.cc
 gesis2dDG_CPPFLAGS = $(AM_CPPFLAGS) -DUSE_YASP \
 	$(HDF5_CPPFLAGS) -DH5_USE_16_API \
 	$(FFTW3_INCL) \
-	$(BOOST_INCL) \
 	$(PARMETIS_CPPFLAGS) \
 	$(SUPERLU_CPPFLAGS) \
 	$(DUNEMPICPPFLAGS)
@@ -54,7 +53,6 @@ gesisUG2dDG_SOURCES = ug_2d.cc
 gesisUG2dDG_CPPFLAGS = $(AM_CPPFLAGS) -DUSE_UG \
 	$(HDF5_CPPFLAGS) -DH5_USE_16_API \
 	$(FFTW3_INCL) \
-	$(BOOST_INCL) \
 	$(PARMETIS_CPPFLAGS) \
 	$(SUPERLU_CPPFLAGS) \
 	$(UG_CPPFLAGS) \
@@ -82,7 +80,6 @@ gesis3dDG_SOURCES = geo_inversion_3d.cc
 gesis3dDG_CPPFLAGS = $(AM_CPPFLAGS) -DUSE_YASP \
 	$(HDF5_CPPFLAGS) -DH5_USE_16_API \
 	$(FFTW3_INCL) \
-	$(BOOST_INCL) \
 	$(PARMETIS_CPPFLAGS) \
 	$(SUPERLU_CPPFLAGS) \
 	$(DUNEMPICPPFLAGS)
@@ -107,7 +104,6 @@ gesisALU3dDG_SOURCES = alugrid_3d.cc
 gesisALU3dDG_CPPFLAGS = $(AM_CPPFLAGS) -DUSE_ALUGRID \
 	$(HDF5_CPPFLAGS) -DH5_USE_16_API \
 	$(FFTW3_INCL) \
-	$(BOOST_INCL) \
 	$(PARMETIS_CPPFLAGS) \
 	$(SUPERLU_CPPFLAGS) \
 	$(DUNEMPICPPFLAGS)
@@ -133,7 +129,6 @@ gesis2dFEM_SOURCES = geo_inversion_2d.cc
 gesis2dFEM_CPPFLAGS = $(AM_CPPFLAGS) -DUSE_YASP -DUSE_FEM \
 	$(HDF5_CPPFLAGS) -DH5_USE_16_API \
 	$(FFTW3_INCL) \
-	$(BOOST_INCL) \
 	$(PARMETIS_CPPFLAGS) \
 	$(SUPERLU_CPPFLAGS) \
 	$(DUNEMPICPPFLAGS)
@@ -158,7 +153,6 @@ gesis3dFEM_SOURCES = geo_inversion_3d.cc
 gesis3dFEM_CPPFLAGS = $(AM_CPPFLAGS) -DUSE_YASP -DUSE_FEM \
 	$(HDF5_CPPFLAGS) -DH5_USE_16_API \
 	$(FFTW3_INCL) \
-	$(BOOST_INCL) \
 	$(PARMETIS_CPPFLAGS) \
 	$(SUPERLU_CPPFLAGS) \
 	$(DUNEMPICPPFLAGS)
