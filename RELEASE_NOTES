@@ -1,0 +1,9 @@
+DUNE-GESIS
+==========
+
+This is the 1.0.1-rc1 release of the DUNE-GESIS module.
+
+DUNE-GESIS (1.0) is compatible with the 2.3 release of the DUNE core modules and the 2.0
+release of PDELab.
+
+This release requires at least GCC 4.7.

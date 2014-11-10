@@ -1,73 +1,90 @@
-Preparing the Sources
-=========================
+DUNE-GESIS
+==========
 
-Additional to the software mentioned in README you'll need the
-following programs installed on your system:
+This is version 1.0.1-rc1 of the DUNE-GESIS module.
 
-  automake >= 1.9
-
-  autoconf >= 2.62
-
-  libtool
-
-Getting started
----------------
-
-If these preliminaries are met, you should run 
-
-  dunecontrol all
-
-which will find all installed dune modules as well as all dune modules 
-(not installed) which sources reside in a subdirectory of the current 
-directory. Note that if dune is not installed properly you will either
-have to add the directory where the dunecontrol script resides (probably 
-./dune-common/bin) to your path or specify the relative path of the script.
-
-On your project and all uninstalled DUNE source modules found the script 
-will then calls the GNU autoconf/automake to create a ./configure-script 
-and the Makefiles. Afterwards that configure script will be called and the
-modules will be build using make all
-
-Most probably you'll have to provide additional information to dunecontrol 
-(e. g. compilers, configure options) and/or make options. 
-
-The most convenient way is to use options files in this case. The files
-defining three variables:
-
-AUTOGEN_FLAGS    flags passed to autogen
-CONFIGURE_FLAGS  flags passed to configure
-MAKE_FLAGS       flags passed to make
-
-An example options file might look like this:
-
-#use this options to autogen, configure and make if no other options are given
-AUTOGEN_FLAGS="--ac=2.50 --ac=1.8" #Forces automake 2,50 and autoconf 1.8
-CONFIGURE_FLAGS="CXX=g++-3.4 --prefix=/install/path" #force g++-3.4 as compiler
-MAKE_FLAGS=install #Per default run make install instead of simply make
-
-If you save this information into example.opts you can path the opts file to
-dunecontrol via the --opts option, e. g.
-
-  dunecontrol --opts=example.opts all
-
-To get a full list of available configure flags just run
-
-  dunecontrol configure --help
-
-after running at least 
-  dunecontrol autogen
-
-More info
----------
-
-See
-
-     dunecontrol --help
-
-for further options.
+GESIS (GEoStatistical Inversion based on Stationary problems) 
+is a collection of applications for the solution of 
+(1) the steady-state groundwater flow problem,
+(2) the steady-state groundwater solute transport,
+(3) the large-scale inverse problem 
+    (estimating the hydraulic conductivity of a confined aquifer 
+    from measurements of the hydraulic head or the temporal moments 
+    of a tracer concentration) 
+    using the quasi-linear geostatistical approach (QLGA).
 
 
-The full build-system is described in the dune-common/doc/buildsystem (SVN version) or under share/doc/dune-common/buildsystem if you installed DUNE!
+The following six applications can be built:
 
-$Id$
+1. gesis2dDG: solves (1)+(2)+(3) on a structured 2-D mesh with rectangular elements 
+              (using the DUNE-YASP grid)
 
+2. gesis3dDG: solves (1)+(2)+(3) on a structured 3-D mesh with rectangular elements 
+              (using the DUNE-YASP grid)
+
+3. gesisUG2dDG: solves (1) on a structured 2-D mesh with rectangular elements,
+                solves (2) on a locally refined 2-D mesh with non-conforming refinement of rectangular elements
+                (using the UG grid, sequential version only)
+
+4. gesisALU3dDG: solves (1) on a structured 3-D mesh with rectangular elements,
+                 solves (2) on a locally refined 3-D mesh with non-conforming refinement of rectangular elements
+                 (using the dune-alugrid module, parallelized with dynamic load-balancind)
+
+5. gesis2dFEM: solves (1)+(2)+(3) on a structured 2-D mesh with rectangular elements 
+              (using the DUNE-YASP grid)
+
+6. gesis3dFEM: solves (1)+(2)+(3) on a structured 3-D mesh with rectangular elements 
+              (using the DUNE-YASP grid)
+
+Applications 1-4 are based on the cell-centered finite volume and the discontinuous Galerkin schemes (CCFV/DG),
+applications 5-6 are based on the standard Galerkin FEM method and the streamline diffusion method (FEM/SDFEM).
+
+If you need help, please contact the author <ngo@eclipso.de>.
+
+
+
+
+Dependencies
+------------
+
+TypeTree depends on the following software packages:
+
+* The dune-common library from DUNE, version 2.3.x. The dependency is actually very
+  weak, and you can easily use the library standalone by replacing the few convenience
+  components reused from dune-common (and by replacing the build system, of course).
+
+* TypeTree uses lots and lots of templates, so you need a decent C++ compiler. This
+  initial release should still compile with GCC 4.2, but we plan to bump up the
+  requirements to the level of C++11 support provided by GCC 4.4 or 4.5 (not decided
+  yet). Even now, compile times are greatly reduced if the compiler supports the new
+  C++11 standard (GCC 4.3 and newer). PDELab is not regularly tested with ICC (it should
+  work with ICC 13.x), but we also support the clang compiler (3.1+).
+
+For a full explanation of the DUNE installation process please read
+the installation notes [2] or the build system HOWTO [3].
+
+License
+-------
+
+The PDELab library, headers and test programs are free open-source software,
+dual-licensed under version 3 or later of the GNU Lesser General Public License
+and version 2 of the GNU General Public License with a special run-time exception.
+
+See the file COPYING for full copying permissions.
+
+Installation
+------------
+
+Short installation instructions can be found in file INSTALL. For the
+full instructions please see [1].
+
+Links
+-----
+
+0. http://www.dune-project.org/pdelab/
+1. http://www.dune-project.org
+2. http://www.dune-project.org/doc/installation-notes.html
+3. http://dune-project.org/doc/buildsystem/buildsystem.pdf
+4. http://gcc.gnu.org/onlinedocs/libstdc++/faq.html#faq.license
+5. http://lists.dune-project.org/mailman/listinfo/dune-pdelab
+6. http://users.dune-project.org/projects/dune-pdelab/issues
