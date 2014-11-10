@@ -347,7 +347,7 @@ namespace Dune {
           REAL baselevel_factor = std::pow(2.0,baselevel);
           REAL level_diff = eg.entity().level() - baselevel;
 
-          REAL refinement_factor_dim = std::pow(2.0,level_diff*(dim-1)); // dim is important here: one level =  four cells in 2D, or 8 cells in 3D
+          //REAL refinement_factor_dim = std::pow(2.0,level_diff*(dim-1)); // dim is important here: one level =  four cells in 2D, or 8 cells in 3D
           REAL refinement_factor = std::pow(2.0,level_diff);
           REAL dz = inputdata.domain_data.baselevel_gridsizes[dim-1] / refinement_factor;
           //Dune::FieldVector<REAL,dim> cellcenter = eg.geometry().center();
