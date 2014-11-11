@@ -80,9 +80,12 @@ AC_DEFUN([DUNE_PATH_FFTW3_MPI],[
  direct_FFTW3_LDFLAGS="$DUNEMPILDFLAGS"
  nodep_FFTW3_LDFLAGS="$DUNEMPILDFLAGS"
  FFTW3_LDFLAGS="$DUNEMPILDFLAGS"
- direct_FFTW3_LIBS="$DUNEMPILIBS $_dune_fftw3_libpath"
- nodep_FFTW3_LIBS="$DUNEMPILIBS $_dune_fftw3_libpath"
- FFTW3_LIBS="$DUNEMPILIBS $_dune_fftw3_libpath"
+# direct_FFTW3_LIBS="$DUNEMPILIBS $_dune_fftw3_libpath"
+# nodep_FFTW3_LIBS="$DUNEMPILIBS $_dune_fftw3_libpath"
+# FFTW3_LIBS="$DUNEMPILIBS $_dune_fftw3_libpath"
+ direct_FFTW3_LIBS="$_dune_fftw3_libpath"
+ nodep_FFTW3_LIBS="$_dune_fftw3_libpath"
+ FFTW3_LIBS="$_dune_fftw3_libpath"
  FFTW3_PARALLEL=0
 
  # test for an arbitrary header
@@ -111,7 +114,7 @@ AC_DEFUN([DUNE_PATH_FFTW3_MPI],[
    AC_DEFINE(HAVE_FFTW3, 1, [Define to 1 if fftw3 was found])
 
    # proudly show in summary
-   with_fftw3="yes"
+   with_fftw3="yes (MPI version)"
  else
    # clear variables
    direct_FFTW3_CPPFLAGS=
