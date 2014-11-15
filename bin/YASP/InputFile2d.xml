@@ -15,6 +15,24 @@
 #define VERBOSITY_DEBUG_LEVEL     9
 -->
 <inputfile verbosity="6">
+  <plot_options
+      vtk_plot_yfield="yes"
+      vtk_plot_wells="no"
+      vtk_plot_head="yes"
+      vtk_plot_element_ordering="no"
+      vtk_plot_q="yes"
+      vtk_plot_m0="yes"
+      vtk_plot_m1="yes"
+      vtk_plot_adjoint_head="yes"
+      vtk_plot_adjoint_m0="yes"
+      vtk_plot_adjoint_m1="yes"
+      vtk_plot_sensitivities="yes"
+      vtk_plot_cross_covariances="yes"
+      vtk_plot_y_smooth="no"
+      vtk_plot_y_try="yes"
+      vtk_plot_h_old="yes"
+      vtk_plot_m0_old="yes"
+      />
   <!-- ***************************************** -->
   <!-- General switches: -->
   <!-- ***************************************** -->
@@ -43,7 +61,7 @@
   <!-- ***************************************** -->
   <domain_data>
     <extensions>51.2   51.2</extensions>
-    <virtual_nCells>256   256</virtual_nCells>
+    <virtual_nCells>64   64</virtual_nCells>
     <lineplot>
       <startpoint>0.0 0.0</startpoint>
       <endpoint>100.0 100.0</endpoint>
@@ -342,10 +360,10 @@
         <!-- temperature= temperature difference for injection (will not be used for extraction wells) -->
         <!-- One line per well: -->
         <!-- x   zTop     zBottom   k_well    flow_rate    T     t_inject   c     injection_time -->
-        12.5       25.01     25.0      1.0        1e-4     0.0   100      0.0  100
-        17.5       25.01     25.0      1.0        2e-4     1.0   100      1.0  100
-        32.5       25.01     25.0      1.0       -2e-4     0.0   100.0    0.0  100.0
-        37.5       25.01     25.0      1.0       -1e-4     0.0   100.0    0.0  100.0
+        12.5       25.01     25.0      10.0        1e-4     0.0   100      0.0  100
+        17.5       25.01     25.0      10.0        2e-4     1.0   100      1.0  100
+        32.5       25.01     25.0      10.0       -2e-4     0.0   100.0    0.0  100.0
+        37.5       25.01     25.0      10.0       -1e-4     0.0   100.0    0.0  100.0
       </well_data>
       <!-- -->   
       <!-- --> 

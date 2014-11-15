@@ -15,6 +15,17 @@
 #define VERBOSITY_DEBUG_LEVEL     9
 -->
 <inputfile verbosity="6">
+  <plot_options
+      vtk_plot_yfield="yes"
+      vtk_plot_wells="no"
+      vtk_plot_head="yes"
+      vtk_plot_element_ordering="yes"
+      vtk_plot_q="yes"
+      vtk_plot_m0="yes"
+      vtk_plot_y_smooth="no"
+      vtk_plot_h_old="yes"
+      vtk_plot_m0_old="yes"
+      />
   <!-- ***************************************** -->
   <!-- General switches: -->
   <!-- ***************************************** -->

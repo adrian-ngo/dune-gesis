@@ -1,4 +1,4 @@
-rsync ../../src/gesis2dDG .
-rsync ../../src/gesis3dDG .
-rsync ../../src/gesis3dFEM .
-rsync ../../src/gesis2dFEM .
+rsync -avu ../../src/gesis2dDG .
+rsync -avu ../../src/gesis3dDG .
+rsync -avu ../../src/gesis3dFEM .
+rsync -avu ../../src/gesis2dFEM .

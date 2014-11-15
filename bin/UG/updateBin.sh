@@ -1,1 +1,1 @@
-rsync ../../src/gesisUG2dDG .
+rsync -uva  ../../src/gesisUG2dDG .
