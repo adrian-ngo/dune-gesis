@@ -56,6 +56,10 @@ namespace Dune {
         Dune::Timer watch;
         logger << "output2vtu: " << filename << std::endl;
 
+        //Dune::VTK::OutputType vtkOutputType = Dune::VTK::ascii;
+        Dune::VTK::OutputType vtkOutputType = Dune::VTK::appendedraw;
+
+
         typedef typename GFS::Traits::GridViewType GV;
         GV gv = gfs.gridView();
         typedef Dune::PDELab::DiscreteGridFunction<GFS,VCType> DGF;
@@ -77,28 +81,17 @@ namespace Dune {
             vtkwriter.addCellData( new Dune::PDELab::VTKGridFunctionAdapter<DGF > ( dgf, "celldata" ) );
           else
             vtkwriter.addVertexData( new Dune::PDELab::VTKGridFunctionAdapter<DGF> ( dgf, title.c_str() ) );
-
+          
           //find '/' or '\' in the filename
           size_t found=filename.find_last_of("/\\");
-  
+          
           //if parallel and complete path is given, use the pwrite() function
-          if(found<filename.size()&& gv.comm().size() > 1)
-            {
-#ifdef VTK_PLOT_ASCII
-              vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", Dune::VTK::ascii );
-#else
-              vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", Dune::VTK::appendedraw );
-#endif
-            }
-          else
-            {
-#ifdef VTK_PLOT_ASCII
-              vtkwriter.write( filename.c_str(), Dune::VTK::ascii );
-#else
-              vtkwriter.write( filename.c_str(), Dune::VTK::appendedraw );
-#endif
-            }
-
+          if(found<filename.size()&& gv.comm().size() > 1) {
+            vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", vtkOutputType );
+          }
+          else {
+            vtkwriter.write( filename.c_str(), vtkOutputType );
+          }
         }
         else{
 
@@ -112,22 +105,12 @@ namespace Dune {
           size_t found=filename.find_last_of("/\\");
   
           //if parallel and complete path is given, use the pwrite() function
-          if(found<filename.size()&& gv.comm().size() > 1)
-            {
-#ifdef VTK_PLOT_ASCII
-              vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", Dune::VTK::ascii );
-#else
-              vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", Dune::VTK::appendedraw );
-#endif
-            }
-          else
-            {
-#ifdef VTK_PLOT_ASCII
-              vtkwriter.write( filename.c_str(), Dune::VTK::ascii );
-#else
-              vtkwriter.write( filename.c_str(), Dune::VTK::appendedraw );
-#endif
-            }
+          if(found<filename.size()&& gv.comm().size() > 1) {
+            vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", vtkOutputType );
+          }
+          else {
+            vtkwriter.write( filename.c_str(), vtkOutputType );
+          }
 
         }
 
@@ -165,6 +148,9 @@ namespace Dune {
       {
         Dune::Timer watch;
         logger << "output_vector_to_vtu: " << filename << std::endl;
+
+        //Dune::VTK::OutputType vtkOutputType = Dune::VTK::ascii;
+        Dune::VTK::OutputType vtkOutputType = Dune::VTK::appendedraw;
 
         if( gv.comm().rank()==0 
             &&
@@ -228,22 +214,12 @@ namespace Dune {
           size_t found=filename.find_last_of("/\\");
   
           //if parallel and complete path is given, use the pwrite() function
-          if(found<filename.size()&& gv.comm().size() > 1)
-            {
-#ifdef VTK_PLOT_ASCII
-              vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", Dune::VTK::ascii );
-#else
-              vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", Dune::VTK::appendedraw );
-#endif
-            }
-          else
-            {
-#ifdef VTK_PLOT_ASCII
-              vtkwriter.write( filename.c_str(), Dune::VTK::ascii );
-#else
-              vtkwriter.write( filename.c_str(), Dune::VTK::appendedraw );
-#endif
-            }
+          if(found<filename.size()&& gv.comm().size() > 1) {
+            vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", vtkOutputType );
+          }
+          else {
+            vtkwriter.write( filename.c_str(), vtkOutputType );
+          }
 
           std::stringstream jobtitle;
           jobtitle << "output_vector_to_vtu: writing " << filename;
@@ -278,6 +254,9 @@ namespace Dune {
         Dune::Timer watch;
         logger << "output_dgf_to_vtu: " << filename << std::endl;
 
+        //Dune::VTK::OutputType vtkOutputType = Dune::VTK::ascii;
+        Dune::VTK::OutputType vtkOutputType = Dune::VTK::appendedraw;
+
         if( gv.comm().rank()==0 &&
             verbosity >= VERBOSITY_DEBUG_LEVEL )
           std::cout << "VTK output of vertex-data '" << title.c_str() << "' to file '" << filename.c_str() << ".vtu'" <<  std::endl;
@@ -296,22 +275,12 @@ namespace Dune {
             size_t found=filename.find_last_of("/\\");
 	  
             //if parallel and complete path is given, use the pwrite() function
-            if(found<filename.size()&& gv.comm().size() > 1)
-              {
-#ifdef VTK_PLOT_ASCII
-                ss_vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", Dune::VTK::ascii );
-#else
-                ss_vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", Dune::VTK::appendedraw );
-#endif
-              }
-            else
-              {
-#ifdef VTK_PLOT_ASCII
-                ss_vtkwriter.write( filename.c_str(), Dune::VTK::ascii );
-#else
-                ss_vtkwriter.write( filename.c_str(), Dune::VTK::appendedraw );
-#endif
-              }
+            if(found<filename.size()&& gv.comm().size() > 1) {
+              ss_vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", vtkOutputType );
+            }
+            else {
+              ss_vtkwriter.write( filename.c_str(), vtkOutputType );
+            }
           }
         else
           {
@@ -325,22 +294,12 @@ namespace Dune {
             size_t found=filename.find_last_of("/\\");
 	  
             //if parallel and complete path is given, use the pwrite() function
-            if(found<filename.size()&& gv.comm().size() > 1)
-              {
-#ifdef VTK_PLOT_ASCII
-                vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", Dune::VTK::ascii );
-#else
-                vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", Dune::VTK::appendedraw );
-#endif
-              }
-            else
-              {
-#ifdef VTK_PLOT_ASCII
-                vtkwriter.write( filename.c_str(), Dune::VTK::ascii );
-#else
-                vtkwriter.write( filename.c_str(), Dune::VTK::appendedraw );
-#endif
-              }
+            if(found<filename.size()&& gv.comm().size() > 1) {
+              vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", vtkOutputType );
+            }
+            else {
+              vtkwriter.write( filename.c_str(), vtkOutputType );
+            }
           }
 
         std::stringstream jobtitle;
@@ -512,9 +471,94 @@ namespace Dune {
       } // end of void plotDataToRefinedGrid
 
 
+
+      /**
+         Function to plot the grid ordering to a cell-wise output.
+         \tparam GV The gridview type.
+         \param gv The gridview.
+         \param filename The name of the VTK file.
+       */
+
+      template<typename GV>
+      static void outputGridviewIndexToDGF( const GV& gv,
+                                            const std::string filename,
+                                            const std::string meshtype="cube"
+                                            ){
+        Dune::Timer watch;
+
+        // (1) Construct finite element space
+        const int dim = GV::dimension;
+        Dune::GeometryType gt;
+
+        if( meshtype == "cube" )
+          gt.makeCube(dim);
+        else
+          gt.makeSimplex(dim);
+  
+        typedef Dune::PDELab::P0LocalFiniteElementMap<double,double,dim> P0FEM;
+        P0FEM p0fem( gt );
+
+        // (2) Set up grid function space
+        typedef Dune::PDELab::ISTLVectorBackend<> VBE;
+
+        typedef Dune::PDELab::NoConstraints NOCON;
+        NOCON nocon;
+
+        typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,NOCON,VBE> P0GFS;
+        P0GFS p0gfs(gv, p0fem, nocon );
+
+        typedef typename Dune::PDELab::BackendVectorSelector<P0GFS,double>::Type UType;    
+        UType u0(p0gfs, 0.0);
+
+
+        for (unsigned int i=0;i<u0.flatsize();i++) {
+          u0.base()[i] = REAL(i)/(u0.flatsize()-1);
+          // plot the processor rank for debugging purposes:
+          // u0[i] = gv.comm().rank();
+        }
+
+        /*
+        // Alternative loop implementation:
+        typedef typename GV::Traits::template Codim<0>::template Partition<Dune::All_Partition>::Iterator ElementIterator;
+        int iElement = 0;
+        for (ElementIterator it=gv.template begin<0,Dune::All_Partition>();
+        it!=gv.template end<0,Dune::All_Partition>();++it) {
+
+        // plotting element level
+        //u0[gv.indexSet().index(*it)] = (*it).level(); 
+        // plotting element index
+        u0[gv.indexSet().index(*it)] = gv.indexSet().index(*it);
+        iElement++;
+        }
+        */
+    
+        typedef Dune::PDELab::DiscreteGridFunction<P0GFS,UType> P0DGF;
+        P0DGF u0dgf(p0gfs,u0);
+
+        std::stringstream jobtitle;
+        jobtitle << "outputGridviewIndexToDGF: copying ";
+        General::log_elapsed_time( watch.elapsed(),
+                                   gv.comm(),
+                                   General::verbosity,
+                                   "IO",
+                                   jobtitle.str() );
+
+        output2vtu( p0gfs, 
+                    u0, 
+                    filename, 
+                    "elementorder", 
+                    General::verbosity, 
+                    true, 
+                    0
+                    );
+
+      }
+
+
     }; // class VTKPlot
 
-  }
-}
+  } // Gesis
+
+} // Dune
 
 #endif

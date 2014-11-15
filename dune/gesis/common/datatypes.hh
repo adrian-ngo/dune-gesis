@@ -4,8 +4,8 @@
 // define some general data types
 
 #ifdef _USE_FLOAT_
-typedef float CTYPE;
-typedef float REAL;
+typedef float CTYPE;  // Be careful: This was never tested!
+typedef float REAL;   // Be careful: This was never tested!
 #else
 typedef double CTYPE;
 typedef double REAL;

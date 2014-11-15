@@ -8,6 +8,9 @@
 #ifndef DUNE_GESIS_IO_ROUTINES_HH
 #define	DUNE_GESIS_IO_ROUTINES_HH
 
+#if HAVE_HDF5
+#include "hdf5.h"
+#endif
 #include <dune/gesis/common/io/HDF5Tools.hh>
 #include <dune/gesis/common/io/VTKPlot.hh>
 #include <dune/gesis/common/io/DGFTools.hh>

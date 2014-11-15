@@ -3,9 +3,9 @@
 #ifndef DUNE_GESIS_GRIDFUNCTIONSPACEUTILITIES_HH
 #define DUNE_GESIS_GRIDFUNCTIONSPACEUTILITIES_HH
 
-#include<math.h>
+#include <math.h>
 #include <cstdlib>
-#include<vector>
+#include <vector>
 
 #include <dune/common/exceptions.hh>
 #include <dune/common/fvector.hh>
@@ -28,7 +28,7 @@
 #include<dune/pdelab/localoperator/convectiondiffusionparameter.hh>
 
 namespace Dune {
-  namespace PDELab {
+  namespace Gesis {
 
     //! \brief Convert the pressure h (scalar grid function) into a 
     //! vector-valued grid function (with dim components) 
@@ -45,8 +45,8 @@ namespace Dune {
              typename GFS>
     class DiscreteGridFunctionDarcy
       : public TypeTree::LeafNode,
-        public GridFunctionInterface<
-      GridFunctionTraits<
+        public Dune::PDELab::GridFunctionInterface<
+      Dune::PDELab::GridFunctionTraits<
         typename GFS::Traits::GridViewType,
         typename GFS::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeFieldType,
         GFS::Traits::FiniteElementType::Traits::LocalBasisType::Traits::dimDomain,
@@ -71,12 +71,12 @@ namespace Dune {
     public:
       //typedef typename LBTraits::dimDomain dim;
       //typedef GridFunctionTraits< GV, RF, LBTraits::dimDomain, Dune::FieldVector<RF,LBTraits::dimDomain> > Traits;
-      typedef GridFunctionTraits< GV, RF, dim, Dune::FieldVector<RF,dim> > Traits;
+      typedef Dune::PDELab::GridFunctionTraits< GV, RF, dim, Dune::FieldVector<RF,dim> > Traits;
 
     private:
 
-      typedef LocalFunctionSpace<GFS> LFS;
-      typedef LFSIndexCache<LFS> LFSCache;
+      typedef Dune::PDELab::LocalFunctionSpace<GFS> LFS;
+      typedef Dune::PDELab::LFSIndexCache<LFS> LFSCache;
       typedef typename VCType::template ConstLocalView<LFSCache> XView;
 
       const GWP& gwp;
@@ -124,7 +124,7 @@ namespace Dune {
 
       inline int getLocalBasisOrder() const {
 
-        LocalFunctionSpace<GFS> lfs(*pgfs);
+        Dune::PDELab::LocalFunctionSpace<GFS> lfs(*pgfs);
         return lfs.finiteElement().localBasis().order();
         
       }
@@ -349,7 +349,7 @@ namespace Dune {
       typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type VCType;
       typedef Dune::PDELab::DiscreteGridFunction<GFS,VCType> ScalarDGF;
       
-      typedef typename ConvectionDiffusionBoundaryConditions::Type BCType;
+      typedef typename Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
 
 	  shared_ptr<GFS const> pgfs;
       const GWP& gwp;
@@ -388,7 +388,7 @@ namespace Dune {
 
       inline int getLocalBasisOrder() const {
 
-        LocalFunctionSpace<GFS> lfs(*pgfs);
+        Dune::PDELab::LocalFunctionSpace<GFS> lfs(*pgfs);
         return lfs.finiteElement().localBasis().order();
         
       }
@@ -594,7 +594,7 @@ namespace Dune {
 
             BCType bctype = gwp.bctype( *iit, faceLocal );
             if( !withoutK && 
-                bctype == ConvectionDiffusionBoundaryConditions::Dirichlet ) {
+                bctype == Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet ) {
               
               // evaluate Dirichlet boundary condition
               typename GWP::Traits::RangeFieldType g = gwp.g( *(iit->inside()), iit->geometry().global(faceLocal) );
@@ -700,13 +700,13 @@ namespace Dune {
     // refined grid whereas the solution of the GWE lives on the coarsest grid level 0.
     // 
 	template<typename GFS, typename VCType>
-	class DiscreteRefinedGridFunction: public DiscreteGridFunction<GFS,VCType>{
+	class DiscreteRefinedGridFunction: public Dune::PDELab::DiscreteGridFunction<GFS,VCType>{
 
     private:
       const int baselevel;
 
     public:
-      typedef DiscreteGridFunction<GFS,VCType> base_type;
+      typedef Dune::PDELab::DiscreteGridFunction<GFS,VCType> base_type;
 	  typedef typename base_type::Traits Traits;
       enum {dim = GFS::Traits::GridViewType::dimension};
 
@@ -820,7 +820,7 @@ namespace Dune {
 
 	};  // class DiscreteRefinedGridFunction
 
-  } // namespace PDELab
+  } // namespace Gesis
 
 } // namespace Dune
 

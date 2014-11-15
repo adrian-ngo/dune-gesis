@@ -129,7 +129,7 @@ class RT0_PressureField {
   typedef typename Dune::PDELab::BackendVectorSelector<GFS_GW,REAL>::Type VCType_GW;
   typedef Dune::PDELab::DiscreteGridFunction<GFS_GW,VCType_GW> DGF;
 
-  typedef Dune::PDELab::VectorDGF<GWP,GFS_GW> DARCY_FLUX_DGF;
+  typedef Dune::Gesis::VectorDGF<GWP,GFS_GW> DARCY_FLUX_DGF;
   
   
   typedef typename GV::Traits::template Codim<0>::template Partition<Dune::All_Partition>::Iterator ElementIterator;
