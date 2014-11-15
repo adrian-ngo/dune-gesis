@@ -599,16 +599,6 @@ namespace Dune {
             } 
             else {
 
-
-#ifdef DEBUG_LOG_LEVEL_2
-              if(my_rank==0){
-                std::cout << "---> 3D-case: WARNING: negative eigenvalue lambda = " 
-                          << lambda 
-                          << "  choose 0"
-                          << std::endl;
-              }
-#endif
-
               KField[ jj ][0] = 0.0; // sqrt( -lambda ) * random_epsilon[0];
               KField[ jj ][1] = 0.0; // sqrt( -lambda ) * random_epsilon[1];
             }
@@ -1761,12 +1751,6 @@ namespace Dune {
               output = KFieldVector[ l ];
             }
 
-#ifdef DEBUG_LOG_LEVEL_2
-            logger << "2d-global-index: " << global_index[0]  << global_index[1];
-            logger << "     1d-local-index: " << l;
-            logger << "     2d-value: " << output << std::endl;
-#endif// DEBUG_LOG_LEVEL_2
-
           }
 
         else // multi-processore case:
@@ -2043,16 +2027,15 @@ namespace Dune {
                                        0
                                        );
 
-#ifdef VTK_PLOT_WELLS
-        VTKPlot::output_vector_to_vtu( gv, 
-                                       well_conductivity_field,
-                                       filename + "_Wells",
-                                       title + "_Wells",
-                                       inputdata.verbosity,
-                                       true,
-                                       0
-                                       );
-#endif
+        if( inputdata.plot_options.vtk_plot_wells )
+          VTKPlot::output_vector_to_vtu( gv, 
+                                         well_conductivity_field,
+                                         filename + "_Wells",
+                                         title + "_Wells",
+                                         inputdata.verbosity,
+                                         true,
+                                         0
+                                         );
 
       }
 
