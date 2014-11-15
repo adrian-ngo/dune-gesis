@@ -149,13 +149,15 @@ namespace Dune {
       Yfieldgenerator_try.setWellConductivities( gv_0 /* gv_gw */ );
 
 
-#ifdef VTK_PLOT_YTRY
-      std::stringstream vtu_Y_try;
-      vtu_Y_try << dir.Y_try_vtu 
-                << "_i"<< it_counter 
-                << "_w"<< wCounter;
-      Yfieldgenerator_try.plot2vtu( gv_0, vtu_Y_try.str(), "Y_try" );
-#endif
+
+      if( inputdata.plot_options.vtk_plot_y_try ){
+        std::stringstream vtu_Y_try;
+        vtu_Y_try << dir.Y_try_vtu 
+                  << "_i"<< it_counter 
+                  << "_w"<< wCounter;
+        Yfieldgenerator_try.plot2vtu( gv_0, vtu_Y_try.str(), "Y_try" );
+      }
+
 
 
       typedef typename IDT::SDT SDT;
@@ -224,21 +226,23 @@ namespace Dune {
           forward_try.head_simulation(vchead_try);
 
 
-#ifdef VTK_PLOT_TRIAL_FIELDS
-          std::stringstream vtu_head_try;
-          vtu_head_try << dir.vtudir << "/h_try"
-                       << "_s" << iSetup
-                       << "_i" << it_counter 
-                       << "_w" << wCounter;
-          VTKPlot::output2vtu( gfs_gw, 
-                               vchead_try, 
-                               vtu_head_try.str(), 
-                               "h_try", 
-                               inputdata.verbosity, 
-                               true, 
-                               0
-                               );
-#endif
+          
+          if( inputdata.plot_options.vtk_plot_trialfields ){
+            std::stringstream vtu_head_try;
+            vtu_head_try << dir.vtudir << "/h_try"
+                         << "_s" << iSetup
+                         << "_i" << it_counter 
+                         << "_w" << wCounter;
+            VTKPlot::output2vtu( gfs_gw, 
+                                 vchead_try, 
+                                 vtu_head_try.str(), 
+                                 "h_try", 
+                                 inputdata.verbosity, 
+                                 true, 
+                                 0
+                                 );
+          }
+
 
           //MPI_Barrier(helper.getCommunicator());  
       
@@ -357,7 +361,7 @@ namespace Dune {
                                              );
 
 
-#ifdef VTK_PLOT_TRIAL_FIELDS
+          if( inputdata.plot_options.vtk_plot_trialfields ){
             std::stringstream vtu_M0_try;
             vtu_M0_try << dir.vtudir 
                        << "/M0_try_cg"
@@ -372,7 +376,8 @@ namespace Dune {
                                  true, 
                                  0 
                                  );
-#endif
+          }
+
 
             if(measurements.nMeasPerSetupPerType(iSetup,2))
               measurements.take_measurements( 2, vcM0_try_cg, gfs_cg, helper, iSetup );
@@ -425,7 +430,8 @@ namespace Dune {
                                               vcM1_try_cg // output
                                               );
 
-#ifdef VTK_PLOT_TRIAL_FIELDS
+
+          if( inputdata.plot_options.vtk_plot_trialfields ){
               std::stringstream vtu_M1_try;
               vtu_M1_try << dir.vtudir << "/M1_try_cg" 
                          << "_s" << iSetup
@@ -439,7 +445,7 @@ namespace Dune {
                                    true, 
                                    0 
                                    );
-#endif
+          }
               
               if(measurements.nMeasPerSetupPerType(iSetup,3))
                 measurements.take_measurements(3, vcM1_try_cg, gfs_cg, helper, iSetup);
@@ -556,35 +562,37 @@ namespace Dune {
                                         );
             
 
-#ifdef VTK_PLOT_TRIAL_FIELDS
-            std::stringstream vtu_heatM0_try;
-            vtu_heatM0_try << dir.vtudir << "/heatM0_try"
-                           << "_s" << iSetup
-                           << "_i" << it_counter 
-                           << "_w" << wCounter;
-            VTKPlot::output2vtu( gfs_cg, 
-                                 vcheatM0_try_cg, 
-                                 vtu_heatM0_try.str(), 
-                                 "heatm0_try", 
-                                 inputdata.verbosity, 
-                                 true, 
-                                 0
-                                 );
 
-            std::stringstream vtu_heatM1_try;
-            vtu_heatM1_try << dir.vtudir << "/heatM1_try"
-                           << "_s" << iSetup
-                           << "_i" << it_counter 
-                           << "_w" << wCounter;
-            VTKPlot::output2vtu( gfs_cg, 
-                                 vcheatM1_try_cg, 
-                                 vtu_heatM1_try.str(), 
-                                 "heatm1_try", 
-                                 inputdata.verbosity, 
-                                 true, 
-                                 0
-                                 );
-#endif
+            if( inputdata.plot_options.vtk_plot_trialfields ){
+              std::stringstream vtu_heatM0_try;
+              vtu_heatM0_try << dir.vtudir << "/heatM0_try"
+                             << "_s" << iSetup
+                             << "_i" << it_counter 
+                             << "_w" << wCounter;
+              VTKPlot::output2vtu( gfs_cg, 
+                                   vcheatM0_try_cg, 
+                                   vtu_heatM0_try.str(), 
+                                   "heatm0_try", 
+                                   inputdata.verbosity, 
+                                   true, 
+                                   0
+                                   );
+
+              std::stringstream vtu_heatM1_try;
+              vtu_heatM1_try << dir.vtudir << "/heatM1_try"
+                             << "_s" << iSetup
+                             << "_i" << it_counter 
+                             << "_w" << wCounter;
+              VTKPlot::output2vtu( gfs_cg, 
+                                   vcheatM1_try_cg, 
+                                   vtu_heatM1_try.str(), 
+                                   "heatm1_try", 
+                                   inputdata.verbosity, 
+                                   true, 
+                                   0
+                                   );
+            }
+
 
             //Take measurements !!!
             logger << "HEAT: take_measurements_AT of Y_try" << std::endl;
