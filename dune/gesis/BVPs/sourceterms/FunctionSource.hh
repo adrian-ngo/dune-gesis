@@ -117,11 +117,11 @@ namespace Dune {
     public:
     
       typedef Dune::PDELab::DiscreteGridFunction<GFS,VCType> DGF;
-      typedef Dune::PDELab::DiscreteGridFunctionDarcy<GWP,GFS> DARCY_FLUX_DGF;
+      typedef Dune::Gesis::DiscreteGridFunctionDarcy<GWP,GFS> DARCY_FLUX_DGF;
       typedef REAL RF;
     
       // refined versions evaluating on leaf elements:
-      typedef Dune::PDELab::DiscreteRefinedGridFunction<GFS,VCType> DRGF;
+      typedef Dune::Gesis::DiscreteRefinedGridFunction<GFS,VCType> DRGF;
 
       const SourceNature source_nature;
       typedef SourceTermTraits<GV,REAL> Traits;
@@ -305,112 +305,6 @@ namespace Dune {
           }
         }
       
-
-#ifdef WELL_FRACTURE_MODEL 
-
-        nSources=setupdata.wdlist.total;
-   
-        for( UINT i=0; i<nSources; i++ ) {
-          Dune::FieldVector<RF,dim> global=eg.geometry().center();
-          //std::cout<<"i:"<<i<<std::endl;
-          std::vector<REAL> meshsize(inputdata.domain_data.yasp_gridsizes);
-          std::vector<REAL> meshsize_2(inputdata.domain_data.yasp_gridsizes);
-          for(UINT ii=0; ii<meshsize_2.size();ii++)
-            meshsize_2[ii]*=0.5;
-
-          RF well_x = setupdata.wdlist.pointdata_vector[i].x;
-          RF well_top = setupdata.wdlist.pointdata_vector[i].well_top;
-          RF well_bottom = setupdata.wdlist.pointdata_vector[i].well_bottom;
-#ifdef DIMENSION3
-          RF well_y=setupdata.wdlist.pointdata_vector[i].y;
-#endif
-
-          if( global[0] >= well_x-meshsize_2[0] &&  global[0] < well_x+meshsize_2[0] 
-#ifdef DIMENSION3             
-              && global[1] >= well_y-meshsize_2[1] &&  global[1] < well_y+meshsize_2[1] 
-              && global[2] >= well_bottom && global[2] < well_top
-#else
-              && global[1] >= well_bottom && global[1] < well_top
-#endif
-              ){
-          
-            RF pumping_rate, input,injection_time,rho_s, c_s;
-            RF porosity(0.3); // will be set in zone_parameters(...);
-              
-            pumping_rate = setupdata.wdlist.pointdata_vector[i].well_rate;
-
-            if( equationMode == EQ::adjoint )
-              pumping_rate = -pumping_rate;
-
-            if( passengerType == PassengerType::heat ){
-              input = setupdata.wdlist.pointdata_vector[i].temperature;
-              injection_time=setupdata.wdlist.pointdata_vector[i].temperature_injection_time;
-#ifdef DIMENSION3                       
-              zone_parameters(global[2], porosity, rho_s, c_s);
-#else
-              zone_parameters(global[1], porosity, rho_s, c_s);
-#endif       
-            }else{
-              input = setupdata.wdlist.pointdata_vector[i].concentration;
-              injection_time=setupdata.wdlist.pointdata_vector[i].concentration_injection_time;
-            }
-         
-              
-              
-            if(injection_time<=GEO_EPSILON)
-              injection_time=0.0;
-            injection_time*=injection_time*0.5;
-
-
-            if( pumping_rate > GEO_EPSILON*0.5 && fabs(input) >  GEO_EPSILON*0.5) {
-                //UINT flag_source=1; // Ask Ronnie: Wofür?
-              RF heat_factor=1.0;
-                
-              if( passengerType == PassengerType::heat )
-                heat_factor=(rho_w*c_w)/( (porosity*rho_w*c_w)+((1.0-porosity)*rho_s*c_s) );
-                  
-              Dune::GeometryType gt = eg.geometry().type();
-
-                  
-              std::vector<Dune::FieldVector<RF,dim>> well_points;
-              std::vector<size_t> well_points_cornerindex;
-    
-              size_t nElementCorners = eg.geometry().corners();
-              for( size_t iElementCorner = 0; iElementCorner < nElementCorners; iElementCorner++ ) {
-                Dune::FieldVector<RF,dim> elementcorner = eg.geometry().corner( iElementCorner );
-#ifdef DIMENSION3
-                if( isPointInsideReachOfWell( elementcorner,meshsize_2[0], meshsize_2[1], i) )
-#else
-                  if( isPointInsideReachOfWell( elementcorner, meshsize_2[0], i ) )
-#endif
-                    {
-                      well_points.push_back( elementcorner );
-                      well_points_cornerindex.push_back( iElementCorner );
-
-                    }
-              }
-                                    
-                  
-              for(UINT iEdge=0; iEdge<well_points.size(); iEdge++) {
-                Dune::FieldVector<RF,dim> local=eg.geometry().local( well_points[iEdge]);
-                lfsv.finiteElement().localBasis().evaluateFunction( local, shapefunctions);
-
-                RF factor=eg.geometry().volume();
-                RF nPoints=eg.geometry().corners();
-                for( UINT ii=0; ii<lfsv.size(); ii++ ) {
-
-                  residual.accumulate( lfsv, ii,  (-pumping_rate/factor*nPoints)*input*injection_time*heat_factor* shapefunctions[ii]);
-
-                }
-
-              }
-
-            }
-              
-          }
-        }
-
-#endif // WELL_FRACTURE_MODEL 
         return true;
       }
 
