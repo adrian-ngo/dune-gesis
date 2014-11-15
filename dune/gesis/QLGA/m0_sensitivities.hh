@@ -387,21 +387,21 @@ namespace Dune {
 #endif
 
 
-#ifdef VTK_PLOT_PSI_transport
-              std::stringstream vtu_m0_adj;
-              vtu_m0_adj << dir.vcM0_adj_prefix 
-                         << "_s" << iSetup
-                         << "_m" << global_meas_id 
-                         << "_i" << iteration_number;
-              VTKPlot::output2vtu( gfs_cg, 
-                                   vc_m0adj_cg, 
-                                   vtu_m0_adj.str(), 
-                                   "m0_Adjoint", 
-                                   inputdata.verbosity, 
-                                   true, 
-                                   0
-                                   );
-#endif
+              if( inputdata.plot_options.vtk_plot_adjoint_m0 ){
+                std::stringstream vtu_m0_adj;
+                vtu_m0_adj << dir.vcM0_adj_prefix 
+                           << "_s" << iSetup
+                           << "_m" << global_meas_id 
+                           << "_i" << iteration_number;
+                VTKPlot::output2vtu( gfs_cg, 
+                                     vc_m0adj_cg, 
+                                     vtu_m0_adj.str(), 
+                                     "m0_Adjoint", 
+                                     inputdata.verbosity, 
+                                     true, 
+                                     0
+                                     );
+              }
             
               /*
                * solve for adjoint head ( given m0 and m0 adjoint)
@@ -441,33 +441,22 @@ namespace Dune {
                 std::cout << gwe_h_adj_m0.show_ls_result() << std::endl;
 
 
-#ifdef VTK_PLOT_PSI_transport
-              std::stringstream vtu_hadj_m0;
-              vtu_hadj_m0 << dir.vchead_adj_given_M0_prefix 
-                          << "_s" << iSetup
-                          << "_m" << global_meas_id 
-                          << "_i" << iteration_number;
-              VTKPlot::output2vtu( gfs_gw, 
-                                   vc_h_adj_m0, 
-                                   vtu_hadj_m0.str(), 
-                                   "h_adj_m0", 
-                                   inputdata.verbosity, 
-                                   true, 
-                                   0
-                                   );
-              // Debug:
-              /*
-                std::stringstream vtu_hadj_m0_vcM0_old;
-                vtu_hadj_m0_vcM0_old << dir.vchead_adj_given_M0_prefix << "_m" << global_meas_id << "_i" << iteration_number << "_vcM0_old";
+              if( inputdata.plot_options.vtk_plot_adjoint_m0 ){
+                std::stringstream vtu_hadj_m0;
+                vtu_hadj_m0 << dir.vchead_adj_given_M0_prefix 
+                            << "_s" << iSetup
+                            << "_m" << global_meas_id 
+                            << "_i" << iteration_number;
                 VTKPlot::output2vtu( gfs_gw, 
-                vcM0_old_cg, 
-                vtu_hadj_m0_vcM0_old.str(), 
-                "vcM0_old", 
-                inputdata.verbosity, 
-                true, 
-                0 );
-              */
-#endif
+                                     vc_h_adj_m0, 
+                                     vtu_hadj_m0.str(), 
+                                     "h_adj_m0", 
+                                     inputdata.verbosity, 
+                                     true, 
+                                     0
+                                     );
+              }
+
 
 
               // gradient of the head adjoint
