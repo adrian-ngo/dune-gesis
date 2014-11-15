@@ -1,24 +1,10 @@
 #ifndef DUNE_GESIS_DRIVER_HH
 #define DUNE_GESIS_DRIVER_HH
 
-//#include "showIndexSets.hh"
 #ifdef LINE_PLOT_M0
 #include "lineplot.hh"
 #endif
 
-#ifndef USE_YASP
-#include <dune/grid/io/file/dgfparser.hh>
-#include "my_gridexamples.hh"
-#endif
-
-#ifdef USE_ALUGRID
-#include <dune/grid/alugrid.hh>
-#include <dune/grid/utility/structuredgridfactory.hh>
-#endif
-
-#ifdef USE_UG
-#include<dune/grid/uggrid.hh>
-#endif
 
 #include <dune/gesis/common/Vector.hh>
 #include <dune/gesis/common/DenseMatrix.hh>
@@ -30,21 +16,11 @@
 #include <dune/gesis/common/my_gfs_utilities.hh>
 #include <dune/gesis/BVPs/GroundWaterParameters.hh>
 #include <dune/gesis/BVPs/GeoElectricalPotentialParameters.hh>
-//#include "FieldParameters.hh"
+
 
 #include <dune/gesis/BVPs/DG/dgf_pressurefield.hh>
 #include <dune/gesis/BVPs/DG/rt0_pressurefield.hh>
 #include <dune/gesis/BVPs/DG/reorderedgridview.hh>
-
-#ifdef TEST_GLOBAL_REFINE
-#include "testGlobalRefine.hh"
-#endif
-#ifdef TEST_DRIVE_HEAT
-#include "testDriveHeatRGV.hh"
-#endif
-#ifdef TEST_DRIVE_SOLUTE
-#include "testDriveRGV.hh"
-#endif
 
 #include <dune/gesis/BVPs/obs/MeasurementList.hh>
 
@@ -52,10 +28,6 @@
 #include <dune/gesis/BVPs/projectors/CoarseGridP0Projector.hh>
 
 #include <dune/gesis/BVPs/ForwardSimulator.hh>
-
-#if defined USE_ALUGRID || defined USE_UG
-#include "adaptive/adaptiveDrive_h_rgv.hh"
-#endif
 
 #include <dune/gesis/QLGA/inversionkernel.hh>
 
@@ -73,9 +45,9 @@ namespace Dune {
 
     template<typename IDT,typename YFG,typename DIR,int dim>
     REAL driver( IDT& inputdata,   // must be non-const because of well-calibration
-                              YFG& yfg_orig,
-                              DIR& dir,
-                              const Dune::MPIHelper& helper )
+                 YFG& yfg_orig,
+                 DIR& dir,
+                 const Dune::MPIHelper& helper )
     {
       if( helper.rank()==0 && inputdata.verbosity>0 )
         std::cout << "driver(...)" << std::endl;
@@ -91,8 +63,6 @@ namespace Dune {
         std::cout << "*************************" << std::endl;
         std::cout << std::endl;
       }
-
-
 
 
       Dune::Timer watch;
@@ -217,121 +187,6 @@ namespace Dune {
 #endif // USE_YASP
 
 
-#ifdef USE_UG
-      // If we use the UG grid, we need to first setup an appropriate base grid,
-      // which has at least enough cells
-      // to be distributed among the number of processes before we can start refining.
-      // This is done by creating a DGF (Dune Grid File) which is then being
-      // read by the Dune Grid Pointer.
-
-      std::string sDGF_filename( "mygrid.dgf" );
-
-      if( helper.rank() == 0 ) {
-        DGFTools::
-          output_Domain_DGF( sDGF_filename.c_str()
-                             , inputdata.domain_data.extensions
-                             , inputdata.domain_data.nCells
-                             , "cube"
-                             , inputdata.domain_data.ug_heapsize
-                             , helper.size()
-                             );
-      }
-
-
-      /*
-        Wait until the new DGF file is fully written before every processor starts reading data from it!
-        Otherwise, we might run into trouble because some fast process is reading old info!
-      */
-      MPI_Barrier( helper.getCommunicator() );
-      typedef Dune::UGGrid<dim> GRID;
-      UINT baselevel = inputdata.domain_data.ug_baselevel;
-      std::cout << "Create UG grid with " << sDGF_filename.c_str() << std::endl;
-      Dune::GridPtr<GRID> gridptr( sDGF_filename.c_str(), helper.getCommunicator() );
-      std::cout << "Get UG grid pointer" << std::endl;
-      GRID& grid = *gridptr;
-
-      if(grid.loadBalance()){
-        std::cout << "load balance successful" << std::endl;
-      }
-
-      if( baselevel==0 ){
-        std::cout << "No global refinement for UG grid" << std::endl;
-      }
-      else{
-        std::cout << "Globally refine UG grid with level " << baselevel << std::endl;
-        grid.globalRefine( baselevel );
-      }
-
-      grid.setClosureType( Dune::UGGrid<dim>::NONE );  // we work with hanging nodes!
-      grid.setRefinementType( Dune::UGGrid<dim>::COPY );  // Gets full gridview on all levels, BUT this works only for conforming refinement. (Oliver Sander)
-      std::cout << "ug grid baselevel = " << grid.maxLevel() << std::endl;
-
-#endif // USE_UG
-
-
-
-
-#ifdef USE_ALUGRID
-      /*
-      std::string sALU_filename( "my3dgrid.alu" );
-      if( helper.rank() == 0 )
-        {
-          ALUTools::create_ALU_Hexahedra_Cuboid( sALU_filename.c_str()
-                                                 , inputdata.domain_data.extensions[0]
-                                                 , inputdata.domain_data.extensions[1],
-                                                 inputdata.domain_data.extensions[2]
-                                                 );
-        }
-      */
-
-      /*
-        Wait until the new DGF file is fully written before every processor starts reading data from it!
-        Otherwise, we might run into trouble because some fast process is reading old info!
-      */
-      logger << "---MPI_Barrier---" << std::endl;
-      MPI_Barrier( helper.getCommunicator() );
-
-      UINT baselevel = inputdata.domain_data.alugrid_baselevel;
-
-      // make grid
-      Dune::FieldVector<REAL,dim> LowerLeft(0);
-      Dune::FieldVector<REAL,dim> UpperRight;
-      UpperRight[0] = inputdata.domain_data.extensions[0];
-      UpperRight[1] = inputdata.domain_data.extensions[1];
-
-      Dune::array<unsigned int,dim> elements;
-      elements[0] = inputdata.domain_data.nCells[0];
-      elements[1] = inputdata.domain_data.nCells[1];
-
-#ifdef DIMENSION3
-      UpperRight[2] = inputdata.domain_data.extensions[2];
-      elements[2] = inputdata.domain_data.nCells[2];
-#endif
-
-      typedef Dune::ALUGrid<dim,dim,Dune::cube,Dune::nonconforming> GRID;
-
-      watch.reset();
-      Dune::StructuredGridFactory<GRID> structuredGridFactory;
-      Dune::shared_ptr<GRID> gridptr =
-        structuredGridFactory.createCubeGrid(LowerLeft, UpperRight, elements);
-
-      REAL elapsed_time;
-      elapsed_time = watch.elapsed();
-      std::cout << "=== Dune::StructuredGridFactory building 3D ALUGRID took "
-                << elapsed_time << " sec." << std::endl;
-
-      watch.reset();
-      GRID& grid = *gridptr;
-
-      if(grid.loadBalance()){
-        elapsed_time = watch.elapsed();
-        std::cout << "=== Initial load balancing for ALUGRID took "
-                  << elapsed_time << " sec." << std::endl;
-      }
-
-      std::cout << "ALUGRID grid baselevel = " << grid.maxLevel() << std::endl;
-
-#endif // USE_ALUGRID
 
       // 1.) GV and GFS for the Groundwater Equation:
       logger << "Get level gridview for the flow equation." << std::endl;
@@ -377,15 +232,7 @@ namespace Dune {
 
 #else // using DG
 
-#if defined USE_ALUGRID || defined USE_UG
-      // This must be used for the parallel ALUGRID (Rebecca).
-      // We will use an overlapping linear solver on a non-overlapping grid
-      // with ghost-cells. Therefore, the ghost-cells are treated as
-      // if they were overlap cells of an overlapping grid with overlap=1.
-      typedef Dune::PDELab::P0ParallelGhostConstraints CONSTRAINTS;
-#else
       typedef Dune::PDELab::P0ParallelConstraints CONSTRAINTS;
-#endif
 
 #endif // USE_FEM
 
@@ -404,17 +251,18 @@ namespace Dune {
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV_TP,CTYPE,REAL,1> FEM_HYPER;
 #else
       typedef Dune::PDELab::P0LocalFiniteElementMap<CTYPE,REAL,dim> FEM_ELLIP;
-#ifdef USE_Qk
-      // 2.) Transport Equation using DG with Qk elements on cubes
-      typedef Dune::PDELab::QkDGLocalFiniteElementMap<CTYPE,REAL,pMAX,dim> FEM_HYPER;
-      const int blocksize = Dune::QkStuff::QkSize<pMAX,dim>::value;
-      logger << "DG: Using QkDG for the hyperbolic PDE with blocksize "
-             << blocksize << std::endl;
-#else
+
+#ifdef USE_Pk
       // 2.) Transport Equation using DG with Pk elements on cubes
       typedef Dune::PDELab::OPBLocalFiniteElementMap<CTYPE,REAL,pMAX,dim,bt> FEM_HYPER;
       const int blocksize = Dune::PB::PkSize<pMAX,dim>::value;
       logger << "DG: Using PkDG for the hyperbolic PDE with blocksize "
+             << blocksize << std::endl;
+#else
+      // 2.) Transport Equation using DG with Qk elements on cubes
+      typedef Dune::PDELab::QkDGLocalFiniteElementMap<CTYPE,REAL,pMAX,dim> FEM_HYPER;
+      const int blocksize = Dune::QkStuff::QkSize<pMAX,dim>::value;
+      logger << "DG: Using QkDG for the hyperbolic PDE with blocksize "
              << blocksize << std::endl;
 #endif
 #endif
@@ -483,9 +331,10 @@ namespace Dune {
         }
       */
 
-#ifdef VTK_PLOT_Y_FIELD
-      yfg_orig.plot2vtu( gv_gw, dir.Y_orig_vtu, "Y_orig", baselevel );
-#endif
+      if( inputdata.plot_options.vtk_plot_yfield ){
+        yfg_orig.plot2vtu( gv_gw, dir.Y_orig_vtu, "Y_orig", baselevel );
+      }
+
 
 
 
@@ -592,18 +441,20 @@ namespace Dune {
                                             );
         //}
 
-#ifdef VTK_PLOT_Y_SMOOTH
-        YFG yfg_smoothed_Yorig(inputdata,dir,helper.getCommunicator());
-        if( helper.size() > 1 )
-          yfg_smoothed_Yorig.parallel_import_from_local_vector( smoothed_orig_YField, local_count, local_offset );
-        else
-          yfg_smoothed_Yorig.import_from_vector( smoothed_orig_YField );
 
-        yfg_smoothed_Yorig.plot2vtu( gv_gw,
-                                     dir.Y_orig_vtu + "_smoothed",
-                                     "Y_smoothed",
-                                     baselevel );
-#endif
+        if( inputdata.plot_options.vtk_plot_y_smooth ) {
+          YFG yfg_smoothed_Yorig(inputdata,dir,helper.getCommunicator());
+          if( helper.size() > 1 )
+            yfg_smoothed_Yorig.parallel_import_from_local_vector( smoothed_orig_YField, local_count, local_offset );
+          else
+            yfg_smoothed_Yorig.import_from_vector( smoothed_orig_YField );
+
+          yfg_smoothed_Yorig.plot2vtu( gv_gw,
+                                       dir.Y_orig_vtu + "_smoothed",
+                                       "Y_smoothed",
+                                       baselevel );
+        }
+
 
       // The YFIELD object is supposed to be used only for the evaluation of the
       // conductivity field. It shoud indicate that nothing else is used from the
@@ -703,10 +554,10 @@ namespace Dune {
 
 #else
 
-#ifdef USE_CUBE
-      const Dune::GeometryType::BasicType bt = Dune::GeometryType::cube;
-#else
+#ifdef USE_SIMPLEX
       const Dune::GeometryType::BasicType bt = Dune::GeometryType::simplex;
+#else
+      const Dune::GeometryType::BasicType bt = Dune::GeometryType::cube;
 #endif
       // 1.) Groundwater Equation using CCFV
       Dune::GeometryType gt = Dune::GeometryType(bt,dim);
@@ -759,61 +610,9 @@ namespace Dune {
 
       }
 
-      //showIndexSets( gv_gw, pRootGridView );
-      //return;
-
-#ifdef TEST_DRIVE_SOLUTE
-      testDriveRGV<GRID,GFS_GW,IDT,YFG,DIR>( grid,
-                                             gfs_gw,
-                                             inputdata,
-                                             yfg_orig,
-                                             dir,
-                                             helper
-                                             );
-#endif // TEST_DRIVE
-#ifdef TEST_DRIVE_HEAT
-      testDriveHeatRGV<GRID,GFS_GW,IDT,YFG,DIR>( grid,
-                                                 gfs_gw,
-                                                 inputdata,
-                                                 yfg_orig,
-                                                 dir,
-                                                 helper
-                                                 );
-#endif // TEST_DRIVE_HEAT
-
-#ifdef TEST_GLOBAL_REFINE
-      testGlobalRefine<GRID,GFS_GW,IDT,YFG,DIR>( grid,
-                                                 gfs_gw,
-                                                 inputdata,
-                                                 yfg_orig,
-                                                 dir,
-                                                 helper
-                                                 );
-#endif // TEST_GLOBAL_REFINE
-
-#if defined TEST_DRIVE_HEAT || defined TEST_DRIVE_SOLUTE || defined TEST_GLOBAL_REFINE
-      return;
-#endif
 
 #endif // USE_YASP
 
-#if defined USE_ALUGRID || defined USE_UG
-      Dune::Gesis::adaptiveDrive_h_rgv
-        <GRID,
-         GFS_GW,
-         IDT,
-         YFG,
-         DIR>
-        ( grid,
-          gfs_gw,
-          inputdata,
-          yfg_orig,
-          baselevel,
-          dir,
-          helper
-          );
-      return;
-#endif //USE_ALUGRID or USE_UG
 
 
 
@@ -1085,29 +884,17 @@ namespace Dune {
 
           }
 
-#ifdef VTK_PLOT_P_FIELD
-          VTKPlot::output2vtu( gfs_gw,
-                               vchead_orig,
-                               dir.head_orig_vtu[iSetup],
-                               "h_orig",
-                               inputdata.verbosity,
-                               true,
-                               0
-                               );
-
-          // Only for comparison with Ole's output:
-          /*
+          if(inputdata.plot_options.vtk_plot_head ){
             VTKPlot::output2vtu( gfs_gw,
-            vchead_orig,
-            dir.head_orig_vtu[iSetup] + "_cg",
-            "h_orig",
-            inputdata.verbosity,
-            false,
-            0,
-            true
-            );
-          */
-#endif
+                                 vchead_orig,
+                                 dir.head_orig_vtu[iSetup],
+                                 "h_orig",
+                                 inputdata.verbosity,
+                                 true,
+                                 0
+                                 );
+          }
+
 
           // Calculate the Darcy flux out of the head "vchead_orig"
           DARCY_FLUX_DGF darcyflux_dgf( gwp_fwd,
@@ -1115,25 +902,20 @@ namespace Dune {
                                         vchead_orig,
                                         baselevel );
 
-#ifdef VTK_PLOT_Q_FIELD
-          VTKPlot::output_dgf_to_vtu( gv_gw,
-                                      gfs_gw,
-                                      darcyflux_dgf.exportDGF(),
-                                      dir.q_orig_vtu[iSetup],
-                                      "q_orig",
-                                      inputdata.verbosity,
-                                      true,
-                                      0 );
-#endif
+          if( inputdata.plot_options.vtk_plot_q ){
+            VTKPlot::output_dgf_to_vtu( gv_gw,
+                                        gfs_gw,
+                                        darcyflux_dgf.exportDGF(),
+                                        dir.q_orig_vtu[iSetup],
+                                        "q_orig",
+                                        inputdata.verbosity,
+                                        true,
+                                        0 );
+          }
+
 
 #ifdef USE_YASP
           UINT maxlevel=inputdata.domain_data.yasp_maxlevel;
-#endif
-#ifdef USE_ALUGRID
-          UINT maxlevel = inputdata.domain_data.alugrid_baselevel + inputdata.domain_data.alugrid_maxsteps;
-#endif
-#ifdef USE_UG
-          UINT maxlevel = inputdata.domain_data.ug_baselevel + inputdata.domain_data.ug_maxsteps;
 #endif
 
           if(maxlevel>baselevel)
@@ -1176,12 +958,11 @@ namespace Dune {
           verifyCalibratedWellsOnRefinedGrid(gv_tp,inputdata);
 
 
-#ifdef VTK_PLOT_RGV
-          std::stringstream vtu_gv_tp;
-          vtu_gv_tp << dir.vtudir << "/gv_tp_orig_" << iSetup;
-
-          outputGridviewIndexToDGF( gv_tp, inputdata, vtu_gv_tp.str() );
-#endif // VTK_PLOT_RGV
+          if( inputdata.plot_options.vtk_plot_element_ordering ){
+            std::stringstream vtu_gv_tp;
+            vtu_gv_tp << dir.vtudir << "/gv_tp_orig_" << iSetup;
+            VTKPlot::outputGridviewIndexToDGF( gv_tp, vtu_gv_tp.str() );
+          }
 
 
 #endif
@@ -1259,14 +1040,35 @@ namespace Dune {
                                                           );
               }
 
-#ifdef VTK_PLOT_C_FIELD
-              VTKPlot::output2vtu( gfs_cg,
-                                   vcM0_cg,
-                                   dir.m0_orig_vtu[iSetup] + "_cg",
-                                   "m0_orig_cg",
-                                   inputdata.verbosity,
-                                   true,
-                                   0 );
+              if(inputdata.plot_options.vtk_plot_m0 ){
+                VTKPlot::output2vtu( gfs_cg,
+                                     vcM0_cg,
+                                     dir.m0_orig_vtu[iSetup] + "_cg",
+                                     "m0_orig_cg",
+                                     inputdata.verbosity,
+                                     true,
+                                     0 );
+
+                VTKPlot::output2vtu( gfs_tp,
+                                     vcM0_orig,
+                                     dir.m0_orig_vtu[iSetup],
+                                     "m0_orig",
+                                     inputdata.verbosity,
+                                     true,
+                                     std::max(0,pMAX-1) );
+              }
+
+
+              REAL m0dg_negMass(0), m0dg_posMass(0), m0dg_totMass(0);
+              GridFunctionTools::totalMass( gfs_tp, vcM0_orig, m0dg_negMass, m0dg_posMass, m0dg_totMass );
+              if( helper.rank() == 0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
+                std::cout << "pos./neg. mass (orig) = " 
+                          << std::fixed << std::setprecision(5)
+                          << m0dg_posMass << " " << m0dg_negMass  << std::endl;
+                std::cout << "tot. mass (orig) = " 
+                          << std::fixed << std::setprecision(5)
+                          << m0dg_totMass << std::endl;
+              }
 
               REAL m0cg_negMass(0), m0cg_posMass(0), m0cg_totMass(0);
               GridFunctionTools::totalMass( gfs_cg, vcM0_cg, m0cg_negMass, m0cg_posMass, m0cg_totMass );
@@ -1279,23 +1081,7 @@ namespace Dune {
                           << m0cg_totMass << std::endl;
               }
 
-              VTKPlot::output2vtu( gfs_tp,
-                                   vcM0_orig,
-                                   dir.m0_orig_vtu[iSetup],
-                                   "m0_orig",
-                                   inputdata.verbosity,
-                                   true,
-                                   std::max(0,pMAX-1) );
-              REAL m0dg_negMass(0), m0dg_posMass(0), m0dg_totMass(0);
-              GridFunctionTools::totalMass( gfs_tp, vcM0_orig, m0dg_negMass, m0dg_posMass, m0dg_totMass );
-              if( helper.rank() == 0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
-                std::cout << "pos./neg. mass (orig) = " 
-                          << std::fixed << std::setprecision(5)
-                          << m0dg_posMass << " " << m0dg_negMass  << std::endl;
-                std::cout << "tot. mass (orig) = " 
-                          << std::fixed << std::setprecision(5)
-                          << m0dg_totMass << std::endl;
-              }
+
 #ifdef LINE_PLOT_M0
               // *********************************
               // Plot over line for gnuplot:
@@ -1318,10 +1104,6 @@ namespace Dune {
 #endif // LINE_PLOT_M0
 
 
-
-
-
-#endif
             }
 
             if( bReadM0MeasurementDone ){
@@ -1399,31 +1181,24 @@ namespace Dune {
                                                             );
                 }
 
-                /*
-                  if(inputdata.problem_types.transport_inversion_m1){
-                  // take measurements
-                  orig_measurements.take_measurements( 3, vcM1_cg, gfs_cg, helper, iSetup);
-                  }
-                */
 
-#ifdef VTK_PLOT_C_FIELD
-                VTKPlot::output2vtu( gfs_cg,
-                                     vcM1_cg,
-                                     dir.m1_orig_vtu[iSetup] + "_cg",
-                                     "m1_orig_cg",
-                                     inputdata.verbosity,
-                                     true,
-                                     0 );
+                if(inputdata.plot_options.vtk_plot_m1 ){
+                  VTKPlot::output2vtu( gfs_cg,
+                                       vcM1_cg,
+                                       dir.m1_orig_vtu[iSetup] + "_cg",
+                                       "m1_orig_cg",
+                                       inputdata.verbosity,
+                                       true,
+                                       0 );
 
-                VTKPlot::output2vtu( gfs_tp,
-                                     vcM1_orig,
-                                     dir.m1_orig_vtu[iSetup],
-                                     "m1_orig",
-                                     inputdata.verbosity,
-                                     true,
-                                     std::max(0,pMAX-1) );
-
-#endif
+                  VTKPlot::output2vtu( gfs_tp,
+                                       vcM1_orig,
+                                       dir.m1_orig_vtu[iSetup],
+                                       "m1_orig",
+                                       inputdata.verbosity,
+                                       true,
+                                       std::max(0,pMAX-1) );
+                }
 
 
                 //Take the measurements!
@@ -1512,36 +1287,38 @@ namespace Dune {
                                                                   vcATphi_orig
                                                                   );
 
-#ifdef VTK_PLOT_EL_POTENTIAL_FIELD
-                  VTKPlot::output2vtu( gfs_gw,
-                                       vcphi0_orig,
-                                       dir.phi0_orig_vtu[iSetup][iconfig],
-                                       "phi0_orig",
-                                       inputdata.verbosity,
-                                       true,
-                                       0 );
-                  VTKPlot::output2vtu( gfs_gw,
-                                       vcM0phi_orig,
-                                       dir.M0phi_orig_vtu[iSetup][iconfig],
-                                       "M0phi_orig",
-                                       inputdata.verbosity,
-                                       true,
-                                       0 );
-                  VTKPlot::output2vtu( gfs_gw,
-                                       vcM1phi_orig,
-                                       dir.M1phi_orig_vtu[iSetup][iconfig],
-                                       "M1phi_orig",
-                                       inputdata.verbosity,
-                                       true,
-                                       0 );
-                  VTKPlot::output2vtu( gfs_gw,
-                                       vcATphi_orig,
-                                       dir.ATphi_orig_vtu[iSetup][iconfig],
-                                       "ATphi_orig",
-                                       inputdata.verbosity,
-                                       true,
-                                       0 );
-#endif
+
+                  if( inputdata.plot_options.vtk_plot_el_potential_field ){
+                    VTKPlot::output2vtu( gfs_gw,
+                                         vcphi0_orig,
+                                         dir.phi0_orig_vtu[iSetup][iconfig],
+                                         "phi0_orig",
+                                         inputdata.verbosity,
+                                         true,
+                                         0 );
+                    VTKPlot::output2vtu( gfs_gw,
+                                         vcM0phi_orig,
+                                         dir.M0phi_orig_vtu[iSetup][iconfig],
+                                         "M0phi_orig",
+                                         inputdata.verbosity,
+                                         true,
+                                         0 );
+                    VTKPlot::output2vtu( gfs_gw,
+                                         vcM1phi_orig,
+                                         dir.M1phi_orig_vtu[iSetup][iconfig],
+                                         "M1phi_orig",
+                                         inputdata.verbosity,
+                                         true,
+                                         0 );
+                    VTKPlot::output2vtu( gfs_gw,
+                                         vcATphi_orig,
+                                         dir.ATphi_orig_vtu[iSetup][iconfig],
+                                         "ATphi_orig",
+                                         inputdata.verbosity,
+                                         true,
+                                         0 );
+                  }
+
 
                   if(inputdata.problem_types.moments_geoeletric_potential_inversion){
                     //Take measurements !!!
@@ -1694,23 +1471,24 @@ namespace Dune {
                                                       iSetup );
             }
 
-#ifdef VTK_PLOT_HEAT_FIELD
-            VTKPlot::output2vtu( gfs_tp, vcheatM0_orig, dir.heatM0_orig_vtu[iSetup],
-                                 "heatM0",
-                                 inputdata.verbosity, true, std::max(0,pMAX-1) );
+            if( inputdata.plot_options.vtk_plot_heat ){
+              VTKPlot::output2vtu( gfs_tp, vcheatM0_orig, dir.heatM0_orig_vtu[iSetup],
+                                   "heatM0",
+                                   inputdata.verbosity, true, std::max(0,pMAX-1) );
 
-            VTKPlot::output2vtu( gfs_cg, vcheatM0_cg, dir.heatM0_orig_vtu[iSetup] + "_cg",
-                                 "heatM0_cg",
-                                 inputdata.verbosity, true, 0 );
+              VTKPlot::output2vtu( gfs_cg, vcheatM0_cg, dir.heatM0_orig_vtu[iSetup] + "_cg",
+                                   "heatM0_cg",
+                                   inputdata.verbosity, true, 0 );
 
-            VTKPlot::output2vtu( gfs_cg, vcheatM1_cg, dir.heatM1_orig_vtu[iSetup] + "_cg",
-                                 "heatM1_cg",
-                                 inputdata.verbosity, true, 0 );
+              VTKPlot::output2vtu( gfs_cg, vcheatM1_cg, dir.heatM1_orig_vtu[iSetup] + "_cg",
+                                   "heatM1_cg",
+                                   inputdata.verbosity, true, 0 );
 
-            VTKPlot::output2vtu( gfs_cg, vcheatAT_orig, dir.heatArrival_Time_orig_vtu[iSetup] + "_cg",
-                                 "heat_arrival_time_orig",
-                                 inputdata.verbosity, true, 0 );
-#endif
+              VTKPlot::output2vtu( gfs_cg, vcheatAT_orig, dir.heatArrival_Time_orig_vtu[iSetup] + "_cg",
+                                   "heat_arrival_time_orig",
+                                   inputdata.verbosity, true, 0 );
+            }
+
           } // END: if(inputdata.problem_types.heat_forward || inputdata.problem_types.heat_mean_arrival_time_inversion)
 
           //} //END: for all setups
@@ -1816,15 +1594,15 @@ namespace Dune {
                                                                 , "/vcphi0_orig"
                                                                 , vcphi0_orig
                                                                 );
-#ifdef VTK_PLOT_EL_POTENTIAL_FIELD
-                VTKPlot::output2vtu( gfs_gw,
-                                     vcphi0_orig,
-                                     dir.phi0_orig_vtu[iSetup][iconfig],
-                                     "phi0_orig",
-                                     inputdata.verbosity,
-                                     true,
-                                     0 );
-#endif
+                if( inputdata.plot_options.vtk_plot_el_potential_field ){
+                  VTKPlot::output2vtu( gfs_gw,
+                                       vcphi0_orig,
+                                       dir.phi0_orig_vtu[iSetup][iconfig],
+                                       "phi0_orig",
+                                       inputdata.verbosity,
+                                       true,
+                                       0 );
+                }
               }
 
 
