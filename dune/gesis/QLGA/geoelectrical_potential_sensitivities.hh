@@ -143,16 +143,16 @@ void geoelectrical_potential_sensitivities( // input:
                                 vchead_old,
                                 baselevel );
 
-#ifdef VTK_PLOT_Q_FIELD
-      VTKPlot::output_dgf_to_vtu( gv_gw, 
-                                  gfs_gw, 
-                                  darcyflux_dgf, 
-                                  dir.q_orig_vtu[iSetup] + "_TEST", 
-                                  "q_orig", 
-                                  inputdata.verbosity, 
-                                  true,
-                                  0 );
-#endif
+  if(inputdata.plot_options.vtk_plot_q ){
+    VTKPlot::output_dgf_to_vtu( gv_gw, 
+                                gfs_gw, 
+                                darcyflux_dgf, 
+                                dir.q_orig_vtu[iSetup] + "_TEST", 
+                                "q_orig", 
+                                inputdata.verbosity, 
+                                true,
+                                0 );
+  }
 
   // some more variables
   Vector<UINT> read_local_count,read_local_offset;
@@ -367,28 +367,29 @@ void geoelectrical_potential_sensitivities( // input:
                                     measure_location2,
                                     vc_phi_adj );  // eqn: (144)
        
-#ifdef VTK_PLOT_PSI_GP
-          std::stringstream vtu_phi_adj;
-          vtu_phi_adj << dir.vcphi_adj_prefix << "_m" << global_meas_id << "_i" << iteration_number;
-          VTKPlot::output2vtu( gfs_gw,
-                               vc_phi_adj,
-                               vtu_phi_adj.str(),
-                               "phi_adj",
-                               inputdata.verbosity, 
-                               true, 
-                               0 );
+          if( inputdata.plot_options.vtk_plot_gp_adjoint ){
+            std::stringstream vtu_phi_adj;
+            vtu_phi_adj << dir.vcphi_adj_prefix << "_m" << global_meas_id << "_i" << iteration_number;
+            VTKPlot::output2vtu( gfs_gw,
+                                 vc_phi_adj,
+                                 vtu_phi_adj.str(),
+                                 "phi_adj",
+                                 inputdata.verbosity, 
+                                 true, 
+                                 0 );
 
-          std::stringstream vtu_phi_adj_vcphi0;
-          vtu_phi_adj_vcphi0 << dir.vcphi_adj_prefix << "_m" << global_meas_id << "_i" << iteration_number;
-          VTKPlot::output2vtu( gfs_gw,
-                               vcphi0,
-                               vtu_phi_adj_vcphi0.str() + "_vcphi0",
-                               "vcphi0",
-                               inputdata.verbosity, 
-                               true, 
-                               0 );
+            std::stringstream vtu_phi_adj_vcphi0;
+            vtu_phi_adj_vcphi0 << dir.vcphi_adj_prefix << "_m" << global_meas_id << "_i" << iteration_number;
+            VTKPlot::output2vtu( gfs_gw,
+                                 vcphi0,
+                                 vtu_phi_adj_vcphi0.str() + "_vcphi0",
+                                 "vcphi0",
+                                 inputdata.verbosity, 
+                                 true, 
+                                 0 );
 
-#endif
+          }
+
         
           //logger<<"solving for adjoint Transport M0 wrt. phi adjoint!"<<std::endl;
           tpe_m0_adj.solve_adjoint( vc_phi_adj, vcphi0, // inputs
@@ -399,17 +400,19 @@ void geoelectrical_potential_sensitivities( // input:
                       vcM0_adj_phi_adj_cg,  // output
                       inputdata.transport_parameters.l2_diffusion_adjoint );
 
-#ifdef VTK_PLOT_PSI_GP
-          std::stringstream vtu_M0gp_adj_phi_adj;
-          vtu_M0gp_adj_phi_adj << dir.vcM0gp_adj_phi_adj_prefix << "_m" << global_meas_id << "_i" << iteration_number;
-          VTKPlot::output2vtu( gfs_cg,
-                               vcM0_adj_phi_adj_cg,
-                               vtu_M0gp_adj_phi_adj.str() + "_cg",
-                               "GEP_M0_adj_phi_adj_cg",
-                               inputdata.verbosity, 
-                               true, 
-                               0 );
-#endif
+
+          if( inputdata.plot_options.vtk_plot_gp_adjoint ){
+            std::stringstream vtu_M0gp_adj_phi_adj;
+            vtu_M0gp_adj_phi_adj << dir.vcM0gp_adj_phi_adj_prefix << "_m" << global_meas_id << "_i" << iteration_number;
+            VTKPlot::output2vtu( gfs_cg,
+                                 vcM0_adj_phi_adj_cg,
+                                 vtu_M0gp_adj_phi_adj.str() + "_cg",
+                                 "GEP_M0_adj_phi_adj_cg",
+                                 inputdata.verbosity, 
+                                 true, 
+                                 0 );
+          }
+
 
 
 #ifdef USE_FEM
@@ -434,18 +437,20 @@ void geoelectrical_potential_sensitivities( // input:
 
 
        
-#ifdef VTK_PLOT_PSI_GP
-          std::stringstream vtu_head_adj_M0;
-          vtu_head_adj_M0 << dir.vcheadgp_adj_M0_prefix << "_m" << global_meas_id << "_i" << iteration_number;
-          VTKPlot::output2vtu( gfs_gw,
-                               vc_hadj_m0, 
-                               vtu_head_adj_M0.str(),
-                               "headGP_adj_M0_adj", 
-                               inputdata.verbosity, 
-                               true, 
-                               0 );
 
-#endif
+          if( inputdata.plot_options.vtk_plot_gp_adjoint ){
+            std::stringstream vtu_head_adj_M0;
+            vtu_head_adj_M0 << dir.vcheadgp_adj_M0_prefix << "_m" << global_meas_id << "_i" << iteration_number;
+            VTKPlot::output2vtu( gfs_gw,
+                                 vc_hadj_m0, 
+                                 vtu_head_adj_M0.str(),
+                                 "headGP_adj_M0_adj", 
+                                 inputdata.verbosity, 
+                                 true, 
+                                 0 );
+          }
+
+
 
           // gradient of the head adjoint
           DARCY_FLUX_DGF grad_hadj_m0_dgf( gwp_fwd_old, // dummy place-holder!
@@ -474,7 +479,8 @@ void geoelectrical_potential_sensitivities( // input:
                                 iphiM0Sensitivity
                                 );
             
-#ifdef VTK_PLOT_S
+
+          /*
           std::stringstream vtu_file;
           vtu_file << dir.Sensitivity_vtu_prefix << "_phiM0Sensitivity";
           VTKPlot::output_vector_to_vtu( gv_0
@@ -483,7 +489,7 @@ void geoelectrical_potential_sensitivities( // input:
                                          , "phiM0Sensitivity"
                                          , inputdata.verbosity
                                          );
-#endif
+          */
 
 
           VCType_CG vc_theta_phiM1( gfs_cg, 0.0 );
@@ -497,17 +503,19 @@ void geoelectrical_potential_sensitivities( // input:
                       vc_m0adj_m1adj_cg,   // output
                       inputdata.transport_parameters.l2_diffusion_adjoint );
 
-#ifdef VTK_PLOT_PSI_GP
-          std::stringstream vtu_gep_m0adj_m1adj;
-          vtu_gep_m0adj_m1adj << dir.vcM0gp_adj_M1_prefix << "_m" << global_meas_id << "_i" << iteration_number;
-          VTKPlot::output2vtu( gfs_cg,
-                               vc_m0adj_m1adj_cg,
-                               vtu_gep_m0adj_m1adj.str() + "_cg",
-                               "GEP_m0adj_m1adj_cg",
-                               inputdata.verbosity, 
-                               true,
-                               0 );
-#endif
+
+          if( inputdata.plot_options.vtk_plot_gp_adjoint ){
+            std::stringstream vtu_gep_m0adj_m1adj;
+            vtu_gep_m0adj_m1adj << dir.vcM0gp_adj_M1_prefix << "_m" << global_meas_id << "_i" << iteration_number;
+            VTKPlot::output2vtu( gfs_cg,
+                                 vc_m0adj_m1adj_cg,
+                                 vtu_gep_m0adj_m1adj.str() + "_cg",
+                                 "GEP_m0adj_m1adj_cg",
+                                 inputdata.verbosity, 
+                                 true,
+                                 0 );
+          }
+
             
           /*
            * solve for adjoint head (GP) ( given m0/m1 and M0/M1 adjoint)
@@ -540,17 +548,19 @@ void geoelectrical_potential_sensitivities( // input:
                                       );
 #endif
 
-#ifdef VTK_PLOT_PSI_GP
-          std::stringstream vtu_head_adj_M0M1;
-          vtu_head_adj_M0M1 << dir.vcheadgp_adj_M0M1_prefix << "_m" << global_meas_id << "_i" << iteration_number;
-          VTKPlot::output2vtu( gfs_gw,
-                               vc_hadj_m0m1,
-                               vtu_head_adj_M0M1.str(),
-                               "headGP_adj_M0M1_adj",
-                               inputdata.verbosity, 
-                               true, 
-                               0 );
-#endif
+
+          if( inputdata.plot_options.vtk_plot_gp_adjoint ){
+            std::stringstream vtu_head_adj_M0M1;
+            vtu_head_adj_M0M1 << dir.vcheadgp_adj_M0M1_prefix << "_m" << global_meas_id << "_i" << iteration_number;
+            VTKPlot::output2vtu( gfs_gw,
+                                 vc_hadj_m0m1,
+                                 vtu_head_adj_M0M1.str(),
+                                 "headGP_adj_M0M1_adj",
+                                 inputdata.verbosity, 
+                                 true, 
+                                 0 );
+          }
+
 
           // dgf: of adjoint head
           DARCY_FLUX_DGF grad_hadj_m0m1_dgf( gwp_fwd_old, // dummy place-holder!
@@ -578,16 +588,18 @@ void geoelectrical_potential_sensitivities( // input:
                                 iphiM1Sensitivity
                                 );
 
-#ifdef VTK_PLOT_S
-          std::stringstream vtu_file1;
-          vtu_file1 << dir.Sensitivity_vtu_prefix << "_phiM1Sensitivity";
-          VTKPlot::output_vector_to_vtu( gv_0
-                                         , phiM1Sensitivity
-                                         , vtu_file1.str()
-                                         , "phiM1Sensitivity"
-                                         , inputdata.verbosity
-                                         );
-#endif
+
+          if( inputdata.plot_options.vtk_plot_sensitivities ){
+            std::stringstream vtu_file1;
+            vtu_file1 << dir.Sensitivity_vtu_prefix << "_phiM1Sensitivity";
+            VTKPlot::output_vector_to_vtu( gv_0
+                                           , phiM1Sensitivity
+                                           , vtu_file1.str()
+                                           , "phiM1Sensitivity"
+                                           , inputdata.verbosity
+                                           );
+          }
+
             
           // calculate sensitivities of the ratio!
        
