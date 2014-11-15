@@ -11,20 +11,32 @@
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/common/function.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
-//#include<dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include<dune/pdelab/localoperator/pattern.hh>
 #include<dune/pdelab/localoperator/flags.hh>
 #include<dune/pdelab/localoperator/idefault.hh>
 #include<dune/pdelab/localoperator/defaultimp.hh>
 #include<dune/pdelab/finiteelement/localbasiscache.hh>
 
-//#include"convectiondiffusionparameter.hh"
-
 #include "dune/gesis/common/eval.hh"
 #include "dune/gesis/BVPs/wells/wellposition.hh"
 
 
 #define HOUSTON_h_F
+
+/** a local operator for solving the convection-diffusion equation with discontinuous Galerkin
+ *  
+ * \f{align*}{
+ *   \nabla\cdot(-A(x) \nabla u + b(x) u) + c(x)u &=& f \mbox{ in } \Omega,  \\
+ *                                              u &=& g \mbox{ on } \partial\Omega_D \\
+ *                (b(x,u) - A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_N \\
+ *                        -(A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_O
+ * \f}
+ * Note:
+ *  - This formulation is valid for velocity fields which are non-divergence free.
+ *  - Outflow boundary conditions should only be set on the outflow boundary
+ *
+ * \tparam T model of ConvectionDiffusionParameterInterface
+ */
 
 namespace Dune {
   namespace Gesis {
@@ -39,20 +51,6 @@ namespace Dune {
       enum Type { weightsOn, weightsOff };
     };
 
-    /** a local operator for solving the convection-diffusion equation with discontinuous Galerkin
-     *  
-     * \f{align*}{
-     *   \nabla\cdot(-A(x) \nabla u + b(x) u) + c(x)u &=& f \mbox{ in } \Omega,  \\
-     *                                              u &=& g \mbox{ on } \partial\Omega_D \\
-     *                (b(x,u) - A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_N \\
-     *                        -(A(x)\nabla u) \cdot n &=& j \mbox{ on } \partial\Omega_O
-     * \f}
-     * Note:
-     *  - This formulation is valid for velocity fields which are non-divergence free.
-     *  - Outflow boundary conditions should only be set on the outflow boundary
-     *
-     * \tparam T model of ConvectionDiffusionParameterInterface
-     */
     template< 
       typename TP,
       typename FEM,
@@ -165,10 +163,10 @@ namespace Dune {
                             ConvectionDiffusionDGWeights::Type weights_=ConvectionDiffusionDGWeights::weightsOn,
                             Real alpha_=2.0, 
                             int intorderadd_=0
-                             )
-        : 
+                            )
+      : 
 #ifdef USE_NUMDIFF
-        Dune::PDELab::NumericalJacobianApplyVolume<ConvectionDiffusionDG<TP,FEM,SOURCE_TYPE> >(1.0e-7),
+      Dune::PDELab::NumericalJacobianApplyVolume<ConvectionDiffusionDG<TP,FEM,SOURCE_TYPE> >(1.0e-7),
         Dune::PDELab::NumericalJacobianApplySkeleton<ConvectionDiffusionDG<TP,FEM,SOURCE_TYPE> >(1.0e-7),
         Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionDG<TP,FEM,SOURCE_TYPE> >(1.0e-7),
         Dune::PDELab::NumericalJacobianVolume<ConvectionDiffusionDG<TP,FEM,SOURCE_TYPE> >(1.0e-7),
@@ -367,43 +365,43 @@ namespace Dune {
           const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
 
-        // loop over quadrature points
-        for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
-          {
-            // evaluate basis functions
-            std::vector<RangeType> phi(lfsu.size());
-            evalFunctionBasis( it->position(), lfsu, cache, phi );
+          // loop over quadrature points
+          for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
+            {
+              // evaluate basis functions
+              std::vector<RangeType> phi(lfsu.size());
+              evalFunctionBasis( it->position(), lfsu, cache, phi );
 
-            //RF u0 = concentration * injectiontime / eg.geometry().volume();
-            RF u0 = 1.0;
-            // scaling with 1./eg.geometry().volume() is important due to refinement
+              //RF u0 = concentration * injectiontime / eg.geometry().volume();
+              RF u0 = 1.0;
+              // scaling with 1./eg.geometry().volume() is important due to refinement
 
-            RF fval = well_rate * u0 * screening_fraction / eg.geometry().volume();
-
-
-            //fval *= baselevel_factor; // works for outflow well with tracer coming from Dirichlet BC
-            if( eg.entity().level() > (int)baselevel ){
-
-              fval /= (refinement_factor / baselevel_factor);  // for refinement of gv_tp
-
-            }
-            //if( eg.entity().level() > baselevel )
-            //fval *= (refinement_factor_dim / baselevel_factor);  // for refinement of gv_tp
+              RF fval = well_rate * u0 * screening_fraction / eg.geometry().volume();
 
 
-            // integrate (K grad u - bu)*grad phi_i + a*u*phi_i
+              //fval *= baselevel_factor; // works for outflow well with tracer coming from Dirichlet BC
+              if( eg.entity().level() > (int)baselevel ){
 
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+                fval /= (refinement_factor / baselevel_factor);  // for refinement of gv_tp
 
-            for (size_type j=0; j<lfsu.size(); j++)
-              for (size_type i=0; i<lfsu.size(); i++) {
-                //mat.accumulate(lfsu,i,lfsu,j,( Agradphi[j]*gradphi[i] - phi[j]*(beta*gradphi[i]) + c*phi[j]*phi[i] )*factor);
-                //RF extra_well_contribution = -u0*well_rate*phi[j]*phi[i]*factor *screening_fraction; // *screening_fraction
-                //mat.accumulate( lfsu, i, lfsu, j, extra_well_contribution );
-                mat.accumulate( lfsu, i, lfsu, j, -fval*phi[j]*phi[i]*factor );
-                // addwellto_: jacobian_volume (element integral)
               }
-          }
+              //if( eg.entity().level() > baselevel )
+              //fval *= (refinement_factor_dim / baselevel_factor);  // for refinement of gv_tp
+
+
+              // integrate (K grad u - bu)*grad phi_i + a*u*phi_i
+
+              RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+
+              for (size_type j=0; j<lfsu.size(); j++)
+                for (size_type i=0; i<lfsu.size(); i++) {
+                  //mat.accumulate(lfsu,i,lfsu,j,( Agradphi[j]*gradphi[i] - phi[j]*(beta*gradphi[i]) + c*phi[j]*phi[i] )*factor);
+                  //RF extra_well_contribution = -u0*well_rate*phi[j]*phi[i]*factor *screening_fraction; // *screening_fraction
+                  //mat.accumulate( lfsu, i, lfsu, j, extra_well_contribution );
+                  mat.accumulate( lfsu, i, lfsu, j, -fval*phi[j]*phi[i]*factor );
+                  // addwellto_: jacobian_volume (element integral)
+                }
+            }
 
         }
 
@@ -533,7 +531,7 @@ namespace Dune {
         // face diameter; this should be revised for anisotropic meshes?
 #ifdef HOUSTON_h_F
         RF h_F = std::min( ig.inside()->geometry().volume(),
-                        ig.outside()->geometry().volume() ) / ig.geometry().volume(); // Houston!
+                           ig.outside()->geometry().volume() ) / ig.geometry().volume(); // Houston!
 #else
         DF h_s, h_n;
         DF hmax_s = 0.;
@@ -1424,44 +1422,44 @@ namespace Dune {
 
           // loop over quadrature points
           for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
-          {
+            {
 
               //typename TP::Traits::RangeType beta 
               //    = tp.velocity(eg.entity(),it->position(),equationMode);
 
-            // get gradient basis
-            std::vector<Dune::FieldVector<RF,dim> > gradphi( lfsv.size() );
-            evalGradientBasis( eg,
-                               it->position(), // expects element local coordinates!
-                               lfsv,
-                               cache,
-                               gradphi );
+              // get gradient basis
+              std::vector<Dune::FieldVector<RF,dim> > gradphi( lfsv.size() );
+              evalGradientBasis( eg,
+                                 it->position(), // expects element local coordinates!
+                                 lfsv,
+                                 cache,
+                                 gradphi );
 
-            // evaluate basis functions 
-            std::vector<RangeType> phi(lfsv.size());
-            evalFunctionBasis( it->position(), lfsv, cache, phi );
+              // evaluate basis functions 
+              std::vector<RangeType> phi(lfsv.size());
+              evalFunctionBasis( it->position(), lfsv, cache, phi );
 
-            RF u0 = concentration * injectiontime;
-            //RF u0 = concentration * injectiontime; //*eg.geometry().volume();
-            // scaling with 1./eg.geometry().volume() is important due to refinement
+              RF u0 = concentration * injectiontime;
+              //RF u0 = concentration * injectiontime; //*eg.geometry().volume();
+              // scaling with 1./eg.geometry().volume() is important due to refinement
 
-            RF factor = it->weight() * eg.geometry().integrationElement(it->position());
+              RF factor = it->weight() * eg.geometry().integrationElement(it->position());
 
-            RF fval = well_rate * u0 / eg.geometry().volume() * screening_fraction; // good!
+              RF fval = well_rate * u0 / eg.geometry().volume() * screening_fraction; // good!
 
 
-            //fval *= baselevel_factor;
-            if( eg.entity().level() > (int)baselevel ){
+              //fval *= baselevel_factor;
+              if( eg.entity().level() > (int)baselevel ){
 
-              fval /= (refinement_factor_dim / baselevel_factor); // for refinement of gv_tp
+                fval /= (refinement_factor_dim / baselevel_factor); // for refinement of gv_tp
 
+              }
+
+              for (size_type i=0; i<lfsv.size(); i++){
+                residual.accumulate(lfsv,i,-fval*phi[i]*factor); // active
+                // addwellto_: lambda_volume (element integral)
+              }
             }
-
-            for (size_type i=0; i<lfsv.size(); i++){
-              residual.accumulate(lfsv,i,-fval*phi[i]*factor); // active
-              // addwellto_: lambda_volume (element integral)
-            }
-          }
 
         }
 
@@ -1565,8 +1563,10 @@ namespace Dune {
         tp.setTime(t);
       }
     };
-  }
-}
+
+
+  } // Gesis
+} // Dune
 
 
 #endif // TRANSPORT_OPERATOR_DG_HH
