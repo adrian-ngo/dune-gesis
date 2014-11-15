@@ -78,7 +78,9 @@
 #include <dune/gesis/common/io/IO_routines.hh>
 #include <dune/gesis/yfield/FFTFieldGenerator.hh>
 
+#if HAVE_DUNE_ALUGRID
 #include <dune/gesis/driver/driverALU.hh>
+#endif
 
 CLogfile logger;
 
@@ -317,7 +319,7 @@ int main(int argc, char** argv) {
     }
 
 
-    CInputData inputdata( helper );
+    Dune::Gesis::CInputData inputdata( helper );
     if( !inputdata.readInputFileXml(dir.inputfile) )
       exit(2); // missing input-file
       
@@ -371,13 +373,18 @@ int main(int argc, char** argv) {
 
       
     //definitions for the Y-Field
-    typedef Dune::Gesis::FFTFieldGenerator<CInputData,REAL,dim> YFG;
+    typedef Dune::Gesis::FFTFieldGenerator<Dune::Gesis::CInputData,REAL,dim> YFG;
     YFG Yfieldgenerator( inputdata,dir,helper.getCommunicator() );
     //generate the Y_field
     Yfieldgenerator.init();
 
+    double timeCounted = 0;
+#if HAVE_DUNE_ALUGRID
     // start the main-work-flow
-    double timeCounted = Dune::Gesis::driverALU<CInputData,YFG,DIR,dim>( inputdata, Yfieldgenerator, dir, helper );
+    timeCounted = Dune::Gesis::driverALU<Dune::Gesis::CInputData,YFG,DIR,dim>( inputdata, Yfieldgenerator, dir, helper );
+#else
+    std::cout << "The DUNE module dune-alugrid is required!" << std::endl;
+#endif
 
     if( helper.rank()==0 && inputdata.verbosity > 0 ){
       double elapsedTime = main_timer.elapsed();
