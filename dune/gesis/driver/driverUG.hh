@@ -1,28 +1,14 @@
 #ifndef DUNE_GESIS_DRIVER_UG_HH
 #define DUNE_GESIS_DRIVER_UG_HH
 
-#include <dune/grid/uggrid.hh>
 
-#include <dune/gesis/common/io/HDF5Tools.hh>
-
-//#include "showIndexSets.hh"
 #ifdef LINE_PLOT_M0
 #include "lineplot.hh"
 #endif
 
 #ifndef USE_YASP
 #include <dune/grid/io/file/dgfparser.hh>
-//#include "my_gridexamples.hh"
 #endif
-
-#ifdef USE_ALUGRID
-#include <dune/grid/alugrid.hh>
-#include <dune/grid/utility/structuredgridfactory.hh>
-#endif
-
-//#if HAVE_UG
-#include <dune/grid/uggrid.hh>
-//#endif
 
 #include <dune/gesis/common/Vector.hh>
 #include <dune/gesis/common/DenseMatrix.hh>
@@ -34,7 +20,7 @@
 #include <dune/gesis/common/my_gfs_utilities.hh>
 #include <dune/gesis/BVPs/GroundWaterParameters.hh>
 #include <dune/gesis/BVPs/GeoElectricalPotentialParameters.hh>
-//#include "FieldParameters.hh"
+
 
 #include <dune/gesis/BVPs/DG/dgf_pressurefield.hh>
 #include <dune/gesis/BVPs/DG/rt0_pressurefield.hh>
@@ -45,7 +31,6 @@
 
 //#include <dune/gesis/BVPs/projectors/L2SubspaceProjector.hh>
 //#include <dune/gesis/BVPs/projectors/CoarseGridP0Projector.hh>
-
 //#include <dune/gesis/BVPs/ForwardSimulator.hh>
 
 #if HAVE_UG
@@ -57,12 +42,15 @@
 
 extern CLogfile logger;
 
-
-
 namespace Dune {
   namespace Gesis {
 
-    template<typename IDT,typename YFG,typename DIR,int dim>
+    template<
+      typename IDT,
+      typename YFG,
+      typename DIR,
+      int dim
+      >
     REAL driverUG( IDT& inputdata,   // must be non-const because of well-calibration
                    YFG& yfg_orig,
                    DIR& dir,
@@ -148,58 +136,6 @@ namespace Dune {
 #endif // HAVE_UG
 
 
-
-
-#ifdef USE_ALUGRID
-      /*
-        Wait until the new DGF file is fully written before every processor starts reading data from it!
-        Otherwise, we might run into trouble because some fast process is reading old info!
-      */
-      logger << "---MPI_Barrier---" << std::endl;
-      MPI_Barrier( helper.getCommunicator() );
-
-      UINT baselevel = inputdata.domain_data.alugrid_baselevel;
-
-      // make grid
-      Dune::FieldVector<REAL,dim> LowerLeft(0);
-      Dune::FieldVector<REAL,dim> UpperRight;
-      UpperRight[0] = inputdata.domain_data.extensions[0];
-      UpperRight[1] = inputdata.domain_data.extensions[1];
-
-      Dune::array<unsigned int,dim> elements;
-      elements[0] = inputdata.domain_data.nCells[0];
-      elements[1] = inputdata.domain_data.nCells[1];
-
-#ifdef DIMENSION3
-      UpperRight[2] = inputdata.domain_data.extensions[2];
-      elements[2] = inputdata.domain_data.nCells[2];
-#endif
-
-      typedef Dune::ALUGrid<dim,dim,Dune::cube,Dune::nonconforming> GRID;
-
-      watch.reset();
-      Dune::StructuredGridFactory<GRID> structuredGridFactory;
-      Dune::shared_ptr<GRID> gridptr =
-        structuredGridFactory.createCubeGrid(LowerLeft, UpperRight, elements);
-
-      REAL elapsed_time;
-      elapsed_time = watch.elapsed();
-      std::cout << "=== Dune::StructuredGridFactory building 3D ALUGRID took "
-                << elapsed_time << " sec." << std::endl;
-
-      watch.reset();
-      GRID& grid = *gridptr;
-
-      if(grid.loadBalance()){
-        elapsed_time = watch.elapsed();
-        std::cout << "=== Initial load balancing for ALUGRID took "
-                  << elapsed_time << " sec." << std::endl;
-      }
-
-      std::cout << "ALUGRID grid baselevel = " << grid.maxLevel() << std::endl;
-
-#endif // USE_ALUGRID
-
       // 1.) GV and GFS for the Groundwater Equation:
       logger << "Get level gridview for the flow equation." << std::endl;
       typedef typename GRID::LevelGridView GV_GW;
@@ -267,17 +203,18 @@ namespace Dune {
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV_TP,CTYPE,REAL,1> FEM_HYPER;
 #else
       typedef Dune::PDELab::P0LocalFiniteElementMap<CTYPE,REAL,dim> FEM_ELLIP;
-#ifdef USE_Qk
-      // 2.) Transport Equation using DG with Qk elements on cubes
-      typedef Dune::PDELab::QkDGLocalFiniteElementMap<CTYPE,REAL,pMAX,dim> FEM_HYPER;
-      const int blocksize = Dune::QkStuff::QkSize<pMAX,dim>::value;
-      logger << "DG: Using QkDG for the hyperbolic PDE with blocksize "
-             << blocksize << std::endl;
-#else
+
+#ifdef USE_Pk
       // 2.) Transport Equation using DG with Pk elements on cubes
       typedef Dune::PDELab::OPBLocalFiniteElementMap<CTYPE,REAL,pMAX,dim,bt> FEM_HYPER;
       const int blocksize = Dune::PB::PkSize<pMAX,dim>::value;
       logger << "DG: Using PkDG for the hyperbolic PDE with blocksize "
+             << blocksize << std::endl;
+#else
+      // 2.) Transport Equation using DG with Qk elements on cubes
+      typedef Dune::PDELab::QkDGLocalFiniteElementMap<CTYPE,REAL,pMAX,dim> FEM_HYPER;
+      const int blocksize = Dune::QkStuff::QkSize<pMAX,dim>::value;
+      logger << "DG: Using QkDG for the hyperbolic PDE with blocksize "
              << blocksize << std::endl;
 #endif
 #endif
@@ -335,10 +272,10 @@ namespace Dune {
 
       yfg_orig.setWellConductivities( gv_gw );
 
+      if( inputdata.plot_options.vtk_plot_yfield ){
+        yfg_orig.plot2vtu( gv_gw, dir.Y_orig_vtu, "Y_orig", baselevel );
+      }
 
-#ifdef VTK_PLOT_Y_FIELD
-      yfg_orig.plot2vtu( gv_gw, dir.Y_orig_vtu, "Y_orig", baselevel );
-#endif
 
       // Dimensions of extended field per zone:
       std::vector< Vector<UINT> > nCellsExt;
@@ -420,10 +357,10 @@ namespace Dune {
 
 #else
 
-#ifdef USE_CUBE
-      const Dune::GeometryType::BasicType bt = Dune::GeometryType::cube;
-#else
+#ifdef USE_SIMPLEX
       const Dune::GeometryType::BasicType bt = Dune::GeometryType::simplex;
+#else
+      const Dune::GeometryType::BasicType bt = Dune::GeometryType::cube;
 #endif
       // 1.) Groundwater Equation using CCFV
       Dune::GeometryType gt = Dune::GeometryType(bt,dim);
@@ -460,7 +397,7 @@ namespace Dune {
           helper
           );
 
-#endif //USE_ALUGRID or USE_UG
+#endif // USE_UG
 
       // log the original measurements
       //orig_measurements.write_to_logger("original measurements for inversion");
