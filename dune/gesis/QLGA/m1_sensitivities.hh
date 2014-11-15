@@ -336,20 +336,20 @@ namespace Dune{
             General::logMinAndMax( vc_m1adj_cg, gv_tp.comm() );
 
      
-#ifdef VTK_PLOT_PSI_transport
-            std::stringstream vtu_m1_adj;
-            vtu_m1_adj << dir.vcM1_adj_prefix
-                       << "_s" << iSetup
-                       << "_m" << global_meas_id 
-                       << "_i" << iteration_number;
-            VTKPlot::output2vtu( gfs_cg, 
-                                 vc_m1adj_cg, 
-                                 vtu_m1_adj.str(), 
-                                 "m1_Adjoint", 
-                                 inputdata.verbosity, 
-                                 true, 
-                                 0 );
-#endif
+            if( inputdata.plot_options.vtk_plot_adjoint_m1 ){
+              std::stringstream vtu_m1_adj;
+              vtu_m1_adj << dir.vcM1_adj_prefix
+                         << "_s" << iSetup
+                         << "_m" << global_meas_id 
+                         << "_i" << iteration_number;
+              VTKPlot::output2vtu( gfs_cg, 
+                                   vc_m1adj_cg, 
+                                   vtu_m1_adj.str(), 
+                                   "m1_Adjoint", 
+                                   inputdata.verbosity, 
+                                   true, 
+                                   0 );
+            }
           
 #ifdef USE_ALL_ADJOINTS // m0m1.solveAdjoint
             /*
@@ -379,22 +379,22 @@ namespace Dune{
 
             General::logMinAndMax( vc_m0adj_m1adj_cg, gv_tp.comm() );
 
-#ifdef VTK_PLOT_PSI_transport
-            std::stringstream vtu_m0adj_m1adj;
-            vtu_m0adj_m1adj << dir.vcM0_adj_given_M1_prefix
-                            << "_s" << iSetup
-                            << "_m" << global_meas_id 
-                            << "_i" << iteration_number;
+            if( inputdata.plot_options.vtk_plot_adjoint_m1 ){
+              std::stringstream vtu_m0adj_m1adj;
+              vtu_m0adj_m1adj << dir.vcM0_adj_given_M1_prefix
+                              << "_s" << iSetup
+                              << "_m" << global_meas_id 
+                              << "_i" << iteration_number;
 
-            Dune::Gesis::VTKPlot::output2vtu( gfs_cg, 
-                                                     vc_m0adj_m1adj_cg,
-                                                     vtu_m0adj_m1adj.str(), 
-                                                     "m0adj_m1adj", 
-                                                     inputdata.verbosity, 
-                                                     true, 
-                                                     0 
-                                                     );
-#endif
+              Dune::Gesis::VTKPlot::output2vtu( gfs_cg, 
+                                                vc_m0adj_m1adj_cg,
+                                                vtu_m0adj_m1adj.str(), 
+                                                "m0adj_m1adj", 
+                                                inputdata.verbosity, 
+                                                true, 
+                                                0 
+                                                );
+            }
 
 #endif// USE_ALL_ADJOINTS // m0m1.solveAdjoint
      
@@ -402,69 +402,6 @@ namespace Dune{
              * solve for head adjoint (given m0, m1, m0 adjoint, and m1 adjoint)
              */
             VCType_GW vc_hadj_m0m1( gfs_gw, 0.0 );
-
-
-            // DEBUG-Plots:
-#ifdef VTK_PLOT_PSI_transport_OFF
-            std::stringstream vtu1;
-            vtu1 << dir.vchead_adj_given_M0M1_prefix
-                 << "_s" << iSetup
-                 << "_m" << global_meas_id 
-                 << "_i" << iteration_number
-                 << "_vc_m0adj_m1adj_cg";
-            Dune::Gesis::VTKPlot::output2vtu( gfs_cg, 
-                                                     vc_m0adj_m1adj_cg,
-                                                     vtu1.str(), 
-                                                     "vc_m0adj_m1adj_cg", 
-                                                     inputdata.verbosity, 
-                                                     true, 
-                                                     0
-                                                     );
-            std::stringstream vtu2;
-            vtu2 << dir.vchead_adj_given_M0M1_prefix
-                 << "_s" << iSetup
-                 << "_m" << global_meas_id 
-                 << "_i" << iteration_number
-                 << "_vcM0_old_cg";
-            Dune::Gesis::VTKPlot::output2vtu( gfs_cg, 
-                                                     vcM0_old_cg,
-                                                     vtu2.str(), 
-                                                     "vcM0_old_cg", 
-                                                     inputdata.verbosity, 
-                                                     true, 
-                                                     0
-                                                     );
-            std::stringstream vtu3;
-            vtu3 << dir.vchead_adj_given_M0M1_prefix 
-                 << "_s" << iSetup
-                 << "_m" << global_meas_id 
-                 << "_i" << iteration_number
-                 << "_vc_m1adj_cg";
-            Dune::Gesis::VTKPlot::output2vtu( gfs_cg, 
-                                                     vc_m1adj_cg,
-                                                     vtu3.str(), 
-                                                     "vc_m1adj_cg", 
-                                                     inputdata.verbosity, 
-                                                     true, 
-                                                     0
-                                                     );
-            std::stringstream vtu4;
-            vtu4 << dir.vchead_adj_given_M0M1_prefix 
-                 << "_s" << iSetup
-                 << "_m" << global_meas_id 
-                 << "_i" << iteration_number
-                 << "_vcM1_old_cg";
-            Dune::Gesis::VTKPlot::output2vtu( gfs_cg, 
-                                                     vcM1_old_cg,
-                                                     vtu4.str(), 
-                                                     "vcM1_old_cg", 
-                                                     inputdata.verbosity, 
-                                                     true, 
-                                                     0
-                                                     );
-#endif
-
-
 
 
 #ifdef USE_ALL_ADJOINTS // GWE.solveAdjoint
@@ -518,21 +455,22 @@ namespace Dune{
 #endif // USE_ALL_ADJOINTS
 
      
-#ifdef VTK_PLOT_PSI_transport 
-            std::stringstream vtu_hadj_m0m1;
-            vtu_hadj_m0m1 << dir.vchead_adj_given_M0M1_prefix
-                          << "_s" << iSetup
-                          << "_m" << global_meas_id 
-                          << "_i" << iteration_number;
-            Dune::Gesis::VTKPlot::output2vtu( gfs_gw, 
-                                                     vc_hadj_m0m1,
-                                                     vtu_hadj_m0m1.str(), 
-                                                     "hadj_m0m1", 
-                                                     inputdata.verbosity, 
-                                                     true, 
-                                                     0
-                                                     );
-#endif
+            if( inputdata.plot_options.vtk_plot_adjoint_m1 ){
+              std::stringstream vtu_hadj_m0m1;
+              vtu_hadj_m0m1 << dir.vchead_adj_given_M0M1_prefix
+                            << "_s" << iSetup
+                            << "_m" << global_meas_id 
+                            << "_i" << iteration_number;
+              Dune::Gesis::VTKPlot::output2vtu( gfs_gw, 
+                                                vc_hadj_m0m1,
+                                                vtu_hadj_m0m1.str(), 
+                                                "hadj_m0m1", 
+                                                inputdata.verbosity, 
+                                                true, 
+                                                0
+                                                );
+            }
+
      
             logger << "calculate sensitivity ... " << std::endl;
 
