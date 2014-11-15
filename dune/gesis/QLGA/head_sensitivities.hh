@@ -223,17 +223,17 @@ namespace Dune {
               std::cout << gwe_adj.show_ls_result() << std::endl;
       
 
-#ifdef VTK_PLOT_PSI_HEAD
-            std::stringstream vtu_h_adj;
-            vtu_h_adj << dir.vchead_adj_prefix << "_m" << global_meas_id << "_i" << iteration_number;
-            Dune::Gesis::VTKPlot::output2vtu( gfs_gw, 
-                                                     vcAdjoint,
-                                                     vtu_h_adj.str(),
-                                                     "head_adj",
-                                                     inputdata.verbosity, 
-                                                     true, 
-                                                     std::max(0,pMAX-1) );
-#endif
+            if( inputdata.plot_options.vtk_plot_adjoint_head ){
+              std::stringstream vtu_h_adj;
+              vtu_h_adj << dir.vchead_adj_prefix << "_m" << global_meas_id << "_i" << iteration_number;
+              Dune::Gesis::VTKPlot::output2vtu( gfs_gw, 
+                                                vcAdjoint,
+                                                vtu_h_adj.str(),
+                                                "head_adj",
+                                                inputdata.verbosity, 
+                                                true, 
+                                                std::max(0,pMAX-1) );
+            }
       
 
             logger << "head_sensitivities: calculate sensitivity ... " << std::endl;
@@ -246,65 +246,22 @@ namespace Dune {
                                             true // <--- This switches off Darcyflux and computes the gradient field!
                                             );
           
-#if defined DEBUG_PLOT && defined VTK_PLOT_PSI_HEAD
-            Dune::Gesis::VTKPlot::
-              output_dgf_to_vtu( gv_gw,
-                                 gfs_gw,
-                                 grad_h_adj_dgf,
-                                 vtu_h_adj.str() + "_GradhAdj",
-                                 "GradhAdj",
-                                 inputdata.verbosity,
-                                 true,
-                                 0 );
-
-            Dune::Gesis::VTKPlot::
-              output_dgf_to_vtu( gv_gw,
-                                 gfs_gw,
-                                 darcyflux_dgf,
-                                 vtu_h_adj.str() + "_Darcy",
-                                 "Darcy",
-                                 inputdata.verbosity,
-                                 true,
-                                 0 );
-#endif
       
             // calculate the sensitivities: the function is defined in this FILE!!
             Dune::Gesis::head_sensitivity_field( gv_0
-                                                        , gv_gw
-                                                        , darcyflux_dgf
-                                                        , grad_h_adj_dgf
-                                                        , qorder
-                                                        , Sensitivity
-                                                        , iSensitivity
-                                                        , iGlobalGridIndexVector
-                                                        );
+                                                 , gv_gw
+                                                 , darcyflux_dgf
+                                                 , grad_h_adj_dgf
+                                                 , qorder
+                                                 , Sensitivity
+                                                 , iSensitivity
+                                                 , iGlobalGridIndexVector
+                                                 );
 
-
-      
-
-
-#if defined DEBUG_PLOT && defined VTK_PLOT_PSI_HEAD
-            Dune::Gesis::VTKPlot::
-              output_vector_to_vtu(
-                                   gv_0
-                                   , Sensitivity
-                                   , vtu_h_adj.str() + "_Sens"
-                                   , "hSens"
-                                   );
-#endif
 
 
             // writing the sensitivity to HDF5
             // the inversion kernel will read it later
-            /*
-            HDF5Tools::write_parallel_to_HDF5( gv_0
-                                               , inputdata
-                                               , Sensitivity
-                                               , "/Sensitivity"
-                                               , inputdata.domain_data.nCells
-                                               , dir.aSensitivity_h5file[global_meas_id]
-                                               );
-            */
 
 #ifdef USE_SEQ_WRITE_TO_HDF5
             // Alternative way of writing to HDF5:
