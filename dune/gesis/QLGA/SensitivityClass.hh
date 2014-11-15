@@ -637,10 +637,10 @@ namespace Dune {
               pfem_ellip = Dune::make_shared<FEM_ELLIP>(gv_0);
 #else
 
-#ifdef USE_CUBE
-              const Dune::GeometryType::BasicType bt = Dune::GeometryType::cube;
-#else
+#ifdef USE_SIMPLEX
               const Dune::GeometryType::BasicType bt = Dune::GeometryType::simplex;
+#else
+              const Dune::GeometryType::BasicType bt = Dune::GeometryType::cube;
 #endif
               Dune::GeometryType gt = Dune::GeometryType(bt,dim);
               pfem_ellip = Dune::make_shared<FEM_ELLIP>(gt);
@@ -880,27 +880,28 @@ namespace Dune {
               inputdata.loglistOfAllWellCenters();
               YfieldGenerator_old[iPool]->setWellConductivities( pool_gv_gw[iPool] );
               
-#ifdef VTK_PLOT_YTRY
 
+              if( inputdata.plot_options.vtk_plot_y_try ){
 #ifdef USE_YASP
-              int baselevel = inputdata.domain_data.yasp_baselevel;
+                int baselevel = inputdata.domain_data.yasp_baselevel;
 #endif
 #ifdef USE_UG
-      int baselevel = inputdata.domain_data.ug_baselevel;
+                int baselevel = inputdata.domain_data.ug_baselevel;
 #endif
-
 #ifdef USE_ALUGRID
-      int baselevel = inputdata.domain_data.alugrid_baselevel;
+                int baselevel = inputdata.domain_data.alugrid_baselevel;
 #endif
-              std::stringstream file_YoldWell;
-              file_YoldWell << dir.vtudir 
-                            << "/Y_old_" << it_counter
-                            << "_Well_pool" << iPool;
-              YfieldGenerator_old[iPool]->plot2vtu( pool_gv_gw[iPool],
-                                                    file_YoldWell.str(),
-                                                    "Y_try",
-                                                    baselevel );
-#endif
+                std::stringstream file_YoldWell;
+                file_YoldWell << dir.vtudir 
+                              << "/Y_old_" << it_counter
+                              << "_Well_pool" << iPool;
+                YfieldGenerator_old[iPool]->plot2vtu( pool_gv_gw[iPool],
+                                                      file_YoldWell.str(),
+                                                      "Y_try",
+                                                      baselevel );
+              }
+
+
 
             } // END: if(CommunicatorPool[iPool][ii].I_am_in())
           } // END: for(UINT ii=0;ii<final_pool_size[iPool];ii++){
@@ -1076,22 +1077,22 @@ namespace Dune {
                                                , baselevel
                                                 );
 
-#ifdef DEBUG_PLOT_H_OLD
-                std::stringstream vtu_h_old;
-                vtu_h_old << dir.vtudir
-                          << "/h_old"
-                          << "_s" << iSetup
-                          << "_i" << it_counter;
+                if( inputdata.plot_options.vtk_plot_h_old ){
+                  std::stringstream vtu_h_old;
+                  vtu_h_old << dir.vtudir
+                            << "/h_old"
+                            << "_s" << iSetup
+                            << "_i" << it_counter;
                 
-                VTKPlot::output2vtu( *(pool_gfs_gw[pool_lookup[iSetup][t_meas]]),
-                                     *(head_old[pool_lookup[iSetup][t_meas]]),
-                                     vtu_h_old.str(),
-                                     "h_old",
-                                     inputdata.verbosity,
-                                     true,
-                                     0
-                                     );
-#endif //DEBUG_PLOT_H_OLD
+                  VTKPlot::output2vtu( *(pool_gfs_gw[pool_lookup[iSetup][t_meas]]),
+                                       *(head_old[pool_lookup[iSetup][t_meas]]),
+                                       vtu_h_old.str(),
+                                       "h_old",
+                                       inputdata.verbosity,
+                                       true,
+                                       0
+                                       );
+                }
 
 
 
@@ -1212,21 +1213,22 @@ namespace Dune {
                                                 );
 
 
-#ifdef DEBUG_PLOT_M0_OLD
-                std::stringstream vtu_m0_old;
-                vtu_m0_old << dir.vtudir
-                           << "/m0_old"
-                           << "_s" << iSetup
-                           << "_i" << it_counter;
-                VTKPlot::output2vtu( *(pool_gfs_cg[pool_lookup[iSetup][t_meas]]),
-                                     *(soluteM0_old[pool_lookup[iSetup][t_meas]]),
-                                     vtu_m0_old.str(),
-                                     "M0_old",
-                                     inputdata.verbosity,
-                                     true,
-                                     0
-                                     );
-#endif // DEBUG_PLOT_M0_OLD
+                if( inputdata.plot_options.vtk_plot_m0_old ){
+                  std::stringstream vtu_m0_old;
+                  vtu_m0_old << dir.vtudir
+                             << "/m0_old"
+                             << "_s" << iSetup
+                             << "_i" << it_counter;
+                  VTKPlot::output2vtu( *(pool_gfs_cg[pool_lookup[iSetup][t_meas]]),
+                                       *(soluteM0_old[pool_lookup[iSetup][t_meas]]),
+                                       vtu_m0_old.str(),
+                                       "M0_old",
+                                       inputdata.verbosity,
+                                       true,
+                                       0
+                                       );
+                }
+
 
               }
               /*
