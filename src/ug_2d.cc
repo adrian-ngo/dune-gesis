@@ -5,7 +5,6 @@
 
 // Set the world and grid dimension here!
 #define DIMENSION2
-
 #include "my_macros.hh"
 
 #ifndef GEO_EPSILON
@@ -25,7 +24,9 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 
-#include<dune/grid/yaspgrid.hh>
+#if HAVE_UG
+#include <dune/grid/uggrid.hh>
+#endif
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 
 #include<dune/istl/bvector.hh>
@@ -50,6 +51,7 @@
 #endif
 
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
+#include<dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 
 #include<dune/pdelab/constraints/common/constraints.hh>
@@ -76,7 +78,10 @@
 #include <dune/gesis/common/io/IO_locations.hh>
 #include <dune/gesis/common/io/IO_routines.hh>
 #include <dune/gesis/yfield/FFTFieldGenerator.hh>
+
+#if HAVE_UG
 #include <dune/gesis/driver/driverUG.hh>
+#endif
 
 CLogfile logger;
 
@@ -315,7 +320,7 @@ int main(int argc, char** argv) {
     }
 
 
-    CInputData inputdata( helper );
+    Dune::Gesis::CInputData inputdata( helper );
     if( !inputdata.readInputFileXml(dir.inputfile) )
       exit(2); // missing input-file
       
@@ -369,13 +374,18 @@ int main(int argc, char** argv) {
 
       
     //definitions for the Y-Field
-    typedef Dune::Gesis::FFTFieldGenerator<CInputData,REAL,dim> YFG;
+    typedef Dune::Gesis::FFTFieldGenerator<Dune::Gesis::CInputData,REAL,dim> YFG;
     YFG Yfieldgenerator( inputdata,dir,helper.getCommunicator() );
     //generate the Y_field
     Yfieldgenerator.init();
 
     // start the main-work-flow
-    double timeCounted = Dune::Gesis::driverUG<CInputData,YFG,DIR,dim>( inputdata, Yfieldgenerator, dir, helper );
+    double timeCounted = 0;
+#if HAVE_UG
+    timeCounted = Dune::Gesis::driverUG<Dune::Gesis::CInputData,YFG,DIR,dim>( inputdata, Yfieldgenerator, dir, helper );
+#else
+    std::cout << "The UG grid is required!" << std::endl;
+#endif
 
     if( helper.rank()==0 && inputdata.verbosity > 0 ){
       double elapsedTime = main_timer.elapsed();

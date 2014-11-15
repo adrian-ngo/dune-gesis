@@ -43,9 +43,7 @@
 #include<dune/pdelab/finiteelementmap/opbfem.hh>
 #include<dune/pdelab/constraints/conforming.hh>
 #include<dune/pdelab/constraints/p0.hh>
-#if defined USE_UG
-#include<dune/pdelab/constraints/p0ghost.hh>
-#endif
+
 #include<dune/pdelab/gridfunctionspace/gridfunctionspace.hh>
 #include<dune/pdelab/gridfunctionspace/interpolate.hh>
 
@@ -74,6 +72,7 @@
 #include <dune/gesis/common/io/IO_routines.hh>
 #include <dune/gesis/common/io/VTKPlot.hh>
 #include <dune/gesis/yfield/FFTFieldGenerator.hh>
+
 #include <dune/gesis/driver/driver.hh>
 
 CLogfile logger;
@@ -313,7 +312,7 @@ int main(int argc, char** argv) {
     }
 
 
-    CInputData inputdata( helper );
+    Dune::Gesis::CInputData inputdata( helper );
     if( !inputdata.readInputFileXml(dir.inputfile) )
       exit(2); // missing input-file
       
@@ -367,13 +366,13 @@ int main(int argc, char** argv) {
 
       
     //definitions for the Y-Field
-    typedef Dune::Gesis::FFTFieldGenerator<CInputData,REAL,dim> YFG;
+    typedef Dune::Gesis::FFTFieldGenerator<Dune::Gesis::CInputData,REAL,dim> YFG;
     YFG Yfieldgenerator( inputdata,dir,helper.getCommunicator() );
     //generate the Y_field
     Yfieldgenerator.init();
 
     // start the main-work-flow
-    double timeCounted = Dune::Gesis::driver<CInputData,YFG,DIR,dim>( inputdata, Yfieldgenerator, dir, helper );
+    double timeCounted = Dune::Gesis::driver<Dune::Gesis::CInputData,YFG,DIR,dim>( inputdata, Yfieldgenerator, dir, helper );
 
     if( helper.rank()==0 && inputdata.verbosity > 0 ){
       double elapsedTime = main_timer.elapsed();

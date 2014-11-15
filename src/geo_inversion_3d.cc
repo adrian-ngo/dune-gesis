@@ -328,9 +328,9 @@ int main(int argc, char** argv) {
 			logger << "--------------------------------------------------------------" << std::endl;
         }
 
-    CInputData inputdata( helper );
-    if( !inputdata.readInputFileXml(dir.inputfile) )
-      return 2; // missing input-file
+        Dune::Gesis::CInputData inputdata( helper );
+        if( !inputdata.readInputFileXml(dir.inputfile) )
+          return 2; // missing input-file
 
     inputdata.writeToScreen();
 
@@ -379,14 +379,14 @@ int main(int argc, char** argv) {
         }
 
         //definitions for the Y-Field
-        typedef Dune::Gesis::FFTFieldGenerator<CInputData,REAL,dim> YFG;
+        typedef Dune::Gesis::FFTFieldGenerator<Dune::Gesis::CInputData,REAL,dim> YFG;
         YFG Yfieldgenerator( inputdata,dir,helper.getCommunicator() );
         //generate the Y_field
         Yfieldgenerator.init();
 
 
         // start the main-work-flow
-        double timeCounted = Dune::Gesis::driver<CInputData,YFG,DIR,dim>( inputdata, Yfieldgenerator, dir, helper );
+        double timeCounted = Dune::Gesis::driver<Dune::Gesis::CInputData,YFG,DIR,dim>( inputdata, Yfieldgenerator, dir, helper );
 
         if( helper.rank()==0 && inputdata.verbosity > 0 ){
           double elapsedTime = main_timer.elapsed();
