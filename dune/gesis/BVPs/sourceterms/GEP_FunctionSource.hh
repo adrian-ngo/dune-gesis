@@ -49,7 +49,7 @@ namespace Dune {
     
       typedef REAL RF;
       // refined versions evaluating on leaf elements:
-      typedef Dune::PDELab::DiscreteRefinedGridFunction<GFS_CG,VCType_CG> DRGF;
+      typedef Dune::Gesis::DiscreteRefinedGridFunction<GFS_CG,VCType_CG> DRGF;
       typedef GradientVectorField<KAPPA_FIELD,GFS_GW> DARCY_FLUX_DGF;
 
       const SourceNature source_nature;
