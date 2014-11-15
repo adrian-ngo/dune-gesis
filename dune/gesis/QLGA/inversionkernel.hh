@@ -361,12 +361,7 @@ namespace Dune {
             for(UINT ii=0; ii<Y_u.size(); ii++)
               Y_old[ii]+=Y_u[ii];
           }
-            
-          // add the simple well model modification!!!
-#ifndef WELL_FRACTURE_MODEL
-          //set_wells(inputdata, Y_old); // TODO: Ask Ronnie: Maybe not needed anymore with the new simple well model!
-#endif
-            
+
           // write the inital guess to hdf5 (as Y_old) 
           HDF5Tools::
             write_sequential_to_HDF5(
@@ -408,12 +403,6 @@ namespace Dune {
           for(UINT jj=0; jj<nzones; jj++)
             for(UINT ii=0; ii<nAllCells; ii++)
               Y_old[ii]+=Xzones[jj][ii]*beta_old[jj];
-                
-          // add the simple well model modification!!!
-#ifndef WELL_FRACTURE_MODEL
-          //set_wells(inputdata, Y_old); // TODO: Ask Ronnie: Maybe not needed anymore with the new simple well model!
-#endif
-
        
           // write the inital guess to hdf5 (as Y_old) 
           HDF5Tools::
@@ -687,13 +676,13 @@ namespace Dune {
         logger<<" ...calculation of sensitivities done! (in "<<watch.elapsed()<<" sec )"<<std::endl;
 
 
-#ifdef VTK_PLOT_S
-        sensitivity.vtu_sensitivity( gv_0, it_counter );
-#endif
+        if( inputdata.plot_options.vtk_plot_sensitivities ){
+          sensitivity.vtu_sensitivity( gv_0, it_counter );
+        }
 
-#ifdef VTK_PLOT_JQ
-        sensitivity.vtu_JQ( gv_0, it_counter );
-#endif
+        if( inputdata.plot_options.vtk_plot_cross_covariances ){
+          sensitivity.vtu_JQ( gv_0, it_counter );
+        }
 
         /*
          * calculate JQJ
@@ -1235,21 +1224,23 @@ namespace Dune {
           // be sure Y_old is there
           if(helper.size()>1)
             MPI_Barrier(helper.getCommunicator());
-#ifdef VTK_PLOT_Y_OLD
-          if(CR==-1){
-            std::stringstream vtu_file;
-            vtu_file << dir.Y_old_vtu_prefix << it_counter;
-            YFG yfg_Y_old( inputdata, dir, helper.getCommunicator() );
-            VTKPlot::output_hdf5data_to_gridview( gv_0,
-                                                  inputdata,
-                                                  vtu_file.str(),
-                                                  dir.Y_old_h5file,
-                                                  "/Y_old",
-                                                  yfg_Y_old
-                                                  );  // function defined in this file
-            vtu_list_Y_old.push_back( vtu_file.str() );
+
+
+          if( inputdata.plot_options.vtk_plot_y_old ){
+            if(CR==-1){
+              std::stringstream vtu_file;
+              vtu_file << dir.Y_old_vtu_prefix << it_counter;
+              YFG yfg_Y_old( inputdata, dir, helper.getCommunicator() );
+              VTKPlot::output_hdf5data_to_gridview( gv_0,
+                                                    inputdata,
+                                                    vtu_file.str(),
+                                                    dir.Y_old_h5file,
+                                                    "/Y_old",
+                                                    yfg_Y_old
+                                                    );  // function defined in this file
+              vtu_list_Y_old.push_back( vtu_file.str() );
+            }
           }
-#endif
      
           // receive the needed loop-data (weighting loop)
           if(helper.rank()>0){
@@ -1465,12 +1456,11 @@ namespace Dune {
       // <BIG LOOP>: END
 
 
+      if( inputdata.plot_options.vtk_plot_y_old ){
+        if(CR==-1)
+          General::createPVDfromVtuList( dir.Y_old_pvd, vtu_list_Y_old );
+      }
 
-
-#ifdef VTK_PLOT_Y_OLD
-      if(CR==-1)
-        General::createPVDfromVtuList( dir.Y_old_pvd, vtu_list_Y_old );
-#endif
     
       /*
        * save the estimates as vtu files
@@ -1486,7 +1476,7 @@ namespace Dune {
                                       , dir.Y_cond_h5file[CR]
                                       );
         }
-#ifdef PLOT_VTU_CR
+
         YFG yfg_Y_old( inputdata, dir, helper.getCommunicator() );
         VTKPlot::output_hdf5data_to_gridview( gv_0,
                                               inputdata,
@@ -1495,7 +1485,7 @@ namespace Dune {
                                               "/Y_old",
                                               yfg_Y_old
                                               );
-#endif
+
       }else{
 
         if(helper.rank()==0){
@@ -1523,31 +1513,9 @@ namespace Dune {
                                       dir );
         }
 
-
-#ifdef VTK_PLOT_Y_ESTIMATED
-        YFG yfg_Y_estimated( inputdata, dir, helper.getCommunicator() );
-        VTKPlot::output_hdf5data_to_gridview( gv_0,
-                                              inputdata,
-                                              dir.Y_estimated_vtu,
-                                              dir.Y_old_h5file,
-                                              "/Y_old",
-                                              yfg_Y_estimated
-                                              );
-#endif //VTK_PLOT_Y_ESTIMATED
-
       }
 
-#ifdef VTK_PLOT_ESTIMATES
-      if(CR==-1){
-        logger<<std::endl<<std::endl
-              <<"PLOT ESTIMATES: THE VTU FILES ARE ACCORDING TO THE LAST ITERATION! THIS MIGHT NOT BE THE BEST ESTIMATES!!! (The measurement values given in >>"<<dir.measurement_file<<" are given according to the best estimate.)"<<std::endl<<std::endl;
-        if(helper.rank()==0)
-          std::cout<<std::endl<<std::endl
-                   <<"PLOT ESTIMATES: THE VTU FILES ARE ACCORDING TO THE LAST ITERATION! THIS MIGHT NOT BE THE BEST ESTIMATES!!! (The measurement values given in >>"<<dir.measurement_file<<" are given according to the best estimate.)"<<std::endl<<std::endl;
-    
-        plot_estimates<GV, GFS, VCType, MEASLIST>(gv,gfs,inputdata,orig_measurements,dir);
-      }
-#endif
+
     
       if(helper.rank()==0){
         
