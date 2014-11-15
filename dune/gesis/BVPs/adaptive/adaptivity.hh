@@ -1,8 +1,8 @@
 // -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 // vi: set et ts=4 sw=2 sts=2:
 
-#ifndef DUNE_PDELAB_ADAPTIVITY_HH
-#define DUNE_PDELAB_ADAPTIVITY_HH
+#ifndef DUNE_GESIS_ADAPTIVITY_HH
+#define DUNE_GESIS_ADAPTIVITY_HH
 
 #include<dune/common/exceptions.hh>
 
@@ -26,7 +26,7 @@
 #include "RedistributeDataHandle.hh"
 
 namespace Dune {
-  namespace PDELab {
+  namespace Gesis {
 
     /*! @class CoeffsToLocalFunctionAdapter
      *
@@ -43,7 +43,7 @@ namespace Dune {
      *  @tparam E         Type for Elems
      */
     template<class CoeffType, class DGF, class FEM, class E>
-    class CoeffsToLocalFunctionAdapter : public FunctionInterface<typename DGF::Traits,
+    class CoeffsToLocalFunctionAdapter : public Dune::PDELab::FunctionInterface<typename DGF::Traits,
                                                                   CoeffsToLocalFunctionAdapter<CoeffType,DGF,FEM,E> >
     {
 
@@ -109,7 +109,7 @@ namespace Dune {
     {
       typedef typename GFSU::Traits::GridViewType::Grid Grid;
       typedef typename Grid::template Codim<0>::Entity Element;
-      typedef LocalFunctionSpace<GFSU> LFSU;
+      typedef Dune::PDELab::LocalFunctionSpace<GFSU> LFSU;
       typedef typename LFSU::Traits::FiniteElementType::
       Traits::LocalBasisType::Traits::DomainFieldType DF;
 
@@ -305,10 +305,10 @@ namespace Dune {
       typedef typename IdSet::IdType IdType;
       typedef typename Grid::LeafIndexSet IndexSet;
       typedef typename IndexSet::IndexType IndexType;
-      typedef LocalFunctionSpace<GFSU> LFSU;
-      typedef DiscreteGridFunction<GFSU, U> DGF;
+      typedef Dune::PDELab::LocalFunctionSpace<GFSU> LFSU;
+      typedef Dune::PDELab::DiscreteGridFunction<GFSU, U> DGF;
       typedef typename GFSU::Traits::FiniteElementMapType FEM;
-      typedef InterpolateBackendStandard IB;
+      typedef Dune::PDELab::InterpolateBackendStandard IB;
       typedef CoeffsToLocalFunctionAdapter<typename U::ElementType,DGF,FEM,Element> CTLFA;
       typedef typename FEM::Traits::FiniteElementType::Traits::LocalBasisType::Traits::RangeType RangeType;
 
@@ -368,7 +368,7 @@ namespace Dune {
                       // only evaluate on entities with data
                       if ((*hit).isLeaf())
                         {
-                          typedef GridFunctionToLocalFunctionAdapter<DGF> GFTLFA;
+                          typedef Dune::PDELab::GridFunctionToLocalFunctionAdapter<DGF> GFTLFA;
                           GFTLFA gftlfa(dgf,*hit);
                           CTLFA  ctlfa(coarseBasis,fem,*father,*hit);
 
@@ -400,7 +400,7 @@ namespace Dune {
                           // only evaluate on entities with data
                           if ((*hit).isLeaf())
                             {
-                              typedef GridFunctionToLocalFunctionAdapter<DGF> GFTLFA;
+                              typedef Dune::PDELab::GridFunctionToLocalFunctionAdapter<DGF> GFTLFA;
                               GFTLFA gftlfa(dgf,*hit);
                               CTLFA  ctlfa(coarseBasis,fem,*father,*hit);
 
@@ -816,11 +816,8 @@ namespace Dune {
       const int steps=20; // max number of bisection steps
       typedef typename T::ElementType NumberType;
 
-#ifdef TWO_NORM_STRATEGY
       NumberType total_error = x.base().two_norm2();
-#else
-      NumberType total_error = x.one_norm();
-#endif
+      //NumberType total_error = x.one_norm();
 
       NumberType max_error = x.infinity_norm();
 
@@ -867,13 +864,11 @@ namespace Dune {
           unsigned int beta_count = 0;
           for (unsigned int i=0; i<x.N(); i++) {
             REAL val = x.base()[i];
-#ifdef TWO_NORM_STRATEGY
+
             if (val>=eta_alpha) { sum_alpha += val*val; alpha_count++;}
             if (val< eta_beta) { sum_beta += val*val; beta_count++;}
-#else
-            if (val>=eta_alpha) { sum_alpha += val; alpha_count++;}
-            if (val< eta_beta) { sum_beta += val; beta_count++;}
-#endif
+            //if (val>=eta_alpha) { sum_alpha += val; alpha_count++;}
+            //if (val< eta_beta) { sum_beta += val; beta_count++;}
           }
           if (verbose >= VERBOSITY_DEBUG_LEVEL)
             {
@@ -1153,7 +1148,7 @@ namespace Dune {
     }
 
 
-  } // namespace PDELab
+  } // namespace Gesis
 } // namespace Dune
 
 #endif
