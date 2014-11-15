@@ -41,7 +41,7 @@ namespace Dune {
     public:
 
       typedef Dune::PDELab::DiscreteGridFunctionGradient<GFS,VCType> GRADIENT_DGF;
-      typedef Dune::PDELab::DiscreteGridFunctionDarcy<GWP,GFS> DARCY_FLUX_DGF;
+      typedef Dune::Gesis::DiscreteGridFunctionDarcy<GWP,GFS> DARCY_FLUX_DGF;
 
 
       const SourceNature source_nature;
