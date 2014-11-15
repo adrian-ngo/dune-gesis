@@ -284,45 +284,6 @@ namespace Dune {
                                                );
 
 
-#ifdef VTK_PLOT_PSI_heat_transport_OFF
-      std::stringstream vtu_head_old;
-      vtu_head_old << dir.vchead_adj_given_heatM0heatM1_prefix
-                   << "_old_head"
-                   << "_i" <<  iteration_number;
-      VTKPlot::output2vtu( gfs_gw, 
-                           vchead_old,
-                           vtu_head_old.str(), 
-                           "vchead_old", 
-                           inputdata.verbosity, 
-                           true, 
-                           0 
-                           );
-
-      std::stringstream vtu_m0_old;
-      vtu_m0_old << dir.vchead_adj_given_heatM0heatM1_prefix
-                 << "_oldM0"
-                 << "_i" <<  iteration_number;
-      VTKPlot::output2vtu( gfs_cg, 
-                           vcM0_old_cg,
-                           vtu_m0_old.str(), 
-                           "vcM0_old_cg", 
-                           inputdata.verbosity, 
-                           true, 
-                           0 
-                           );
-      std::stringstream vtu_m1_old;
-      vtu_m1_old << dir.vchead_adj_given_heatM0heatM1_prefix
-                 << "_oldM1"
-                 << "_i" <<  iteration_number;
-      VTKPlot::output2vtu( gfs_cg, 
-                           vcM1_old_cg,
-                           vtu_m1_old.str(), 
-                           "vcM1_old_cg", 
-                           inputdata.verbosity, 
-                           true, 
-                           0 
-                           );
-#endif
 
 
       // loop over all heat AT measurements points
@@ -373,17 +334,17 @@ namespace Dune {
                         inputdata.transport_parameters.l2_diffusion_adjoint );
             General::logMinAndMax( vc_m0adj_cg, gv_tp.comm() );
  
-#ifdef VTK_PLOT_PSI_heat_transport
-            std::stringstream vtu_m0adj;
-            vtu_m0adj << dir.vcheatM0_adj_prefix << "_m" << global_meas_id << "_i" << iteration_number;
-            VTKPlot::output2vtu( gfs_cg, 
-                                 vc_m0adj_cg, 
-                                 vtu_m0adj.str(), 
-                                 "heat_M0adj", 
-                                 inputdata.verbosity, 
-                                 true, 
-                                 0 );
-#endif
+            if( inputdata.plot_options.vtk_plot_heat_adjoint ){
+              std::stringstream vtu_m0adj;
+              vtu_m0adj << dir.vcheatM0_adj_prefix << "_m" << global_meas_id << "_i" << iteration_number;
+              VTKPlot::output2vtu( gfs_cg, 
+                                   vc_m0adj_cg, 
+                                   vtu_m0adj.str(), 
+                                   "heat_M0adj", 
+                                   inputdata.verbosity, 
+                                   true, 
+                                   0 );
+            }
 
 
             /*
@@ -422,19 +383,20 @@ namespace Dune {
 #endif
 
       
-#ifdef VTK_PLOT_PSI_heat_transport
-            std::stringstream vtu_hadj_m0;
-            vtu_hadj_m0 << dir.vchead_adj_given_heatM0_prefix
-                        << "_m" << global_meas_id 
-                        << "_i" << iteration_number;
-            VTKPlot::output2vtu( gfs_gw, 
-                                 vc_hadj_m0, 
-                                 vtu_hadj_m0.str(), 
-                                 "hadj_heatm0", 
-                                 inputdata.verbosity, 
-                                 true, 
-                                 0 );
-#endif
+            if( inputdata.plot_options.vtk_plot_heat_adjoint ){
+              std::stringstream vtu_hadj_m0;
+              vtu_hadj_m0 << dir.vchead_adj_given_heatM0_prefix
+                          << "_m" << global_meas_id 
+                          << "_i" << iteration_number;
+              VTKPlot::output2vtu( gfs_gw, 
+                                   vc_hadj_m0, 
+                                   vtu_hadj_m0.str(), 
+                                   "hadj_heatm0", 
+                                   inputdata.verbosity, 
+                                   true, 
+                                   0 );
+            }
+
       
             // gradient of the head adjoint
             DARCY_FLUX_DGF grad_hadj_m0_dgf( gwp_fwd_old, // dummy place-holder!
@@ -495,21 +457,23 @@ namespace Dune {
 
             General::logMinAndMax( vc_m0adj_m1adj_cg, gv_tp.comm() );
 
-#ifdef VTK_PLOT_PSI_heat_transport
-            std::stringstream vtu_m0adj_m1adj;
-            vtu_m0adj_m1adj << dir.vcheatM0_adj_given_heatM1_prefix
-                            << "_m" << global_meas_id 
-                            << "_i" << iteration_number;
 
-            VTKPlot::output2vtu( gfs_cg, 
-                                 vc_m0adj_m1adj_cg,
-                                 vtu_m0adj_m1adj.str(), 
-                                 "heat_M0adj_M1adj", 
-                                 inputdata.verbosity, 
-                                 true, 
-                                 0 
-                                 );
-#endif
+            if( inputdata.plot_options.vtk_plot_heat_adjoint ){
+              std::stringstream vtu_m0adj_m1adj;
+              vtu_m0adj_m1adj << dir.vcheatM0_adj_given_heatM1_prefix
+                              << "_m" << global_meas_id 
+                              << "_i" << iteration_number;
+
+              VTKPlot::output2vtu( gfs_cg, 
+                                   vc_m0adj_m1adj_cg,
+                                   vtu_m0adj_m1adj.str(), 
+                                   "heat_M0adj_M1adj", 
+                                   inputdata.verbosity, 
+                                   true, 
+                                   0 
+                                   );
+            }
+
 
 
 
@@ -554,19 +518,20 @@ namespace Dune {
               std::cout << gwe_hadj_m.show_ls_result() << std::endl;
 
       
-#ifdef VTK_PLOT_PSI_heat_transport
-            std::stringstream vtu_hadj_m0m1;
-            vtu_hadj_m0m1 << dir.vchead_adj_given_heatM0heatM1_prefix
-                          << "_m" << global_meas_id << "_i" <<  iteration_number;
-            VTKPlot::output2vtu( gfs_gw, 
-                                 vc_hadj_m0m1,
-                                 vtu_hadj_m0m1.str(), 
-                                 "hadj_heatm0m1", 
-                                 inputdata.verbosity, 
-                                 true, 
-                                 0
-                                 );
-#endif
+            if( inputdata.plot_options.vtk_plot_heat_adjoint ){
+              std::stringstream vtu_hadj_m0m1;
+              vtu_hadj_m0m1 << dir.vchead_adj_given_heatM0heatM1_prefix
+                            << "_m" << global_meas_id << "_i" <<  iteration_number;
+              VTKPlot::output2vtu( gfs_gw, 
+                                   vc_hadj_m0m1,
+                                   vtu_hadj_m0m1.str(), 
+                                   "hadj_heatm0m1", 
+                                   inputdata.verbosity, 
+                                   true, 
+                                   0
+                                   );
+            }
+
             // watch2.reset();
             // logger << "calculate sensitivity heat m1... " << std::endl;
           
