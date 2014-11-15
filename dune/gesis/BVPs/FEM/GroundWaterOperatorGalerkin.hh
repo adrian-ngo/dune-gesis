@@ -2,9 +2,7 @@
 #ifndef DUNE_GESIS_GW_LOP_GALERKIN_HH
 #define DUNE_GESIS_GW_LOP_GALERKIN_HH
 
-    //! \addtogroup LocalOperator
-    //! \ingroup PDELab
-    //! \{
+
 
     /** a local operator for solving the stationary groundwater equation
      *
@@ -49,10 +47,6 @@ namespace Dune {
               >
 	class GwFlowOperator 
       : 
-#ifndef JacVol
-      public NumericalJacobianVolume<GwFlowOperator< GWP,BCType,SourceType,IDT,SDT> >,
-      public NumericalJacobianApplyVolume<GwFlowOperator< GWP,BCType,SourceType,IDT,SDT > >,
-#endif
       public Dune::PDELab::FullVolumePattern,
       public Dune::PDELab::LocalOperatorDefaultFlags
 	{
@@ -126,9 +120,6 @@ namespace Dune {
                      const SDT& setupdata_,
                      const EQ::Mode& equationMode_
                       ) : 
-#ifndef JacVol
-        //       NumericalJacobianVolume< GwFlowOperator<TP> >(1e-7), 
-#endif
         gwp(gwp_), 
         bctype(bctype_), 
         sourceterm( sourceterm_ ),
@@ -554,24 +545,6 @@ namespace Dune {
             for (size_type i=0; i<lfsu.size(); i++)
               r.accumulate( lfsu, i, ( Kgradu*gradphi[i] + c*u*phi[i] )*factor );
           }  // end of loop over quadrature points
-
-
-#ifdef WELL_FRACTURE_MODEL
-        
-        // Note: 
-        // For the adjoint GWE, we do need the well only for monitoring purposes.
-        // In this case we switch off the contributions coming from the pumping / injection.
-        //
-        if( equationMode==EQ::forward && 
-            sourceterm.source_nature!=GEOELECTRICAL_POTENTIAL_SOURCE &&
-            sourceterm.source_nature!=GP_FUNCTIONAL_SOURCE )
-          {
-            UINT nWells= setupdata.wdlist.total;
-          }
-        
-#endif // WELL_FRACTURE_MODEL
-
-
               
 	  }
 
@@ -646,27 +619,6 @@ namespace Dune {
               for (size_type i=0; i<lfsu.size(); i++)
                 mat.accumulate( lfsu, i, lfsu, j, ( Kgradphi[j]*gradphi[i] + c*phi[j]*phi[i] )*factor );
           } // end of loop over quadrature points
-
-#ifdef WELL_FRACTURE_MODEL
-          // should not be used in the GPE!!!
-        if(sourceterm.source_nature!=GEOELECTRICAL_POTENTIAL_SOURCE && sourceterm.source_nature!=GP_FUNCTIONAL_SOURCE){
-          
-          UINT nWells= setupdata.wdlist.total;
-            
-          for( UINT iWell=0; iWell<nWells; iWell++ )
-            {
-              addWellToJacobianVolumeMatrix(
-                                            iWell, 
-                                            eg, 
-                                            lfsu, 
-                                            x, 
-                                            mat
-                                            );
-            }
-	}
-
-#endif // WELL_FRACTURE_MODEL
-
 
       }
 
@@ -897,7 +849,7 @@ else if (sourceterm.source_nature == GP_FUNCTIONAL_SOURCE)
 
 	};
 
-    //! \} group LocalOperator
+
   } // namespace PDELab
 } // namespace Dune
 
