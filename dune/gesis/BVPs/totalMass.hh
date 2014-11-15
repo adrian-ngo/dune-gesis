@@ -1,12 +1,15 @@
 #ifndef TOTAL_MASS_HH
 #define	TOTAL_MASS_HH
 
+#include <dune/pdelab/gridfunctionspace/gridfunctionspaceutilities.hh>
 #include <dune/pdelab/common/geometrywrapper.hh>
 #include <assert.h>
 #include <sstream>
 
-extern CLogfile logger;
+#include <dune/common/timer.hh>
 
+
+extern CLogfile logger;
 
 namespace Dune {
   namespace Gesis {
