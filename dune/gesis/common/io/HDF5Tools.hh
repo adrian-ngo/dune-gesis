@@ -32,7 +32,6 @@ namespace Dune {
       inline static void blob(){
       };
 
-      //#if HAVE_HDF5
       /*
        * Note that in hdf5, all array indices are ordered the other way round!
        *
@@ -56,103 +55,7 @@ namespace Dune {
        */
 
 
-      /*
-       * \tparam dims = numbers of cells in each dimension
-       *
-       * See
-       * http://www.xdmf.org/index.php/Main_Page
-       * for more information on this xml format!
-       */
-      static void writeMetaFileForHDF5( const std::string& meta_filename
-                                        , const std::string& data_filename
-                                        , const std::string& data_name
-                                        , const hsize_t* dims
-                                        , const std::string& meta_title
-                                        )
-      {
 
-        // save header:
-#ifdef DIMENSION3
-        //const int dim = 3;
-        hsize_t col = dims[2]; // x-direction
-        hsize_t row = dims[1]; // y-direction
-        hsize_t dep = dims[0]; // z-direction
-#else
-        //const int dim = 2;
-        hsize_t col = dims[1]; // x-direction
-        hsize_t row = dims[0]; // y-direction
-#endif
-
-        std::ofstream outfile( meta_filename.c_str(), std::ios::out );
-        if( outfile.is_open() )
-          {
-
-            // Strip filename from path:
-            size_t found=data_filename.find_last_of("/\\");
-	  
-            outfile << "<?xml version=\"1.0\" ?>" << std::endl;
-            outfile << "<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []>" << std::endl;
-            outfile << "<Xdmf Version=\"2.0\">" << std::endl;
-            outfile << "  <Domain>" << std::endl;
-            outfile << "    <Grid Name=\"" << meta_title.c_str() <<  "\" GridType=\"Uniform\">" << std::endl << std::endl;
-
-#ifdef DIMENSION3
-            outfile << "      <Topology TopologyType=\"3DCoRectMesh\" NumberOfElements=\""
-              //<< col+1 << " " << row+1 << " " << dep+1 << "\"/>" 
-                    << dep+1 << " " << row+1 << " " << col+1 << "\"/>" 
-                    << std::endl << std::endl;
-#else
-            // Take care: 2d-case must be imbedded into 3d-box with height=1 in order to be displayed properly inside paraview!
-            outfile << "      <Topology TopologyType=\"3DCoRectMesh\" NumberOfElements=\"2 "
-                    << row+1 << " " << col+1 << "\"/>" 
-                    << std::endl << std::endl;
-#endif
-
-
-#ifdef _EXTRA_DATA_
-#ifdef DIMENSION3
-            outfile << "      <Geometry GeometryType=\"ORIGIN_DXDYDZ\">" << std::endl;
-#else
-            outfile << "      <Geometry GeometryType=\"ORIGIN_DXDYDZ\">" << std::endl;
-#endif
-
-            outfile << "        <DataItem ItemType=\"Uniform\" Format=\"HDF\" NumberType=\"Double\" Precision=\"4\" Dimensions=\"" << dim << "\">" << std::endl;
-            outfile << data_filename.substr(found+1) << ":/origin" << std::endl;
-            outfile << "        </DataItem>" << std::endl;
-
-            outfile << "        <DataItem ItemType=\"Uniform\" Format=\"HDF\" NumberType=\"Double\" Precision=\"4\" Dimensions=\"" << dim << "\">" << std::endl;
-            outfile << data_filename.substr(found+1) << ":/resolution" << std::endl;
-            outfile << "        </DataItem>" << std::endl;
-
-            outfile << "      </Geometry>" << std::endl;
-
-#endif //_EXTRA_DATA_
-
-
-            outfile << "      <Attribute Name=\"" << meta_title.c_str() << "\" AttributeType=\"Scalar\" Center=\"Cell\">" << std::endl;
-
-#ifdef DIMENSION3
-            outfile << "        <DataItem ItemType=\"Uniform\" Format=\"HDF\" NumberType=\"Double\" Precision=\"4\" Dimensions=\"" 
-                    << dep << " " << row << " " << col 
-                    << "\">" << std::endl;
-#else
-            // Take care: 2d-case must be imbedded into 3d-box with height=1 in order to be displayed properly inside paraview!
-            outfile << "        <DataItem ItemType=\"Uniform\" Format=\"HDF\" NumberType=\"Double\" Precision=\"4\" Dimensions=\"1 " 
-                    << row << " " << col 
-                    << "\">" << std::endl;
-#endif
-            outfile << data_filename.substr(found+1) << ":" << data_name.c_str() << std::endl;
-
-            outfile << "        </DataItem>" << std::endl;
-            outfile << "      </Attribute>" << std::endl;
-            outfile << "    </Grid>" << std::endl;
-            outfile << "  </Domain>" << std::endl;
-            outfile << "</Xdmf>" << std::endl;
-  
-            outfile.close();
-          }
-
-      }
 
 
 
@@ -329,90 +232,6 @@ namespace Dune {
         assert( status > -1 );
         //logger << "write_sequential_to_HDF5: dataset_id closed." << std::endl;
 
-
-
-#ifdef _EXTRA_DATA_
-
-        /* Create the data space for the attribute. */
-        hsize_t adims = dim;
-        hid_t attribute_dataspace_id = H5Screate_simple( 
-                                                        1
-                                                        , &adims
-                                                        , NULL 
-                                                         );
-
-
-        /* Create the dataset for the location of the origin (reference point) */
-        CTYPE attr_data[ 3 ]; // Take care: Here, we use 3d data even for the 2d case! Reason: Data mismatch in paraview + xmf
-        attr_data[0]  = 0.0; 
-        attr_data[1]  = 0.0; 
-        attr_data[2]  = 0.0;
-
-        /* Write the dataset. */
-        hid_t attribute_id = H5Dcreate( file_id,
-                                        "/origin",
-                                        HDF5_DATA_TYPE,    // Datatype identifier, here: IEEE floating point 32-bit or 64-bit, see my_macros.hh
-                                        attribute_dataspace_id,
-                                        H5P_DEFAULT );
-        assert( attribute_id > -1 );
-        //logger << "write_sequential_to_HDF5: H5Dcreate(/origin) done." << std::endl;
-
-
-        status = H5Dwrite( 
-                          attribute_id
-                          , H5T_NATIVE_DOUBLE
-                          , H5S_ALL
-                          , H5S_ALL
-                          , H5P_DEFAULT
-                          , attr_data 
-                           );
-        assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: H5Dwrite(/origin) done." << std::endl;
-
-
-        /* Close the attribute for the origin. */
-        status = H5Dclose( attribute_id );
-        assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: H5Dclose(/origin) done." << std::endl;
-
-
-        /* Create the dataset for the resolution */
-        attr_data[0]= inputdata.domain_data.virtual_gridsizes[0];
-        attr_data[1]= inputdata.domain_data.virtual_gridsizes[1];
-#ifdef DIMENSION3
-        attr_data[2]= inputdata.domain_data.virtual_gridsizes[2];
-#endif
-        /* Write the dataset. */
-        attribute_id = H5Dcreate( file_id,
-                                  "/resolution",
-                                  HDF5_DATA_TYPE,
-                                  attribute_dataspace_id,
-                                  H5P_DEFAULT );
-        assert( attribute_id > -1 );
-        //logger << "write_sequential_to_HDF5: H5Dcreate(/resolution) done." << std::endl;
-  
-
-        status = H5Dwrite( 
-                          attribute_id
-                          , H5T_NATIVE_DOUBLE
-                          , H5S_ALL
-                          , H5S_ALL
-                          , H5P_DEFAULT
-                          , attr_data 
-                           );
-        assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: H5Dwrite(/resolution) done." << std::endl;
-
-        status = H5Sclose( attribute_dataspace_id );
-        assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: attribute_dataspace_id closed." << std::endl;
-
-        /* Close the attribute for the resolution. */
-        status = H5Dclose( attribute_id );
-        assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: H5Dclose(/resolution) done." << std::endl;
-
-#endif //_EXTRA_DATA_
 
         /* Close the property list. */
         status = H5Pclose( plist_id );
@@ -789,87 +608,6 @@ namespace Dune {
                << data_filename
                << std::endl;
 
-#ifdef _EXTRA_DATA_
-
-        /* Create the data space for the attribute. */
-        hsize_t adims = dim;
-        hid_t attribute_dataspace_id = H5Screate_simple( 
-                                                        1
-                                                        , &adims
-                                                        , NULL 
-                                                         );
-
-
-        /* Create the dataset for the location of the origin (reference point) */
-        CTYPE attr_data[ 3 ]; // Take care: Here, we use 3d data even for the 2d case! Reason: Data mismatch in paraview + xmf
-        attr_data[0]  = 0.0; 
-        attr_data[1]  = 0.0; 
-        attr_data[2]  = 0.0;
-
-        /* Write the dataset. */
-        hid_t attribute_id = H5Dcreate( file_id,
-                                        "/origin",
-                                        HDF5_DATA_TYPE,    // Datatype identifier, here: IEEE floating point 32-bit or 64-bit, see my_macros.hh
-                                        attribute_dataspace_id,
-                                        H5P_DEFAULT );
-        assert( attribute_id > -1 );
-        //logger << "write_sequential_to_HDF5: H5Dcreate(/origin) done." << std::endl;
-
-
-        status = H5Dwrite( 
-                          attribute_id
-                          , H5T_NATIVE_DOUBLE
-                          , H5S_ALL
-                          , H5S_ALL
-                          , H5P_DEFAULT
-                          , attr_data 
-                           );
-        assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: H5Dwrite(/origin) done." << std::endl;
-
-
-        /* Close the attribute for the origin. */
-        status = H5Dclose( attribute_id );
-        assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: H5Dclose(/origin) done." << std::endl;
-
-
-        /* Create the dataset for the resolution */
-        attr_data[0]= gridsizes[0];
-        attr_data[1]= gridsizes[1];
-#ifdef DIMENSION3
-        attr_data[2]= gridsizes[2];
-#endif
-        /* Write the dataset. */
-        attribute_id = H5Dcreate( file_id,
-                                  "/resolution",
-                                  HDF5_DATA_TYPE,    // Datatype identifier, here: IEEE floating point 32-bit or 64-bit, see my_macros.hh
-                                  attribute_dataspace_id,
-                                  H5P_DEFAULT );
-        assert( attribute_id > -1 );
-        //logger << "write_sequential_to_HDF5: H5Dcreate(/resolution) done." << std::endl;
-
-        status = H5Dwrite( attribute_id
-                          , H5T_NATIVE_DOUBLE
-                          , H5S_ALL
-                          , H5S_ALL
-                          , H5P_DEFAULT
-                          , attr_data 
-                           );
-        assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: H5Dwrite(/resolution) done." << std::endl;
-
-        status = H5Sclose( attribute_dataspace_id );
-        assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: attribute_dataspace_id closed." << std::endl;
-
-        /* Close the attribute for the resolution. */
-        status = H5Dclose( attribute_id );
-        assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: H5Dclose(/resolution) done." << std::endl;
-
-#endif //_EXTRA_DATA_
-
         // close the used identifyers
         H5Dclose(dset_id);
         H5Sclose(filespace);
@@ -877,21 +615,6 @@ namespace Dune {
         H5Pclose(plist_id);
         H5Fclose(file_id);
   
-        // write meta file if needed
-        /*
-        if( preserve_structure ){
-          // Write meta file for display in paraview
-          std::string meta_filename;
-          meta_filename = data_filename + ".xmf";
-          writeMetaFileForHDF5( meta_filename,
-                                data_filename,
-                                data_name,
-                                &(dims_global[0]),
-                                meta_title
-                                );
-        }
-        */
-
         std::stringstream jobtitle;
         jobtitle << "write_parallel_to_HDF5: writing " << data_filename;
         General::log_elapsed_time( watch.elapsed(),
@@ -1383,50 +1106,6 @@ namespace Dune {
 	
         */
 
-#ifdef DEBUG_LOG_LEVEL_2
-
-        logger << "Now map it to the leaf grid elements..." << std::endl;
-        for (LeafIterator it = gv.template begin<0,partitiontype> ()
-               ; it != gv.template end<0,partitiontype> ()
-               ; ++it) 
-          {
-            //int local1d_index = indexset.index( *it );
-            //int map_index = mapper.map( *it );
-
-            Dune::FieldVector<CTYPE, dim> x = it->geometry().center();
-	  
-            std::vector<UINT> global_index(dim,0);
-            std::vector<UINT> local_index( dim, 0 );
-
-            for(UINT i=0; i<dim; i++ )
-              {
-                global_index[i] = static_cast<UINT>( x[i] / gridsizes[i] );
-                local_index[i] = global_index[i] - local_offset[ i ];
-              }
-
-
-#ifdef DIMENSION3
-            UINT l = indexconversion_3d_to_1d( local_index[2], local_index[1], local_index[0]
-                                               , local_count[2], local_count[1], local_count[0] );
-#else
-            UINT l = indexconversion_2d_to_1d( local_index[1], local_index[0]
-                                               , local_count[1], local_count[0] );
-#endif
-
-            logger << "global_index = (" 
-                   << global_index[0] << "," << global_index[1] 
-#ifdef DIMENSION3
-                   << "," << global_index[2] 
-#endif
-                   << ")   ";
-            logger << "value = " 
-                   <<  local_Yfield_vector[ l ] 
-                   << std::endl;
-	  
-          }
-        logger << std::endl;
-
-#endif// DEBUG_LOG_LEVEL_2
 
 
         std::stringstream jobtitle;
@@ -1841,21 +1520,6 @@ namespace Dune {
         //propably not needed. because the H5Dwrite blocks anyway!!
         MPI_Barrier( communicator );
 
-
-        // write meta file if needed
-        /*
-        if( writemetafile ){
-          // Write meta file for display in paraview
-          std::string meta_filename;
-          meta_filename = data_filename + ".xmf";
-          writeMetaFileForHDF5( meta_filename,
-                                data_filename,
-                                data_name,
-                                &(global_dim_HDF5[0]),
-                                meta_title
-                                );
-        }
-        */
         
         std::stringstream jobtitle;
         jobtitle << "write_parallel_to_HDF5_without_DUNE: writing "
@@ -2809,9 +2473,6 @@ namespace Dune {
 
     } // end of void write_to_HDF5_on_root()
 
-
-
-      //#endif // HAVE_HDF5
 
     }; // class HDF5Tools
 
