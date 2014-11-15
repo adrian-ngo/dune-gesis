@@ -1,26 +1,19 @@
 #ifndef DUNE_GESIS_DRIVER_ALU_HH
 #define DUNE_GESIS_DRIVER_ALU_HH
 
-#define HAVE_DUNE_ALUGRID 1
 
-//#ifdef HAVE_ALUGRID
-#include <dune/alugrid/grid.hh>
-//#include <dune/grid/alugrid.hh>
+#include <dune/alugrid/grid.hh>   // <--- This requires the dune-alugrid module.
+
 #include <dune/grid/utility/structuredgridfactory.hh>
-//#endif
-
 #include <dune/gesis/common/io/HDF5Tools.hh>
 
-//#include "showIndexSets.hh"
 #ifdef LINE_PLOT_M0
 #include "lineplot.hh"
 #endif
 
 #ifndef USE_YASP
 #include <dune/grid/io/file/dgfparser.hh>
-//#include "my_gridexamples.hh"
 #endif
-
 
 #include <dune/gesis/common/Vector.hh>
 #include <dune/gesis/common/DenseMatrix.hh>
@@ -32,20 +25,13 @@
 #include <dune/gesis/common/my_gfs_utilities.hh>
 #include <dune/gesis/BVPs/GroundWaterParameters.hh>
 #include <dune/gesis/BVPs/GeoElectricalPotentialParameters.hh>
-//#include "FieldParameters.hh"
+
 
 #include <dune/gesis/BVPs/DG/dgf_pressurefield.hh>
 #include <dune/gesis/BVPs/DG/rt0_pressurefield.hh>
 #include <dune/gesis/BVPs/DG/reorderedgridview.hh>
 
-
 #include <dune/gesis/BVPs/obs/MeasurementList.hh>
-
-//#include <dune/gesis/BVPs/projectors/L2SubspaceProjector.hh>
-//#include <dune/gesis/BVPs/projectors/CoarseGridP0Projector.hh>
-
-//#include <dune/gesis/BVPs/ForwardSimulator.hh>
-
 
 #include <dune/gesis/BVPs/adaptive/driver_h_adaptive.hh>
 
@@ -188,7 +174,7 @@ namespace Dune {
 #if USE_YASP
       typedef Dune::PDELab::P0ParallelConstraints CONSTRAINTS;
 #else
-      // This must be used for the parallel ALUGRID (Rebecca).
+      // This must be used for the parallel ALUGRID.
       // We will use an overlapping linear solver on a non-overlapping grid
       // with ghost-cells. Therefore, the ghost-cells are treated as
       // if they were overlap cells of an overlapping grid with overlap=1.
@@ -212,17 +198,18 @@ namespace Dune {
       typedef Dune::PDELab::QkLocalFiniteElementMap<GV_TP,CTYPE,REAL,1> FEM_HYPER;
 #else
       typedef Dune::PDELab::P0LocalFiniteElementMap<CTYPE,REAL,dim> FEM_ELLIP;
-#ifdef USE_Qk
-      // 2.) Transport Equation using DG with Qk elements on cubes
-      typedef Dune::PDELab::QkDGLocalFiniteElementMap<CTYPE,REAL,pMAX,dim> FEM_HYPER;
-      const int blocksize = Dune::QkStuff::QkSize<pMAX,dim>::value;
-      logger << "DG: Using QkDG for the hyperbolic PDE with blocksize "
-             << blocksize << std::endl;
-#else
+
+#ifdef USE_Pk
       // 2.) Transport Equation using DG with Pk elements on cubes
       typedef Dune::PDELab::OPBLocalFiniteElementMap<CTYPE,REAL,pMAX,dim,bt> FEM_HYPER;
       const int blocksize = Dune::PB::PkSize<pMAX,dim>::value;
       logger << "DG: Using PkDG for the hyperbolic PDE with blocksize "
+             << blocksize << std::endl;
+#else
+      // 2.) Transport Equation using DG with Qk elements on cubes
+      typedef Dune::PDELab::QkDGLocalFiniteElementMap<CTYPE,REAL,pMAX,dim> FEM_HYPER;
+      const int blocksize = Dune::QkStuff::QkSize<pMAX,dim>::value;
+      logger << "DG: Using QkDG for the hyperbolic PDE with blocksize "
              << blocksize << std::endl;
 #endif
 #endif
@@ -281,9 +268,11 @@ namespace Dune {
       yfg_orig.setWellConductivities( gv_gw );
 
 
-#ifdef VTK_PLOT_Y_FIELD
-      yfg_orig.plot2vtu( gv_gw, dir.Y_orig_vtu, "Y_orig", baselevel );
-#endif
+
+      if( inputdata.plot_options.vtk_plot_yfield ){
+        yfg_orig.plot2vtu( gv_gw, dir.Y_orig_vtu, "Y_orig", baselevel );
+      }
+
 
       // Dimensions of extended field per zone:
       std::vector< Vector<UINT> > nCellsExt;
@@ -365,10 +354,10 @@ namespace Dune {
 
 #else
 
-#ifdef USE_CUBE
-      const Dune::GeometryType::BasicType bt = Dune::GeometryType::cube;
-#else
+#ifdef USE_SIMPLEX
       const Dune::GeometryType::BasicType bt = Dune::GeometryType::simplex;
+#else
+      const Dune::GeometryType::BasicType bt = Dune::GeometryType::cube;
 #endif
       // 1.) Groundwater Equation using CCFV
       Dune::GeometryType gt = Dune::GeometryType(bt,dim);
