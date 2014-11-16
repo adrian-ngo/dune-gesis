@@ -29,10 +29,6 @@
 
 #include <dune/gesis/BVPs/obs/MeasurementList.hh>
 
-//#include <dune/gesis/BVPs/projectors/L2SubspaceProjector.hh>
-//#include <dune/gesis/BVPs/projectors/CoarseGridP0Projector.hh>
-//#include <dune/gesis/BVPs/ForwardSimulator.hh>
-
 #if HAVE_UG
 //#include <dune/gesis/BVPs/adaptive/driver_h_adaptive.hh>
 #include <dune/gesis/BVPs/adaptive/driver_h_adaptive_M1.hh>
@@ -383,20 +379,20 @@ namespace Dune {
 #endif
 
 #if HAVE_UG
-      Dune::Gesis::adaptiveDrive_h_rgv
-        <GRID,
-         GFS_GW,
-         IDT,
-         YFG,
-         DIR>
-        ( grid,
-          gfs_gw,
-          inputdata,
-          yfg_orig,
-          baselevel,
-          dir,
-          helper
-          );
+      Dune::Gesis::hAdaptiveLoopForM1<GRID,
+                                      GFS_GW,
+                                      IDT,
+                                      YFG,
+                                      MEASLIST,
+                                      DIR>( grid,
+                                            gfs_gw,
+                                            inputdata,
+                                            yfg_orig,
+                                            orig_measurements,
+                                            baselevel,
+                                            dir,
+                                            helper
+                                            );
 
 #endif // USE_UG
 

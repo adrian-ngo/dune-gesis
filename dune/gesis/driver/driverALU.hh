@@ -33,7 +33,8 @@
 
 #include <dune/gesis/BVPs/obs/MeasurementList.hh>
 
-#include <dune/gesis/BVPs/adaptive/driver_h_adaptive.hh>
+//#include <dune/gesis/BVPs/adaptive/driver_h_adaptive.hh>
+#include <dune/gesis/BVPs/adaptive/driver_h_adaptive_M1.hh>
 
 
 #include <dune/gesis/BVPs/totalMass.hh>
@@ -379,22 +380,18 @@ namespace Dune {
 #endif
 
 
-      Dune::Gesis::adaptiveDrive_h_rgv
-        <GRID,
-         GFS_GW,
-         IDT,
-         YFG,
-         DIR>
-        ( grid,
-          gfs_gw,
-          inputdata,
-          yfg_orig,
-          baselevel,
-          dir,
-          helper
-          );
-
-
+      Dune::Gesis::hAdaptiveLoopForM1<GRID,
+                                      GFS_GW,
+                                      IDT,
+                                      YFG,
+                                      DIR>( grid,
+                                            gfs_gw,
+                                            inputdata,
+                                            yfg_orig,
+                                            baselevel,
+                                            dir,
+                                            helper
+                                            );
 
       // log the original measurements
       //orig_measurements.write_to_logger("original measurements for inversion");

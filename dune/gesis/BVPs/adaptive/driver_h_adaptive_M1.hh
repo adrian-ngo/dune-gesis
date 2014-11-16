@@ -25,19 +25,24 @@ namespace Dune {
       typename GFS_GW,
       typename IDT,
       typename YFG,
+      typename MEASLIST,
       typename DIR
       >
-    void adaptiveDrive_h_rgv( GRID& grid,
-                              GFS_GW& gfs_gw,  // <-- changed after refinement and load-balancing!
-                              const IDT& inputdata,
-                              YFG& yfg, // <-- changed after refinement and load-balancing!
-                              const UINT baselevel,
-                              const DIR& dir,
-                              const Dune::MPIHelper& helper
-                              ){
+    void hAdaptiveLoopForM1( GRID& grid,
+                             GFS_GW& gfs_gw,  // <-- changed after refinement and load-balancing!
+                             const IDT& inputdata,
+                             YFG& yfg, // <-- changed after refinement and load-balancing!
+                             MEASLIST& orig_measurements,
+                             const UINT baselevel,
+                             const DIR& dir,
+                             const Dune::MPIHelper& helper
+                             ){
 
       typedef typename IDT::SDT SDT;
-      const SDT& setupdata = inputdata.setups[0]; // We consider only the first setup from the input XML.
+      int nSetups = inputdata.setups.size();
+      for(int iSetup=0; iSetup<nSetups; iSetup++){
+
+      const SDT& setupdata = inputdata.setups[iSetup]; // We consider only the first setup from the input XML.
 
       Dune::Timer watch;
 
@@ -71,13 +76,42 @@ namespace Dune {
         std::cout << gwe_h.show_ls_result() << std::endl;
       General::logMinAndMax( vc_head, gv_gw.comm() );
 
-      VTKPlot::output2vtu( gfs_gw,
-                           vc_head,
-                           dir.vtudir + "/h_orig",
-                           "h_orig",
-                           inputdata.verbosity,
-                           true,
-                           0 );
+      if( inputdata.plot_options.vtk_plot_head ){
+        std::stringstream vtu_head;
+        vtu_head << dir.vtudir << "/h_orig_s" << iSetup;
+        VTKPlot::output2vtu( gfs_gw,
+                             vc_head,
+                             vtu_head.str(),
+                             "h_orig",
+                             inputdata.verbosity,
+                             true,
+                             0 );
+      }
+
+      //Take the head measurements!
+      if( helper.rank()==0 && inputdata.verbosity>=VERBOSITY_INVERSION )
+        std::cout << "Take new measurements of head." << std::endl;
+      orig_measurements.take_measurements( 1, vc_head, gfs_gw, helper, iSetup);
+
+      std::stringstream bufferfile_head_measurements;
+      bufferfile_head_measurements << dir.bufferdimdir 
+                                   << "/head_orig.meas.iSetup" << iSetup 
+                                   << ".rank" << helper.rank();
+
+      orig_measurements.store_measurements( 1, iSetup, bufferfile_head_measurements.str() );
+
+      if( helper.rank()==0 && inputdata.verbosity>=VERBOSITY_INVERSION ){
+        std::cout << "Head measurements stored to " 
+                  << bufferfile_head_measurements.str() << " etc." << std::endl;
+        // copy file to DATA:
+        std::stringstream datafile_per_Setup;
+        datafile_per_Setup << dir.datadimdir 
+                           << "/head_orig.meas.iSetup" << iSetup;
+
+        if( inputdata.problem_types.generate_measurement_data ){
+          General::systemCall( "cp -v " + bufferfile_head_measurements.str() + " " + datafile_per_Setup.str() );
+        }
+      }
 
       //typedef GradientVectorField<GWP_FWD,GFS_GW> DARCY_FLUX_DGF;
       typedef GradientVectorField<GWP_FWD,GFS_GW> DARCY_FLUX_BASE;
@@ -252,7 +286,7 @@ namespace Dune {
         }
 
         if( gv_gw.comm().rank()==0  && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
-          std::cout << "grid-size = " << gv_tp.size(0);
+          std::cout << "grid-size = " << gv_tp.size(0) << std::endl;
         }
 
         if(step<=maxsteps){
@@ -401,7 +435,7 @@ namespace Dune {
 
         if( inputdata.plot_options.vtk_plot_m0 ){
           std::stringstream vtu_m0_file;
-          vtu_m0_file  << dir.vtudir << "/m0_step" << step;
+          vtu_m0_file  << dir.vtudir << "/m0_s" << iSetup << "_step" << step;
           VTKPlot::output2vtu( gfs_tp,
                                vc_m0,
                                vtu_m0_file.str(),
@@ -410,6 +444,35 @@ namespace Dune {
                                true,
                                std::max(0,pMAX-1)  );
 
+        }
+
+        //Take the measurements!
+        if( helper.rank()==0 && inputdata.verbosity>=VERBOSITY_INVERSION )
+          std::cout << "Take new measurements of m0." << std::endl;
+        orig_measurements.take_measurements( 2, vc_m0, gfs_tp, helper, iSetup);
+
+        std::stringstream bufferfile_M0_measurements;
+        bufferfile_M0_measurements << dir.bufferdimdir 
+                                   << "/m0_orig.meas"
+                                   << ".step" << step
+                                   << ".iSetup" << iSetup 
+                                   << ".rank" << helper.rank();
+
+        orig_measurements.store_measurements( 2, iSetup, bufferfile_M0_measurements.str() );
+
+
+        if( helper.rank()==0 && inputdata.verbosity>=VERBOSITY_INVERSION ){
+          std::cout << "m0 measurements stored to " 
+                    << bufferfile_M0_measurements.str() << " etc." << std::endl;
+          // copy file to DATA:
+          std::stringstream datafile_per_Setup;
+          datafile_per_Setup << dir.datadimdir 
+                             << "/m0_orig.meas"
+                             << ".step" << step
+                             << ".iSetup" << iSetup;
+          if( inputdata.problem_types.generate_measurement_data ){
+            General::systemCall( "cp -v " + bufferfile_M0_measurements.str() + " " + datafile_per_Setup.str() );
+          }
         }
 
         // *********************************
@@ -496,15 +559,54 @@ namespace Dune {
 
 
 
-        std::stringstream vtu_m1m0_file;
-        vtu_m1m0_file  << dir.vtudir << "/m1m0_step" << step;
-        VTKPlot::output2vtu( gfs_tp,
-                             vc_m1_m0,
-                             vtu_m1m0_file.str(),
-                             "m1_orig",
-                             inputdata.verbosity,
-                             true,
-                             std::max(0,pMAX-1)  );
+        if( inputdata.plot_options.vtk_plot_m1 ){
+          std::stringstream vtu_m1m0_file;
+          vtu_m1m0_file  << dir.vtudir << "/m1m0_s" << iSetup << "_step" << step;
+          VTKPlot::output2vtu( gfs_tp,
+                               vc_m1_m0,
+                               vtu_m1m0_file.str(),
+                               "m1_orig",
+                               inputdata.verbosity,
+                               true,
+                               std::max(0,pMAX-1)  );
+        }
+
+        //Take the measurements!
+        if( helper.rank()==0 && inputdata.verbosity>=VERBOSITY_INVERSION )
+          std::cout << "Take new measurements of m1." << std::endl;
+        orig_measurements.take_measurements( 3, vc_m1_m0, gfs_tp, helper, iSetup);
+
+
+
+        std::stringstream bufferfile_M1_measurements;
+        bufferfile_M1_measurements << dir.bufferdimdir 
+                                   << "/m1_orig.meas"
+                                   << ".step" << step
+                                   << ".iSetup" << iSetup 
+                                   << ".rank" << helper.rank();
+
+        if( helper.rank() == 0 )
+          std::cout << "Absolute m1 error for Setup #" << iSetup << " is "
+                    << orig_measurements.calibrateAbsErrorForM1( iSetup )
+                    << std::endl;
+
+        orig_measurements.store_measurements( 3, iSetup, bufferfile_M1_measurements.str() );
+
+
+        if( helper.rank()==0 && inputdata.verbosity>=VERBOSITY_INVERSION ){
+          std::cout << "m1 measurements stored to " 
+                    << bufferfile_M1_measurements.str() << " etc." << std::endl;
+          // copy file to DATA:
+          std::stringstream datafile_per_Setup;
+          datafile_per_Setup << dir.datadimdir 
+                             << "/m1_orig.meas"
+                             << ".step" << step
+                             << ".iSetup" << iSetup;
+          if( inputdata.problem_types.generate_measurement_data ){
+            General::systemCall( "cp -v " + bufferfile_M1_measurements.str() + " " + datafile_per_Setup.str() );
+          }
+        }
+
         /*
         std::vector<REAL> vm0;
         General::copy_to_std( vc_m0, vm0 );
@@ -874,7 +976,7 @@ namespace Dune {
       GA grid_adaptor;
 
       for( int ibackstep=grid.maxLevel(); ibackstep>0; --ibackstep ){
-        Dune::PDELab::mark_all_coarsen( grid );
+        Dune::Gesis::mark_all_coarsen( grid );
 
         // prepare the grid for refinement
         grid.preAdapt();
@@ -1011,6 +1113,13 @@ namespace Dune {
 
       */
 
+
+      for( int ibackstep=grid.maxLevel(); ibackstep>0; --ibackstep ){
+        Dune::Gesis::mark_all_coarsen( grid );
+        grid.adapt();
+        gfs_tp.update();
+      }
+
       std::cout << "Summary:" << std::endl;
       std::cout << "           N"
         /*
@@ -1078,6 +1187,8 @@ namespace Dune {
                   << std::setw(10) << std::setprecision(2) << std::scientific << ee[i]
                   << std::endl;
       }
+
+      } // iSetup loop
 
       return;
 
