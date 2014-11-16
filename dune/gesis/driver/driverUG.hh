@@ -34,7 +34,8 @@
 //#include <dune/gesis/BVPs/ForwardSimulator.hh>
 
 #if HAVE_UG
-#include <dune/gesis/BVPs/adaptive/driver_h_adaptive.hh>
+//#include <dune/gesis/BVPs/adaptive/driver_h_adaptive.hh>
+#include <dune/gesis/BVPs/adaptive/driver_h_adaptive_M1.hh>
 #endif
 
 #include <dune/gesis/BVPs/totalMass.hh>
