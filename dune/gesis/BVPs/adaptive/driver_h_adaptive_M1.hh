@@ -61,12 +61,20 @@ namespace Dune {
       PumpingSourceTypeGW source_h( setupdata );
 
       typedef GroundWaterEquation<GFS_GW,GWP_FWD,PumpingSourceTypeGW,IDT,SDT> GWE_H;  
+
+      watch.reset();
   
       GWE_H gwe_h( gfs_gw,
                    inputdata,
                    setupdata,
                    gwp_fwd,
                    source_h );
+
+        General::log_elapsed_time( watch.elapsed(),
+                                   gv_gw.comm(),
+                                   inputdata.verbosity,
+                                   "GWE",
+                                   "Matrix Pattern + Assembly" );
 
       typedef typename Dune::PDELab::BackendVectorSelector<GFS_GW,REAL>::Type VCType_GW;
       VCType_GW vc_head( gfs_gw, 0.0 );
@@ -359,6 +367,7 @@ namespace Dune {
             , SDT
             > TPE_M0;
   
+        watch.reset();
         TPE_M0 tpe_m0( gfs_tp,
                        inputdata,
                        setupdata,
@@ -394,6 +403,11 @@ namespace Dune {
         }
 #endif
 
+        General::log_elapsed_time( watch.elapsed(),
+                                   gv_gw.comm(),
+                                   inputdata.verbosity,
+                                   "TPE",
+                                   "Matrix Pattern + Assembly" );
   
 #ifndef TEST_Adjoint
         tpe_m0.solve_forward( vc_m0 );
@@ -518,6 +532,7 @@ namespace Dune {
 
         typedef TransportEquation<GFS_TP,DARCY_FLUX_DGF,FunctionSourceType,TPM1,IDT,SDT> TPE_M1_M0;
 
+        watch.reset();
         TPE_M1_M0 tpe_m1_m0( gfs_tp,
                              inputdata,
                              setupdata,
@@ -525,6 +540,11 @@ namespace Dune {
                              tpm1,
                              source_m1_m0 );
               
+        General::log_elapsed_time( watch.elapsed(),
+                                   gv_gw.comm(),
+                                   inputdata.verbosity,
+                                   "TPE",
+                                   "Matrix Pattern + Assembly" );
 
 
         // Define sourceterm for the forward transport equation for m1:
