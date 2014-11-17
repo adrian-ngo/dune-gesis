@@ -3,6 +3,14 @@ AC_DEFUN([DUNE_BOOST_PROPERTY_TREE],
 [
         AC_REQUIRE([AC_PROG_CC])
         CPPFLAGS_SAVED="$CPPFLAGS"
+        if test x"$with_boost" != x"no" ; then
+          if test x"$with_boost" != x"yes" ; then
+            if test x"$with_boost" != x"" ; then
+              # USER-specified path
+              BOOST_CPPFLAGS="$with_boost"
+            fi
+          fi
+        fi
         CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
         export CPPFLAGS
 
