@@ -22,6 +22,7 @@
       vtk_plot_element_ordering="yes"
       vtk_plot_q="yes"
       vtk_plot_m0="yes"
+      vtk_plot_m1="yes"
       vtk_plot_y_smooth="no"
       vtk_plot_h_old="yes"
       vtk_plot_m0_old="yes"
@@ -42,7 +43,7 @@
       lnK_inversion="off" 
       head_inversion="on"
       transport_inversion_m0="on" 
-      transport_inversion_m1="off" 
+      transport_inversion_m1="on" 
       heat_mean_arrival_time_inversion="off" 
       moments_geoeletric_potential_inversion="off"
       conditional_realization="off"
@@ -54,7 +55,7 @@
   <!-- ***************************************** -->
   <domain_data>
     <extensions>51.2   51.2</extensions>
-    <virtual_nCells>64   64</virtual_nCells>
+    <virtual_nCells>128   128</virtual_nCells>
     <lineplot>
       <startpoint>0.0 0.0</startpoint>
       <endpoint>100.0 100.0</endpoint>
@@ -65,7 +66,7 @@
         heapsize="2000"
         globalrefine="0"
         baselevel="0"
-        maxsteps="20"
+        maxsteps="9"
         refinementtype="nonconforming"
         refinementfraction="0.15"
         coarseningfraction="0.15"
@@ -89,7 +90,7 @@
         thermal_conductivity="2"
         kappa="0.045"
         sigma0="0.03">
-      <correlationlengths>2.0  1.0</correlationlengths>
+      <correlationlengths>2.0  2.0</correlationlengths>
     </zone>
 <!--
     <zone 
@@ -134,12 +135,12 @@
   <transport_parameters
       a_l="1E-3"
       a_t="1E-4"
-      D_m="2E-9"
+      D_m="1E-9"
       deltaSD_factor="1.0"
       refined_diffusion="1.0"
       l2_diffusion="1.0"
       l2_diffusion_adjoint="1"
-      tolerance="0.10"
+      tolerance="10.0"
       dg_method="SIPG" 
       dg_weights="on" 
       dg_gamma="2.0"
@@ -206,7 +207,7 @@
   <!-- ***************************************** -->
   <!-- Setups for the calculations:              -->
   <!-- ***************************************** -->
-  <Setups total_setups="1">
+  <Setups total_setups="4">
     <!-- -->
     <!-- -->
     <!-- ***************************************** -->
@@ -344,7 +345,7 @@
       </pumping_data>
       <!-- Take care: In the 2-D well model, the y-axis represents the vertical z-axis.-->
       <well_data total="4" datafile="">
-        <!-- Well data format: -->
+        <!-- Well data format: setup #0 -->
         <!-- x          = position of the well along the x-axis -->
         <!-- zTop       = (upper) z-coordinate at which the notches of the well start -->
         <!-- zBottom    = (lower) z-coordinate at the location of the well-bottom -->
@@ -353,10 +354,10 @@
         <!-- temperature= temperature difference for injection (will not be used for extraction wells) -->
         <!-- One line per well: -->
         <!-- x   zTop     zBottom   k_well    flow_rate    T     t_inject   c     injection_time -->
-        12.5       25.01     25.0      1.0        1e-4     0.0   100      0.0  100
-        17.5       25.01     25.0      1.0        2e-4     1.0   100      1.0  100
-        32.5       25.01     25.0      1.0       -2e-4     0.0   100.0    0.0  100.0
-        37.5       25.01     25.0      1.0       -1e-4     0.0   100.0    0.0  100.0
+        12.5       25.01     25.0      10.0        2e-4     0.0   100      0.0  100
+        17.5       25.01     25.0      10.0        1e-4     1.0   100      1.0  100
+        32.5       25.01     25.0      10.0       -1e-4     0.0   100.0    0.0  100.0
+        37.5       25.01     25.0      10.0       -2e-4     0.0   100.0    0.0  100.0
       </well_data>
       <!-- -->   
       <!-- --> 
@@ -381,7 +382,7 @@
       <!-- ******************* -->
       <head_inversion_data regularization_factor="1e-6" regularization_type="dynamic">
         <!-- Measurement of hydraulic head -->
-        <head_measurements total="2" datafile="">
+        <head_measurements total="16" datafile="">
           <!-- (one line per location) must have exactly the following format: -->
           <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
           20.5      20.5           0.005   0.0   0
@@ -412,7 +413,7 @@
         <!-- m0 = zeroth temporal moment of concentration -->
         <!-- ******************************************** -->
         <m0_inversion_data sampling_volume="0.1 0.230" SV_max="0.0 0.0" SV_step="1.0 0.4" SV_limit="10.0">
-          <m0_measurements total="2" datafile="">
+          <m0_measurements total="16" datafile="">
             <!-- (one line per location) must have exactly the following format: --> 
             <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
           20.5      20.5           5.001    0.025   0
@@ -439,7 +440,7 @@
         <!-- m1 = first temporal moment of concentration -->
         <!-- ******************************************** -->
         <m1_inversion_data sampling_volume="0.01 2.10">
-          <m1_measurements total="2" datafile="">
+          <m1_measurements total="16" datafile="">
             <!-- (one line per location) must have exactly the following format: -->
             <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
             20.5      20.5           2.5e5    0.025   0
@@ -685,7 +686,7 @@
       </pumping_data>
       <!-- Take care: In the 2-D well model, the y-axis represents the vertical z-axis.-->
       <well_data total="4" datafile="">
-        <!-- Well data format: -->
+        <!-- Well data format: setup #1 -->
         <!-- x          = position of the well along the x-axis -->
         <!-- zTop       = (upper) z-coordinate at which the notches of the well start -->
         <!-- zBottom    = (lower) z-coordinate at the location of the well-bottom -->
@@ -694,10 +695,692 @@
         <!-- temperature= temperature difference for injection (will not be used for extraction wells) -->
         <!-- One line per well: -->
         <!-- x   zTop     zBottom   k_well    flow_rate    T     t_inject   c     injection_time -->
-        40       25.10     24.9      1.0        3e-3     0.0   100      0.0  100
-        33       25.01     25.0      1.0        2e-3     1.0   100      1.0  100
-        17       25.01     25.0      1.0       -2e-3     0.0   100.0    0.0  100.0
-        10       25.01     25.0      1.0       -3e-3     0.0   100.0    0.0  100.0
+        25.01       12.5     12.4      10.0        2e-3     0.0   100      0.0  100
+        25.01       17.5     17.4      10.0        1e-3     1.0   100      1.0  100
+        25.01       32.5     32.4      10.0       -1e-3     0.0   100.0    0.0  100.0
+        25.01       37.5     37.4      10.0       -2e-3     0.0   100.0    0.0  100.0
+      </well_data>
+      <!-- -->   
+      <!-- --> 
+      <!-- ******************* -->
+      <!-- lnK data            -->
+      <!-- ******************* -->
+      <lnk_inversion_data>
+        <!-- Direct measurements of hydraulic conductivity K: -->
+        <lnk_measurements total="4" datafile="">
+          <!-- This data (one line per location) must have exactly the following format: -->
+          <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+          2.0    2.0    0.0   0.05    0.0 
+          2.0    8.0    0.0   0.05    0.0 
+          8.0    2.0    0.0   0.05    0.0
+          8.0    8.0    0.0   0.05    0.0
+        </lnk_measurements> 
+      </lnk_inversion_data>
+      <!-- -->
+      <!-- -->
+      <!-- ******************* -->
+      <!-- hydraulic head data -->
+      <!-- ******************* -->
+      <head_inversion_data regularization_factor="1e-6" regularization_type="dynamic">
+        <!-- Measurement of hydraulic head -->
+        <head_measurements total="16" datafile="">
+          <!-- (one line per location) must have exactly the following format: -->
+          <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+          20.5      20.5           0.005   0.0   0
+          23.5      20.5           0.005   0.0   0
+          26.5      20.5           0.005   0.0   0
+          29.5      20.5           0.005   0.0   0
+          20.5       23.5           0.005   0.0   0
+          23.5       23.5           0.005   0.0   0
+          26.5       23.5           0.005   0.0   0
+          29.5       23.5           0.005   0.0   0
+          20.5      26.5           0.005   0.0   0
+          23.5      26.5           0.005   0.0   0
+          26.5      26.5           0.005   0.0   0
+          29.5      26.5           0.005   0.0   0
+          20.5       29.5           0.005   0.0   0
+          23.5       29.5           0.005   0.0   0
+          26.5       29.5           0.005   0.0   0
+          29.5       29.5           0.005   0.0   0
+        </head_measurements>
+      </head_inversion_data>
+      <!-- -->
+      <!-- -->
+      <!-- ******************************************** -->
+      <!-- measurements of solute concentration         -->
+      <!-- ******************************************** -->
+      <solute_concentration_inversion_data regularization_factor="1e-6" regularization_type="dynamic">
+        <!-- ******************************************** -->
+        <!-- m0 = zeroth temporal moment of concentration -->
+        <!-- ******************************************** -->
+        <m0_inversion_data sampling_volume="0.1 0.230" SV_max="0.0 0.0" SV_step="1.0 0.4" SV_limit="10.0">
+          <m0_measurements total="16" datafile="">
+            <!-- (one line per location) must have exactly the following format: --> 
+            <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+          20.5      20.5           5.001   0.05   0
+          23.5      20.5           5.001   0.05   0
+          26.5      20.5           5.001   0.05   0
+          29.5      20.5           5.001   0.05   0
+          20.5       23.5           5.001   0.05   0
+          23.5       23.5           5.001   0.05   0
+          26.5       23.5           5.001   0.05   0
+          29.5       23.5           5.001   0.05   0
+          20.5      26.5           5.001   0.05   0
+          23.5      26.5           5.001   0.05   0
+          26.5      26.5           5.001   0.05   0
+          29.5      26.5           5.001   0.05   0
+          20.5       29.5           5.001   0.05   0
+          23.5       29.5           5.001   0.05   0
+          26.5       29.5           5.001   0.05   0
+          29.5       29.5           5.001   0.05   0
+          </m0_measurements>
+        </m0_inversion_data>
+        <!-- -->
+        <!-- -->
+        <!-- ******************************************** -->
+        <!-- m1 = first temporal moment of concentration -->
+        <!-- ******************************************** -->
+        <m1_inversion_data sampling_volume="0.01 2.10">
+          <m1_measurements total="16" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+            20.5      20.5           2.5e5   0.05   0
+            23.5      20.5           2.5e5   0.05   0
+            26.5      20.5           2.5e5   0.05   0
+            29.5      20.5           2.5e5   0.05   0
+            20.5       23.5           2.5e5   0.05   0
+            23.5       23.5           2.5e5   0.05   0
+            26.5       23.5           2.5e5   0.05   0
+            29.5       23.5           2.5e5   0.05   0
+            20.5      26.5           2.5e5   0.05   0
+            23.5      26.5           2.5e5   0.05   0
+            26.5      26.5           2.5e5   0.05   0
+            29.5      26.5           2.5e5   0.05   0
+            20.5       29.5           2.5e5   0.05   0
+            23.5       29.5           2.5e5   0.05   0
+            26.5       29.5           2.5e5   0.05   0
+            29.5       29.5           2.5e5   0.05   0
+          </m1_measurements>
+        </m1_inversion_data>
+        <!-- -->
+        <!-- -->
+      </solute_concentration_inversion_data>
+      <!-- -->
+      <!-- -->
+      <!-- ***************** -->
+      <!-- temperature  data -->
+      <!-- ******************* -->
+      <heat_inversion_data regularization_factor="1" regularization_type="dynamic"> 
+        <m0_measurements total="16" datafile="">
+          <!-- (one line per location) must have exactly the following format: -->
+          <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+            18.0    5.0    0.01   0.2   0
+            8.0    3.0     0.01   0.2   0
+            8.0    5.0     0.01   0.2   0
+            8.0    7.0     0.01   0.2   0
+            10.0    3.0    0.01   0.2   0
+            10.0    5.0    0.01   0.2   0
+            10.0    7.0    0.01   0.2   0
+            12.0    3.0    0.01   0.2   0
+            12.0    5.0    0.01   0.2   0
+            12.0    7.0    0.01   0.2   0
+           14.0    3.0     0.01   0.2   0
+           14.0    5.0     0.01   0.2   0
+           14.0    7.0     0.01   0.2   0
+            16.0    3.0    0.01   0.2   0
+            16.0    5.0    0.01   0.2   0
+            16.0    7.0    0.01   0.2   0
+        </m0_measurements>
+        <m1_measurements total="16" datafile="">
+          <!-- (one line per location) must have exactly the following format: -->
+          <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+          <!-- error of m1 will be used for m1/m0 -->
+            18.0    5.0    0.01   0.2   0
+            8.0    3.0     0.01   0.2   0
+            8.0    5.0     0.01   0.2   0
+            8.0    7.0     0.01   0.2   0
+            10.0    3.0    0.01   0.2   0
+            10.0    5.0    0.01   0.2   0
+            10.0    7.0    0.01   0.2   0
+            12.0    3.0    0.01   0.2   0
+            12.0    5.0    0.01   0.2   0
+            12.0    7.0    0.01   0.2   0
+           14.0    3.0     0.01   0.2   0
+           14.0    5.0     0.01   0.2   0
+           14.0    7.0     0.01   0.2   0
+            16.0    3.0    0.01   0.2   0
+            16.0    5.0    0.01   0.2   0
+            16.0    7.0    0.01   0.2   0
+        </m1_measurements>
+      </heat_inversion_data> 
+      <!-- ***************** -->
+      <!-- geoelectrical potential data -->
+      <!-- ******************* -->
+      <geoelectrical_potential_data total_configs="1" kappa_hdf5_file="" sigma0_hdf5_file=""> 
+        <!-- kappa and sigma0 as hdf5 file not yet implemented! --> 
+        <!-- --> 
+        <!-- --> 
+        <!-- configuration 1 --> 
+        <geoelectrical_potential_configuration>
+          <!-- --> 
+          <!-- --> 
+          <inout_location total="1" datafile="">
+            <!-- in out dipole injection. Must have this structure! -->
+            <!-- x   y    z (for injection location) and x  y  z (for extraction location)     value  (value for the extraction)-->
+            5    1  5  9   1
+          </inout_location>
+          <m0_measurements total="3" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, x2, y2, abs_error, rel_error, value (seperated by blank or tab) -->
+            4.0    4.0    4.0    6.0    2.0   0.10    1
+            5.0    4.0    5.0    6.0    2.0   0.10    1
+            6.0    4.0    6.0    6.0    2.0   0.10    1
+          </m0_measurements>
+          <m1_measurements total="3" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, x2, y2, abs_error, rel_error, value (seperated by blank or tab) -->
+            <!-- error of m1 will be used for m1/m0 -->
+            4.0    4.0    4.0    6.0    2.0   0.10    1
+            5.0    4.0    5.0    6.0    2.0   0.10    1
+            6.0    4.0    6.0    6.0    2.0   0.10    1
+          </m1_measurements>
+        </geoelectrical_potential_configuration>
+        <!-- --> 
+        <!-- --> 
+      </geoelectrical_potential_data>
+      <!-- -->
+      <!-- -->
+    </Setup>
+    <!-- -->
+    <!-- ***************************************** -->
+    <!-- Setup #2:-->
+    <!-- ***************************************** -->
+    <Setup>
+      <!-- ***************************************** -->
+      <!-- Groundwater Flow BCs: -->
+      <!-- ***************************************** -->
+      <flow_equation recycle_matrix_hierarchy="yes">
+        <boundary orientation="west" bctype="1" nstripes="1">
+          <stripe value="100">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe> 
+        </boundary> 
+        <boundary orientation="east" bctype="1">
+          <stripe value="99.88" >
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+      </flow_equation>
+      <!-- ***************************************** -->
+      <!-- Concentration BCs: -->
+      <!-- ***************************************** -->
+      <transport_equation recycle_matrix_hierarchy="no" injection_time="100">
+        <boundary orientation="west" bctype="1" nstripes="1">
+          <stripe value="0.0" regularization_factor="1.0" regularization_type="dynamic">
+            <startpoint>20</startpoint>
+            <endpoint>30</endpoint>
+          </stripe> 
+        </boundary>
+        <boundary orientation="east" bctype="-1">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+      </transport_equation>
+      <!-- ***************************************** -->
+      <!-- Heat BCs: -->
+      <!-- ***************************************** -->
+      <heat_transport_equation recycle_matrix_hierarchy="no" injection_time="3600">
+        <boundary orientation="west" bctype="1" nstripes="1">
+          <stripe value="0.0" regularization_factor="2.0" regularization_type="dynamic">
+            <startpoint>40</startpoint>
+            <endpoint>60</endpoint>
+          </stripe> 
+        </boundary>
+        <boundary orientation="east" bctype="-1">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+      </heat_transport_equation>
+      <!-- -->
+      <!-- -->
+      <!-- ***************************************** -->
+      <!-- Geoelectrical Potential BCs: -->
+      <!-- ***************************************** -->
+      <geoelectrical_potential_equation recycle_matrix_hierarchy="yes">
+        <boundary orientation="west" bctype="1" nstripes="1">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe> 
+        </boundary>
+        <boundary orientation="east" bctype="1" nstripes="1">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0" nstripes="1">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0" nstripes="1">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+      </geoelectrical_potential_equation>
+      <!-- -->
+      <!-- -->
+      <!-- ***************************************** -->
+      <!-- Pumping Data: point source(pumping data) and well data -->
+      <!-- ***************************************** -->
+      <pumping_data total="0" datafile="">
+        <!-- Pumping data must have this format, one line per location (x,y,z): -->
+        <!-- x   y         pumping rate   temperature temperature injection time concentration   concentration injection time(sec) (seperated by blank or tab) -->
+        4.0   5.00    0.00050    1   7200    0.5 7200
+        2.0   5.40    0.00250    1   7200    0.5 7200
+      </pumping_data>
+      <!-- Take care: In the 2-D well model, the y-axis represents the vertical z-axis.-->
+      <well_data total="4" datafile="">
+        <!-- Well data format: setup #2 -->
+        <!-- x          = position of the well along the x-axis -->
+        <!-- zTop       = (upper) z-coordinate at which the notches of the well start -->
+        <!-- zBottom    = (lower) z-coordinate at the location of the well-bottom -->
+        <!-- k_well     = choose a very high conductivity inside the well, e.g. 10.0 -->
+        <!-- flow_rate  = negative for pumping or positive for injection -->
+        <!-- temperature= temperature difference for injection (will not be used for extraction wells) -->
+        <!-- One line per well: -->
+        <!-- x   zTop     zBottom   k_well    flow_rate    T     t_inject   c     injection_time -->
+        37.5       25.01     25.0      10.0        6e-4     0.0   100.0    0.0  100.0
+        32.5       25.01     25.0      10.0        2e-4     1.0   100.0    1.0  100.0
+        17.5       25.01     25.0      10.0       -4e-4     0.0   100      0.0  100
+        12.5       25.01     25.0      10.0       -8e-4     0.0   100      0.0  100
+      </well_data>
+      <!-- -->   
+      <!-- --> 
+      <!-- ******************* -->
+      <!-- lnK data            -->
+      <!-- ******************* -->
+      <lnk_inversion_data>
+        <!-- Direct measurements of hydraulic conductivity K: -->
+        <lnk_measurements total="4" datafile="">
+          <!-- This data (one line per location) must have exactly the following format: -->
+          <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+          2.0    2.0    0.0   0.05    0.0 
+          2.0    8.0    0.0   0.05    0.0 
+          8.0    2.0    0.0   0.05    0.0
+          8.0    8.0    0.0   0.05    0.0
+        </lnk_measurements> 
+      </lnk_inversion_data>
+      <!-- -->
+      <!-- -->
+      <!-- ******************* -->
+      <!-- hydraulic head data -->
+      <!-- ******************* -->
+      <head_inversion_data regularization_factor="1e-6" regularization_type="dynamic">
+        <!-- Measurement of hydraulic head -->
+        <head_measurements total="16" datafile="">
+          <!-- (one line per location) must have exactly the following format: -->
+          <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+          20.5      20.5           0.005   0.0   0
+          23.5      20.5           0.005   0.0   0
+          26.5      20.5           0.005   0.0   0
+          29.5      20.5           0.005   0.0   0
+          20.5       23.5           0.005   0.0   0
+          23.5       23.5           0.005   0.0   0
+          26.5       23.5           0.005   0.0   0
+          29.5       23.5           0.005   0.0   0
+          20.5      26.5           0.005   0.0   0
+          23.5      26.5           0.005   0.0   0
+          26.5      26.5           0.005   0.0   0
+          29.5      26.5           0.005   0.0   0
+          20.5       29.5           0.005   0.0   0
+          23.5       29.5           0.005   0.0   0
+          26.5       29.5           0.005   0.0   0
+          29.5       29.5           0.005   0.0   0
+        </head_measurements>
+      </head_inversion_data>
+      <!-- -->
+      <!-- -->
+      <!-- ******************************************** -->
+      <!-- measurements of solute concentration         -->
+      <!-- ******************************************** -->
+      <solute_concentration_inversion_data regularization_factor="1e-6" regularization_type="dynamic">
+        <!-- ******************************************** -->
+        <!-- m0 = zeroth temporal moment of concentration -->
+        <!-- ******************************************** -->
+        <m0_inversion_data sampling_volume="0.1 0.230" SV_max="0.0 0.0" SV_step="1.0 0.4" SV_limit="10.0">
+          <m0_measurements total="16" datafile="">
+            <!-- (one line per location) must have exactly the following format: --> 
+            <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+          20.5      20.5           5.001    0.025   0
+          23.5      20.5           5.001    0.025   0
+          26.5      20.5           5.001    0.025   0
+          29.5      20.5           5.001    0.025   0
+          20.5       23.5           5.001   0.025   0
+          23.5       23.5           5.001   0.025   0
+          26.5       23.5           5.001   0.025   0
+          29.5       23.5           5.001   0.025   0
+          20.5      26.5           5.001    0.025   0
+          23.5      26.5           5.001    0.025   0
+          26.5      26.5           5.001    0.025   0
+          29.5      26.5           5.001    0.025   0
+          20.5       29.5           5.001   0.025   0
+          23.5       29.5           5.001   0.025   0
+          26.5       29.5           5.001   0.025   0
+          29.5       29.5           5.001   0.025   0
+          </m0_measurements>
+        </m0_inversion_data>
+        <!-- -->
+        <!-- -->
+        <!-- ******************************************** -->
+        <!-- m1 = first temporal moment of concentration -->
+        <!-- ******************************************** -->
+        <m1_inversion_data sampling_volume="0.01 2.10">
+          <m1_measurements total="16" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+            20.5      20.5           2.5e5    0.025   0
+            23.5      20.5           2.5e5    0.025   0
+            26.5      20.5           2.5e5    0.025   0
+            29.5      20.5           2.5e5    0.025   0
+            20.5       23.5           2.5e5   0.025   0
+            23.5       23.5           2.5e5   0.025   0
+            26.5       23.5           2.5e5   0.025   0
+            29.5       23.5           2.5e5   0.025   0
+            20.5      26.5           2.5e5    0.025   0
+            23.5      26.5           2.5e5    0.025   0
+            26.5      26.5           2.5e5    0.025   0
+            29.5      26.5           2.5e5    0.025   0
+            20.5       29.5           2.5e5   0.025   0
+            23.5       29.5           2.5e5   0.025   0
+            26.5       29.5           2.5e5   0.025   0
+            29.5       29.5           2.5e5   0.025   0
+          </m1_measurements>
+        </m1_inversion_data>
+        <!-- -->
+        <!-- -->
+      </solute_concentration_inversion_data>
+      <!-- -->
+      <!-- -->
+      <!-- ***************** -->
+      <!-- temperature  data -->
+      <!-- ******************* -->
+      <heat_inversion_data regularization_factor="1" regularization_type="dynamic"> 
+        <m0_measurements total="16" datafile="">
+          <!-- (one line per location) must have exactly the following format: -->
+          <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+            18.0    5.0    0.01   0.2   0
+            8.0    3.0     0.01   0.2   0
+            8.0    5.0     0.01   0.2   0
+            8.0    7.0     0.01   0.2   0
+            10.0    3.0    0.01   0.2   0
+            10.0    5.0    0.01   0.2   0
+            10.0    7.0    0.01   0.2   0
+            12.0    3.0    0.01   0.2   0
+            12.0    5.0    0.01   0.2   0
+            12.0    7.0    0.01   0.2   0
+           14.0    3.0     0.01   0.2   0
+           14.0    5.0     0.01   0.2   0
+           14.0    7.0     0.01   0.2   0
+            16.0    3.0    0.01   0.2   0
+            16.0    5.0    0.01   0.2   0
+            16.0    7.0    0.01   0.2   0
+        </m0_measurements>
+        <m1_measurements total="16" datafile="">
+          <!-- (one line per location) must have exactly the following format: -->
+          <!-- x, y, abs_error, rel_error, value (seperated by blank or tab) -->
+          <!-- error of m1 will be used for m1/m0 -->
+            18.0    5.0    0.01   0.2   0
+            8.0    3.0     0.01   0.2   0
+            8.0    5.0     0.01   0.2   0
+            8.0    7.0     0.01   0.2   0
+            10.0    3.0    0.01   0.2   0
+            10.0    5.0    0.01   0.2   0
+            10.0    7.0    0.01   0.2   0
+            12.0    3.0    0.01   0.2   0
+            12.0    5.0    0.01   0.2   0
+            12.0    7.0    0.01   0.2   0
+           14.0    3.0     0.01   0.2   0
+           14.0    5.0     0.01   0.2   0
+           14.0    7.0     0.01   0.2   0
+            16.0    3.0    0.01   0.2   0
+            16.0    5.0    0.01   0.2   0
+            16.0    7.0    0.01   0.2   0
+        </m1_measurements>
+      </heat_inversion_data> 
+      <!-- ***************** -->
+      <!-- geoelectrical potential data -->
+      <!-- ******************* -->
+      <geoelectrical_potential_data total_configs="1" kappa_hdf5_file="" sigma0_hdf5_file=""> 
+        <!-- kappa and sigma0 as hdf5 file not yet implemented! --> 
+        <!-- --> 
+        <!-- --> 
+        <!-- configuration 1 --> 
+        <geoelectrical_potential_configuration>
+          <!-- --> 
+          <!-- --> 
+          <inout_location total="1" datafile="">
+            <!-- in out dipole injection. Must have this structure! -->
+            <!-- x   y    z (for injection location) and x  y  z (for extraction location)     value  (value for the extraction)-->
+            5    1  5  9   1
+          </inout_location>
+          <m0_measurements total="3" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, x2, y2, abs_error, rel_error, value (seperated by blank or tab) -->
+            4.0    4.0    4.0    6.0    2.0   0.10    1
+            5.0    4.0    5.0    6.0    2.0   0.10    1
+            6.0    4.0    6.0    6.0    2.0   0.10    1
+          </m0_measurements>
+          <m1_measurements total="3" datafile="">
+            <!-- (one line per location) must have exactly the following format: -->
+            <!-- x, y, x2, y2, abs_error, rel_error, value (seperated by blank or tab) -->
+            <!-- error of m1 will be used for m1/m0 -->
+            4.0    4.0    4.0    6.0    2.0   0.10    1
+            5.0    4.0    5.0    6.0    2.0   0.10    1
+            6.0    4.0    6.0    6.0    2.0   0.10    1
+          </m1_measurements>
+        </geoelectrical_potential_configuration>
+        <!-- --> 
+        <!-- --> 
+      </geoelectrical_potential_data>
+      <!-- -->
+      <!-- -->
+    </Setup>
+    <!-- -->
+    <!-- ***************************************** -->
+    <!-- Setup #3:-->
+    <!-- ***************************************** -->
+    <Setup>
+      <!-- ***************************************** -->
+      <!-- Groundwater Flow BCs: -->
+      <!-- ***************************************** -->
+      <flow_equation recycle_matrix_hierarchy="yes">
+        <boundary orientation="west" bctype="1" nstripes="1">
+          <stripe value="100">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe> 
+        </boundary> 
+        <boundary orientation="east" bctype="1">
+          <stripe value="99.88" >
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+      </flow_equation>
+      <!-- ***************************************** -->
+      <!-- Concentration BCs: -->
+      <!-- ***************************************** -->
+      <transport_equation recycle_matrix_hierarchy="no" injection_time="100">
+        <boundary orientation="west" bctype="1" nstripes="1">
+          <stripe value="0.0" regularization_factor="1.0" regularization_type="dynamic">
+            <startpoint>20</startpoint>
+            <endpoint>30</endpoint>
+          </stripe> 
+        </boundary>
+        <boundary orientation="east" bctype="-1">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+      </transport_equation>
+      <!-- ***************************************** -->
+      <!-- Heat BCs: -->
+      <!-- ***************************************** -->
+      <heat_transport_equation recycle_matrix_hierarchy="no" injection_time="3600">
+        <boundary orientation="west" bctype="1" nstripes="1">
+          <stripe value="0.0" regularization_factor="2.0" regularization_type="dynamic">
+            <startpoint>40</startpoint>
+            <endpoint>60</endpoint>
+          </stripe> 
+        </boundary>
+        <boundary orientation="east" bctype="-1">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+      </heat_transport_equation>
+      <!-- -->
+      <!-- -->
+      <!-- ***************************************** -->
+      <!-- Geoelectrical Potential BCs: -->
+      <!-- ***************************************** -->
+      <geoelectrical_potential_equation recycle_matrix_hierarchy="yes">
+        <boundary orientation="west" bctype="1" nstripes="1">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe> 
+        </boundary>
+        <boundary orientation="east" bctype="1" nstripes="1">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="south" bctype="0" nstripes="1">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+        <boundary orientation="north" bctype="0" nstripes="1">
+          <stripe value="0.0">
+            <startpoint>0.0</startpoint>
+            <endpoint>100.0</endpoint>
+          </stripe>
+        </boundary>
+      </geoelectrical_potential_equation>
+      <!-- -->
+      <!-- -->
+      <!-- ***************************************** -->
+      <!-- Pumping Data: point source(pumping data) and well data -->
+      <!-- ***************************************** -->
+      <pumping_data total="0" datafile="">
+        <!-- Pumping data must have this format, one line per location (x,y,z): -->
+        <!-- x   y         pumping rate   temperature temperature injection time concentration   concentration injection time(sec) (seperated by blank or tab) -->
+        4.0   5.00    0.00050    1   7200    0.5 7200
+        2.0   5.40    0.00250    1   7200    0.5 7200
+      </pumping_data>
+      <!-- Take care: In the 2-D well model, the y-axis represents the vertical z-axis.-->
+      <well_data total="4" datafile="">
+        <!-- Well data format: setup #3 -->
+        <!-- x          = position of the well along the x-axis -->
+        <!-- zTop       = (upper) z-coordinate at which the notches of the well start -->
+        <!-- zBottom    = (lower) z-coordinate at the location of the well-bottom -->
+        <!-- k_well     = choose a very high conductivity inside the well, e.g. 10.0 -->
+        <!-- flow_rate  = negative for pumping or positive for injection -->
+        <!-- temperature= temperature difference for injection (will not be used for extraction wells) -->
+        <!-- One line per well: -->
+        <!-- x   zTop     zBottom   k_well    flow_rate    T     t_inject   c     injection_time -->
+        25.01       37.5     37.4      10.0        2e-3     0.0   100.0    0.0  100.0
+        25.01       32.5     32.4      10.0        1e-3     1.0   100.0    1.0  100.0
+        25.01       17.5     17.4      10.0       -1e-3     0.0   100      0.0  100
+        25.01       12.5     12.4      10.0       -2e-3     0.0   100      0.0  100
       </well_data>
       <!-- -->   
       <!-- --> 
