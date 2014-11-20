@@ -641,12 +641,15 @@ namespace Dune {
             instream >> value;
 
 
-            REAL stochasticDisturbance = inputdata.inversion_parameters.disturbance * distr(gen);
+            
+            REAL stochasticDisturbance = inputdata.inversion_parameters.disturbance;
+            if( stochasticDisturbance > 1E-12 )
+              stochasticDisturbance * distr(gen);
 
             switch( type ){
             case 1:
               {
-                value += 0.05 * stochasticDisturbance * distr(gen); // Allow maximally 1% disturbance for head measurement (100.0 - 99.90)x0.01
+                value += 0.05 * stochasticDisturbance; // Allow maximally 1% disturbance for head measurement (100.0 - 99.90)x0.01
                 head_meas[iSetup][iLine].value = value;
                 break;
               }
