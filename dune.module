@@ -8,9 +8,9 @@ Version: 1.0.1
 Maintainer: adrian.ngo@iwr.uni-heidelberg.de
 #depending on
 #
-Depends: dune-common dune-istl dune-geometry dune-grid dune-localfunctions dune-typetree dune-pdelab
+Depends: dune-common (>= 2.3.1) dune-istl (>= 2.3.1) dune-geometry (>= 2.3.1) dune-grid (>= 2.3.1) dune-localfunctions (>= 2.3.1) dune-typetree (>= 2.3.1) dune-pdelab (>= 2.0.0)
 #
-Suggests: dune-alugrid
+Suggests: dune-alugrid (>= 2.3)
 # dune-alugrid is required only for the 3D adaptive forward transport equation solver with load-balancing.
 # It is not needed by the inversion scheme that runs only on YASP grid.
 #
