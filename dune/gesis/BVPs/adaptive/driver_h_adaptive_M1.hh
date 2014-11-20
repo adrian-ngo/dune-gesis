@@ -16,6 +16,7 @@
 //#include "../integrateFunction.hh"
 //#include "../sortedplot.hh"
 
+#include <dune/gesis/BVPs/totalMass.hh>
 
 namespace Dune {
   namespace Gesis {
@@ -358,6 +359,14 @@ namespace Dune {
         }
 
 
+        UINT allDOFs = gfs_tp.globalSize();
+        allDOFs = gv_gw.comm().sum( allDOFs );
+        if( gv_gw.comm().rank()==0 ){
+          std::cout << "Step " << step
+                    << " All m0 DOFs = " << allDOFs
+                    << std::endl;
+        }
+
         typedef TransportEquation
           < GFS_TP
             , DARCY_FLUX_DGF
@@ -421,27 +430,18 @@ namespace Dune {
         tpe_m0.solve_adjoint( measure_location, vc_m0 );
 #endif
 
-        if( gv_gw.comm().rank()==0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY )
-          std::cout << tpe_m0.show_ls_result() << std::endl;
 
+        if( gv_gw.comm().rank()==0 ){
+          std::cout << tpe_m0.show_ls_result()
+                    << std::endl;
+        }
         REAL u_minimum = 1e100;
         REAL u_maximum = -1e100;
+        std::cout << std::setprecision(2) << std::fixed;
         General::logMinAndMax( vc_m0, gv_gw.comm(), u_minimum, u_maximum );
         minima.push_back( u_minimum );
         maxima.push_back( u_maximum );
 
-        UINT allDOFs = gfs_tp.globalSize();
-        allDOFs = gv_gw.comm().sum( allDOFs );
-
-        if( gv_gw.comm().rank()==0 ){
-          std::cout << "Step " << step
-                    << " All DOFs = " << allDOFs
-                    << " minimum = " << u_minimum
-                    << " maximum = " << u_maximum
-                    << std::endl;
-          std::cout << tpe_m0.show_ls_result()
-                    << std::endl;
-        }
 
         //std::vector<REAL> std_vc_m0;
         //General::copy_to_std( vc_m0, std_vc_m0 );
@@ -460,6 +460,19 @@ namespace Dune {
 
         }
 
+
+        REAL m0dg_negMass(0), m0dg_posMass(0), m0dg_totMass(0);
+        GridFunctionTools::totalMass( gfs_tp, vc_m0, m0dg_negMass, m0dg_posMass, m0dg_totMass );
+        if( helper.rank() == 0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
+          std::cout << "pos./neg. mass (m0) = " 
+                    << std::fixed << std::setprecision(5)
+                    << m0dg_posMass << " " << m0dg_negMass  << std::endl;
+          std::cout << "total mass (m0) = " 
+                    << std::fixed << std::setprecision(5)
+                    << m0dg_totMass << std::endl;
+        }
+
+
         //Take the measurements!
         if( helper.rank()==0 && inputdata.verbosity>=VERBOSITY_INVERSION )
           std::cout << "Take new measurements of m0." << std::endl;
@@ -468,8 +481,8 @@ namespace Dune {
         std::stringstream bufferfile_M0_measurements;
         bufferfile_M0_measurements << dir.bufferdimdir 
                                    << "/m0_orig.meas"
-                                   << ".step" << step
                                    << ".iSetup" << iSetup 
+                                   << ".step" << step
                                    << ".rank" << helper.rank();
 
         orig_measurements.store_measurements( 2, iSetup, bufferfile_M0_measurements.str() );
@@ -482,8 +495,8 @@ namespace Dune {
           std::stringstream datafile_per_Setup;
           datafile_per_Setup << dir.datadimdir 
                              << "/m0_orig.meas"
-                             << ".step" << step
-                             << ".iSetup" << iSetup;
+                             << ".iSetup" << iSetup
+                             << ".step" << step;
           if( inputdata.problem_types.generate_measurement_data ){
             General::systemCall( "cp -v " + bufferfile_M0_measurements.str() + " " + datafile_per_Setup.str() );
           }
@@ -509,8 +522,6 @@ namespace Dune {
           std::cout << "Write to " << gnuplot_datfile.str() << std::endl;
         */
 
-        if( tpe_m0.isAcceptableUpDown( vc_m0, 100.0, 0.0, inputdata.transport_parameters.tolerance ) )
-          break;
 
 
         P0GFS p0gfs( gv_tp, p0fem );
@@ -529,6 +540,12 @@ namespace Dune {
 
         typedef TransportProblemM1<GV_TP,REAL,DARCY_FLUX_DGF,IDT,SDT> TPM1;
         TPM1 tpm1(darcyflux_dgf,inputdata,setupdata);
+
+        if( gv_gw.comm().rank()==0  && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
+          std::cout << "Step " << step
+                    << " All m1 DOFs = " << allDOFs
+                    << std::endl;
+        }
 
         typedef TransportEquation<GFS_TP,DARCY_FLUX_DGF,FunctionSourceType,TPM1,IDT,SDT> TPE_M1_M0;
 
@@ -561,21 +578,18 @@ namespace Dune {
         tpe_m1_m0.solve_forward( vc_m1_m0 );
 
 
+        if( gv_gw.comm().rank()==0  && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
+          std::cout << tpe_m1_m0.show_ls_result()
+                    << std::endl;
+        }
         REAL v_minimum = 1e100;
         REAL v_maximum = -1e100;
+        std::cout << std::setprecision(2) << std::scientific;
         General::logMinAndMax( vc_m1_m0, gv_gw.comm(), v_minimum, v_maximum );
         vminima.push_back( v_minimum );
         vmaxima.push_back( v_maximum );
 
-        if( gv_gw.comm().rank()==0  && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
-          std::cout << "Step " << step
-                    << " All DOFs = " << allDOFs
-                    << " minimum = " << v_minimum
-                    << " maximum = " << v_maximum
-                    << std::endl;
-          std::cout << tpe_m1_m0.show_ls_result()
-                    << std::endl;
-        }
+
 
 
 
@@ -591,6 +605,17 @@ namespace Dune {
                                std::max(0,pMAX-1)  );
         }
 
+        REAL m1dg_negMass(0), m1dg_posMass(0), m1dg_totMass(0);
+        GridFunctionTools::totalMass( gfs_tp, vc_m1_m0, m1dg_negMass, m1dg_posMass, m1dg_totMass );
+        if( helper.rank() == 0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
+          std::cout << "pos./neg. mass (m1) = " 
+                    << std::scientific << std::setprecision(5)
+                    << m1dg_posMass << " " << m1dg_negMass  << std::endl;
+          std::cout << "total mass (m1) = " 
+                    << std::scientific << std::setprecision(5)
+                    << m1dg_totMass << std::endl;
+        }
+
         //Take the measurements!
         if( helper.rank()==0 && inputdata.verbosity>=VERBOSITY_INVERSION )
           std::cout << "Take new measurements of m1." << std::endl;
@@ -601,8 +626,8 @@ namespace Dune {
         std::stringstream bufferfile_M1_measurements;
         bufferfile_M1_measurements << dir.bufferdimdir 
                                    << "/m1_orig.meas"
-                                   << ".step" << step
                                    << ".iSetup" << iSetup 
+                                   << ".step" << step
                                    << ".rank" << helper.rank();
 
         if( helper.rank() == 0 )
@@ -620,8 +645,8 @@ namespace Dune {
           std::stringstream datafile_per_Setup;
           datafile_per_Setup << dir.datadimdir 
                              << "/m1_orig.meas"
-                             << ".step" << step
-                             << ".iSetup" << iSetup;
+                             << ".iSetup" << iSetup
+                             << ".step" << step;
           if( inputdata.problem_types.generate_measurement_data ){
             General::systemCall( "cp -v " + bufferfile_M1_measurements.str() + " " + datafile_per_Setup.str() );
           }
@@ -742,9 +767,12 @@ namespace Dune {
 
         ee.push_back(estimated_error);
 
+        std::cout << std::setprecision(2) << std::scientific << std::endl;
         std::cout << ">>> Estimated Error = " 
                   << estimated_error
+                  << std::endl
                   << std::endl;
+
 
         if(true){
       
@@ -772,6 +800,11 @@ namespace Dune {
         }
 
 #endif // Compute_Error_Estimate
+
+
+        if( tpe_m0.isAcceptableUpDown( vc_m0, 100.0, 0.0, inputdata.transport_parameters.tolerance ) )
+          break; // Exit the adaptation loop when tolerance level is reached.
+
 
         // Prepare for adaptation...
         /*
@@ -927,7 +960,7 @@ namespace Dune {
 
         }
         else {
-          std::cout << "max. steps or max. DOFs reached at step " << maxsteps 
+          std::cout << "STOP: max. steps or max. DOFs reached at step " << maxsteps 
                     << " with #dofs = " <<  gfs_tp.globalSize() << std::endl; 
           break;
         }
@@ -1149,10 +1182,10 @@ namespace Dune {
                 << "     min" 
                 << "     max" 
 
-                << "        l2" 
-                << "    l2rate" 
-                << "   eff(l2)"
+                << "   est.err" 
+                << "      rate" 
         /*
+                << "   eff(l2)"
           << "    h1semi" 
           << "  h1s-rate"
           << "   eff(h1)"
@@ -1160,11 +1193,15 @@ namespace Dune {
           << " error(dg)" 
           << "  rate(dg)" 
           << "   eff(dg)"
-        */
                 << " estimator"
+        */
                 << std::endl;
       for(std::size_t i=0; i<Ndofs.size(); i++) {
     
+        REAL l2_error_rate=0.0;
+        if (i>0)
+          l2_error_rate = log( ee[i]/ee[i-1] ) / log(0.5); 
+
 #ifdef STORE_SOLUTION_HIERARCHY
         REAL rate1=0.0;
         if (i>0)
@@ -1192,9 +1229,7 @@ namespace Dune {
 #ifdef STORE_SOLUTION_HIERARCHY
                   << std::setw(10) << std::setprecision(2) << std::scientific << l2e_hierarchy[i]
                   << std::setw(10) << std::setprecision(2) << std::scientific << rate1
-                  << std::setw(10) << std::setprecision(2) << std::scientific << ee[i]/(l2e_hierarchy[i])
 #endif
-
           /*
             << std::setw(10) << std::setprecision(2) << std::scientific << h1s[i]
             << std::setw(10) << std::setprecision(2) << std::scientific << rate2
@@ -1205,6 +1240,7 @@ namespace Dune {
             << std::setw(10) << std::setprecision(2) << std::scientific << ee[i]/(dge[i])
           */
                   << std::setw(10) << std::setprecision(2) << std::scientific << ee[i]
+                  << std::setw(10) << std::setprecision(2) << std::scientific << l2_error_rate
                   << std::endl;
       }
 

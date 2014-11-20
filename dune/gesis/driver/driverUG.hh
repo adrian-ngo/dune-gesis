@@ -34,7 +34,6 @@
 #include <dune/gesis/BVPs/adaptive/driver_h_adaptive_M1.hh>
 #endif
 
-#include <dune/gesis/BVPs/totalMass.hh>
 
 
 extern CLogfile logger;

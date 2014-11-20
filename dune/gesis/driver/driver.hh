@@ -1062,10 +1062,10 @@ namespace Dune {
               REAL m0dg_negMass(0), m0dg_posMass(0), m0dg_totMass(0);
               GridFunctionTools::totalMass( gfs_tp, vcM0_orig, m0dg_negMass, m0dg_posMass, m0dg_totMass );
               if( helper.rank() == 0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
-                std::cout << "pos./neg. mass (orig) = " 
+                std::cout << "pos./neg. mass (m0) = " 
                           << std::fixed << std::setprecision(5)
                           << m0dg_posMass << " " << m0dg_negMass  << std::endl;
-                std::cout << "tot. mass (orig) = " 
+                std::cout << "total mass (m0) = " 
                           << std::fixed << std::setprecision(5)
                           << m0dg_totMass << std::endl;
               }
@@ -1073,10 +1073,10 @@ namespace Dune {
               REAL m0cg_negMass(0), m0cg_posMass(0), m0cg_totMass(0);
               GridFunctionTools::totalMass( gfs_cg, vcM0_cg, m0cg_negMass, m0cg_posMass, m0cg_totMass );
               if( helper.rank() == 0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
-                std::cout << "pos./neg. mass (L2) = " 
+                std::cout << "pos./neg. mass (m0-L2) = " 
                           << std::fixed << std::setprecision(5)
                           << m0cg_posMass << " " << m0cg_negMass << std::endl;
-                std::cout << "tot. mass (L2) = " 
+                std::cout << "total mass (m0-L2) = " 
                           << std::fixed << std::setprecision(5) 
                           << m0cg_totMass << std::endl;
               }
@@ -1200,6 +1200,27 @@ namespace Dune {
                                        std::max(0,pMAX-1) );
                 }
 
+                REAL m1dg_negMass(0), m1dg_posMass(0), m1dg_totMass(0);
+                GridFunctionTools::totalMass( gfs_tp, vcM1_orig, m1dg_negMass, m1dg_posMass, m1dg_totMass );
+                if( helper.rank() == 0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
+                  std::cout << "pos./neg. mass (m1) = " 
+                            << std::scientific << std::setprecision(5)
+                            << m1dg_posMass << " " << m1dg_negMass  << std::endl;
+                  std::cout << "total mass (m1) = " 
+                            << std::scientific << std::setprecision(5)
+                            << m1dg_totMass << std::endl;
+                }
+
+                REAL m1cg_negMass(0), m1cg_posMass(0), m1cg_totMass(0);
+                GridFunctionTools::totalMass( gfs_cg, vcM1_cg, m1cg_negMass, m1cg_posMass, m1cg_totMass );
+                if( helper.rank() == 0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
+                  std::cout << "pos./neg. mass (m1-L2) = " 
+                            << std::scientific << std::setprecision(5)
+                            << m1cg_posMass << " " << m1cg_negMass << std::endl;
+                  std::cout << "total mass (m1-L2) = " 
+                            << std::scientific << std::setprecision(5) 
+                            << m1cg_totMass << std::endl;
+                }
 
                 //Take the measurements!
                 if( helper.rank()==0 && inputdata.verbosity>=VERBOSITY_INVERSION )
