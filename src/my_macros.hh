@@ -9,6 +9,7 @@
 //
 // debug flags:
 // CXXFLAGS='-g3 -O0 -Wall -Wno-vla -pedantic -UNDEBUG'
+// CXXFLAGS='-g3 -O0 -UNDEBUG'
 //
 // ************************************************
 // The macro pMAX is very important. 
