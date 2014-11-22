@@ -13,7 +13,7 @@
 
 #include <dune/gesis/BVPs/DG/RT0flux.hh>
 #include <dune/gesis/BVPs/DarcyVelocityCache.hh>
-#include <dune/gesis/common/my_gfs_utilities.hh>
+#include <dune/gesis/common/gfs_utilities.hh>
 #include <dune/gesis/BVPs/GroundWaterParameters.hh>
 #include <dune/gesis/BVPs/GeoElectricalPotentialParameters.hh>
 
