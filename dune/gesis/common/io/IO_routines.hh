@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   IO_routines.hh
  * Author: ngo
  *
@@ -17,4 +17,3 @@
 #include <dune/gesis/common/io/ALUTools.hh>
 
 #endif	/* DUNE_GESIS_IO_ROUTINES_HH */
-

@@ -2,17 +2,17 @@
 #define LinePlot_HH
 
 /*
-#include "lineplot.hh"
+  #include "lineplot.hh"
 
-...
-      std::stringstream gnuplot_datfile;
-      gnuplot_datfile << "testplot_" << step << ".dat";
+  ...
+  std::stringstream gnuplot_datfile;
+  gnuplot_datfile << "testplot_" << step << ".dat";
 
-      LinePlot<GV> lplot(gv);
-      lplot.setEndPoints( std::vector<REAL>{0,1},
-                          std::vector<REAL>{1,0} );
-      lplot.addDGData( udgf );
-      lplot.write(gnuplot_datfile.str());
+  LinePlot<GV> lplot(gv);
+  lplot.setEndPoints( std::vector<REAL>{0,1},
+  std::vector<REAL>{1,0} );
+  lplot.addDGData( udgf );
+  lplot.write(gnuplot_datfile.str());
 
 */
 
@@ -26,7 +26,7 @@ public:
   typedef typename GV::Traits::template Codim<0>::template Partition<Dune::All_Partition>::Iterator ElementIterator;
   typedef typename GV::Traits::template Codim<0>::Entity Element;
 
-  private:
+private:
   const GV& gv;
   COORD startpoint;
   COORD endpoint;
@@ -38,7 +38,7 @@ public:
     gv(gv_)
   {
   }
-  
+
   void setEndPoints( const std::vector<REAL>& startpoint_,
                      const std::vector<REAL>& endpoint_ ) {
     for(int i=0; i<dim; ++i ){
@@ -48,7 +48,7 @@ public:
 
     COORD tmp(startpoint);
     tmp -= endpoint;
-    
+
     contents << "# StartPoint = " << startpoint << std::endl;
     contents << "# EndPoint = " << endpoint << std::endl;
     contents << "# Length = " << tmp.two_norm() << std::endl;
@@ -80,7 +80,7 @@ public:
     //logger << "DEBUG: addDGData: startpoint - endpoint = " << tmp << std::endl;
 
     contents << "# " << function_name << std::endl;
-    // Iterate over the grid elements and evaluate the gridfunction along the 
+    // Iterate over the grid elements and evaluate the gridfunction along the
     // line between startpoint and endpoint.
 
     std::vector<REAL> datavector;
@@ -97,7 +97,7 @@ public:
       //logger << "DEBUG: addDGData: elementcenter = " << elementcenter << std::endl;
       //logger << "DEBUG: addDGData: startpoint - elementcenter = " << loc << std::endl;
 
-      if( std::abs( tmp[0]/loc[0] - tmp[1]/loc[1] ) < 1e-12 
+      if( std::abs( tmp[0]/loc[0] - tmp[1]/loc[1] ) < 1e-12
 #ifdef DIMENSION3
           &
           std::abs( tmp[0]/loc[0] - tmp[2]/loc[2] ) < 1e-12
@@ -112,28 +112,28 @@ public:
 
           COORD eck(startpoint);
 
-          Dune::FieldVector<REAL,dim> elementcorner 
+          Dune::FieldVector<REAL,dim> elementcorner
             = eit->geometry().corner( iElementCorner );
 
-          Dune::FieldVector<REAL,dim> elementcornerLocal 
+          Dune::FieldVector<REAL,dim> elementcornerLocal
             = eit->geometry().local( elementcorner );
 
           eck -= elementcorner;
 
           bool bAddToPlot = false;
-          
-          if( std::abs(elementcorner[0]) < 1e-12 
+
+          if( std::abs(elementcorner[0]) < 1e-12
               && std::abs( elementcorner[1] - 1.0 ) < 1e-12 ){
             bAddToPlot = true;
-          } 
-          else if( std::abs(elementcorner[1]) < 1e-12 
+          }
+          else if( std::abs(elementcorner[1]) < 1e-12
                    && std::abs( elementcorner[0] - 1.0 ) < 1e-12 ) {
             bAddToPlot = true;
           }
-          else if ( std::abs( tmp[0]/eck[0] - tmp[1]/eck[1] ) < 1e-12 
+          else if ( std::abs( tmp[0]/eck[0] - tmp[1]/eck[1] ) < 1e-12
 #ifdef DIMENSION3
                     &
-                    std::abs( tmp[0]/eck[0] - tmp[2]/eck[2] ) < 1e-12 
+                    std::abs( tmp[0]/eck[0] - tmp[2]/eck[2] ) < 1e-12
 #endif
                     ) {
             bAddToPlot = true;
@@ -143,11 +143,11 @@ public:
             contents << "# DEBUG elementcorner = " << elementcorner << std::endl;
             Dune::FieldVector<REAL,1> fval;
             dgf.evaluate( *eit, elementcornerLocal, fval );
-            contents << eck.two_norm() - 0.5*length << " " 
+            contents << eck.two_norm() - 0.5*length << " "
                      << fval[0]
                      << std::endl;
           }
-          
+
         }
 
         contents << std::endl;

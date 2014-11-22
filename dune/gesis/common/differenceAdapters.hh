@@ -64,7 +64,7 @@ namespace Dune {
                                                1,Dune::FieldVector<typename T1::Traits::RangeFieldType,1> > Traits;
 
       //! constructor
-      DifferenceAdapter (const T1& t1_, 
+      DifferenceAdapter (const T1& t1_,
                          const T2& t2_,
                          const double neglectRadius_=1E-12
                          ) : t1(t1_), t2(t2_), neglectRadius(neglectRadius_) {}
@@ -126,7 +126,7 @@ namespace Dune {
                                                1,Dune::FieldVector<typename T1::Traits::RangeFieldType,1> > Traits;
 
       //! constructor
-      DifferenceSquaredAdapter( const T1& t1_, 
+      DifferenceSquaredAdapter( const T1& t1_,
                                 const T2& t2_,
                                 const double neglectRadius_=1E-12
                                 ) : t1(t1_),
@@ -143,7 +143,7 @@ namespace Dune {
           y = 0;
           return;
         }
-    
+
         typename T1::Traits::RangeType y1;
         t1.evaluate(e,x,y1);
         typename T2::Traits::RangeType y2;
@@ -168,4 +168,3 @@ namespace Dune {
 } // Dune
 
 #endif // DUNE_GESIS_DIFFERENCE_ADAPTERS_HH
-

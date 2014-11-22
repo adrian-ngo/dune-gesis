@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   ALUTools.hh
  * Author: ngo
  *
@@ -48,10 +48,10 @@ namespace Dune {
         }
       };
 
-      
+
       static void create_ALU_Hexahedra_Cuboid( const std::string filename,
                                                double domain_length_x,
-                                               double domain_length_y, 
+                                               double domain_length_y,
                                                double domain_length_z ){
 
 
@@ -73,12 +73,12 @@ namespace Dune {
           outfile << " 0 1 2 3 4 5 6 7 " << std::endl;
 
           outfile << "6" << std::endl;
-		  outfile << "-2 4 0 3 7 4" << std::endl; 
-		  outfile << "-3 4 1 5 6 2" << std::endl; 
-		  outfile << "-1 4 0 4 5 1" << std::endl; 
-		  outfile << "-1 4 3 2 6 7" << std::endl; 
-		  outfile << "-1 4 0 1 2 3" << std::endl; 
-		  outfile << "-1 4 5 4 7 6" << std::endl; 
+          outfile << "-2 4 0 3 7 4" << std::endl;
+          outfile << "-3 4 1 5 6 2" << std::endl;
+          outfile << "-1 4 0 4 5 1" << std::endl;
+          outfile << "-1 4 3 2 6 7" << std::endl;
+          outfile << "-1 4 0 1 2 3" << std::endl;
+          outfile << "-1 4 5 4 7 6" << std::endl;
 
           outfile.close();
         }
@@ -86,25 +86,25 @@ namespace Dune {
 
         /*
 
-1
-0  1  2  3  4  5  6  7 
+          1
+          0  1  2  3  4  5  6  7
 
-6
--2 4 0 3 7 4
--3 4 1 5 6 2
--1 4 0 4 5 1 
--1 4 3 2 6 7
--1 4 0 1 2 3 
--1 4 5 4 7 6 
+          6
+          -2 4 0 3 7 4
+          -3 4 1 5 6 2
+          -1 4 0 4 5 1
+          -1 4 3 2 6 7
+          -1 4 0 1 2 3
+          -1 4 5 4 7 6
 
-0 -1
-1 -1
-2 -1
-3 -1
-4 -1
-5 -1
-6 -1
-7 -1
+          0 -1
+          1 -1
+          2 -1
+          3 -1
+          4 -1
+          5 -1
+          6 -1
+          7 -1
         */
 
       }
@@ -126,4 +126,3 @@ namespace Dune {
 
 
 #endif	/* DUNE_GESIS_ALU_TOOLS_HH */
-

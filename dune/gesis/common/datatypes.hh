@@ -20,8 +20,8 @@ struct P0Layout
 {
   bool contains (Dune::GeometryType gt)
   {
-	if (gt.dim()==dim) return true;
-	return false;
+    if (gt.dim()==dim) return true;
+    return false;
   }
 };
 

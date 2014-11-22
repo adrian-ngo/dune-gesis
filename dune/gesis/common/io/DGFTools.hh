@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   DGFTools.hh
  * Author: ngo
  *
@@ -21,33 +21,33 @@ namespace Dune {
 
 
     /*
-      DGF - Dune Grid Format 
+      DGF - Dune Grid Format
     */
     class DGFTools{
 
     private:
       DGFTools(){};
     public:
-      
-      /* 
-         Creates a dgf (Dune Grid Format) file for initial generation of a unstructured grid 
-         over a cuboid or rectangular domain. 
-         On the one hand, a minimal number of cells given by 
-         npfactors[0] * npfactors[1] * npfactors[2] 
+
+      /*
+         Creates a dgf (Dune Grid Format) file for initial generation of a unstructured grid
+         over a cuboid or rectangular domain.
+         On the one hand, a minimal number of cells given by
+         npfactors[0] * npfactors[1] * npfactors[2]
          is needed to serve all nProcesses.
          On the other hand, the number of cells per dimension, npfactors[i],
-         must fit the number of virtual cells nCells[i], 
+         must fit the number of virtual cells nCells[i],
          i.e. npfactors[i] must be an integer multiple of nCells[i].
          Otherwise, the Y-field data would not fit into the unstructured grid smoothly!
       */
-      static void output_Domain_DGF( 
-                             const std::string& filename
-                             , const Vector<REAL>& extensions
-                             , const Vector<UINT>& nCells
-                             , const std::string& elementshape
-                             , const UINT heapSize
-                             , const UINT nProcesses
-                              )
+      static void output_Domain_DGF(
+                                    const std::string& filename
+                                    , const Vector<REAL>& extensions
+                                    , const Vector<UINT>& nCells
+                                    , const std::string& elementshape
+                                    , const UINT heapSize
+                                    , const UINT nProcesses
+                                     )
       {
 
 #ifdef DIMENSION3
@@ -73,9 +73,9 @@ namespace Dune {
             std::cout << "nAllVirtualCells = " << nAllVirtualCells  << std::endl;
             for( UINT i=0; i<dim; i++ )
               {
-                /* If npfactors is not an integer multiple of nCells, make it at least the same number! 
+                /* If npfactors is not an integer multiple of nCells, make it at least the same number!
                    This is necessary to make the unstructured grid fit into the virtual grid.
-                   This is to prevent cubes (containing two triangular grid cells) from getting 
+                   This is to prevent cubes (containing two triangular grid cells) from getting
                    two different values of the Y-field!
                 */
                 if( !General::isFactorOf(  nCells[i], npfactors[i] ) )
@@ -84,7 +84,7 @@ namespace Dune {
                   }
               }
           }
-  
+
         logger << "create DGF file for the domain" << std::endl;
         std::ofstream outfile( filename.c_str(), std::ios::out );
         if( outfile.is_open() )
@@ -94,13 +94,13 @@ namespace Dune {
 
             outfile << "Interval" << std::endl;
 
-            outfile << "0.0 0.0" 
+            outfile << "0.0 0.0"
 #ifdef DIMENSION3
                     << " 0.0"
 #endif
                     << std::endl;
 
-            outfile << extensions[ 0 ] << " " << extensions[ 1 ] 
+            outfile << extensions[ 0 ] << " " << extensions[ 1 ]
 #ifdef DIMENSION3
                     << " " << extensions[ 2 ]
 #endif
@@ -138,7 +138,7 @@ namespace Dune {
             outfile << "% set heapsize " << std::endl;
             outfile << "heapsize " << heapSize << std::endl;
             outfile << "#" << std::endl;
-	  
+
             outfile << std::endl;
             outfile << "Boundarydomain" << std::endl;
             outfile << "default 1" << std::endl;
@@ -149,7 +149,7 @@ namespace Dune {
             outfile.close();
             logger << "DGF file written to " << filename.c_str() << std::endl;
           }
-  
+
       } // static void output_Domain_DGF
 
     }; // class DGFTools
@@ -170,4 +170,3 @@ namespace Dune {
 
 
 #endif	/* DUNE_GESIS_DGF_TOOLS_HH */
-

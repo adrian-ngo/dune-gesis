@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   DenseMatrix.hh
  * Author: A. Ngo
  *
@@ -48,7 +48,7 @@ namespace Dune {
         // Korrektur 1: A(r[row],col) darf auch negativ sein. max sollte nur ungleich 0 sein!
 
         ComponentType max = std::abs(A(r[row],col));
-    
+
         int imax = row;
 
         for(int i=row+1; i<rows; ++i)
@@ -143,7 +143,7 @@ namespace Dune {
       }
 
       // Constructor:
-      DenseMatrix(const int _rows, const int _cols, const ComponentType def_val) 
+      DenseMatrix(const int _rows, const int _cols, const ComponentType def_val)
 	: data( _rows*_cols, def_val )
 	, rows(_rows)
         , cols(_cols)
@@ -153,7 +153,7 @@ namespace Dune {
 
 
       // Copy constructor:
-      DenseMatrix( const DenseMatrix& other ) 
+      DenseMatrix( const DenseMatrix& other )
         : data( other.data )
         , rows( other.rows )
         , cols( other.cols )
@@ -167,7 +167,7 @@ namespace Dune {
 
       //int   n_rows(){ return rows; }
       //int   n_cols(){ return cols; }
-  
+
       inline ComponentType & operator()(const int row, const int col)
       {
         assert(row < rows|| col < cols ||
@@ -197,7 +197,7 @@ namespace Dune {
         }
         return *this;
       }
-  
+
 
       Vector<ComponentType> operator* (const Vector<ComponentType> & x)
       {
@@ -226,7 +226,7 @@ namespace Dune {
 
         return y;
       }
-  
+
       void inverse(DenseMatrix<ComponentType> & X)
       {
         assert(cols == rows);
@@ -238,16 +238,16 @@ namespace Dune {
           Vector<ComponentType> B(rows,0.0),X_row(rows,0.0);
 
           B[ii]=1.0; // canonical basis
-        
+
           this->gauss_solver(X_row,B);
           for(int jj=0; jj<rows; jj++)
             X(jj,ii)=X_row[jj];
         }
-        
+
       }
-  
+
       void write_to_HDF5(const std::string & filename, const std::string & dataname){
-      
+
         std::vector<UINT> dimensions(2,0);
         dimensions[0]=(UINT)rows;
         dimensions[1]=(UINT)cols;
@@ -259,19 +259,19 @@ namespace Dune {
                                                 , filename
                                                 );
       }
-  
+
       template<typename IDT>
       void read_from_HDF5( const std::string & filename,
                            const std::string & dataname,
                            const IDT& inputdata
                            ){
-      
+
         data.resize(0);
         rows=0;
         cols=0;
-      
+
         Vector<UINT> local_count(2,0), local_offset(2,0);
-      
+
         HDF5Tools::
           read_sequential_from_HDF5( data
                                      , dataname
@@ -284,7 +284,7 @@ namespace Dune {
         cols=local_count[1];
       }
 
-  
+
       void row_equilibration(){
         // This function must not be called twice!
         for(int i=0;i<this->rows;++i){
@@ -375,7 +375,6 @@ namespace Dune {
 
 
   } // Gesis
-} // Dune 
+} // Dune
 
 #endif	/* DUNE_GESIS_DENSEMATRIX_HH */
-

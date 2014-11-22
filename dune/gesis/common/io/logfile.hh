@@ -48,12 +48,12 @@ public:
     std::cout << "Open logger file " << filename << std::endl;
     this->open( filename.c_str() );
   };
-  
+
   ~CLogfile(){
     std::cout << "Close logger file " << filename << std::endl;
     this->close();
   };
-  
+
 };
 
 

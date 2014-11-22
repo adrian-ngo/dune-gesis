@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Vector.hh
  * Author: A. Ngo
  *
@@ -32,7 +32,7 @@ namespace Dune {
       }
 
       //! \brief Constructor initializing Vector from an std::vector.
-      Vector( const std::vector<ComponentType>&x ) 
+      Vector( const std::vector<ComponentType>&x )
         : std::vector<ComponentType>( x ) {
       }
 
@@ -97,7 +97,7 @@ namespace Dune {
           sum += std::abs( self[i] );
         return sum;
       }
-  
+
       // Maximum norm:
       ComponentType maximum_norm() const {
         ComponentType maximum( 0 );
@@ -191,7 +191,7 @@ namespace Dune {
         return *this;
       }
 
-      Vector operator-(const Vector& b){    
+      Vector operator-(const Vector& b){
         const Vector &a = *this;
         assert( a.size() == b.size() );
         Vector c(a);
@@ -259,4 +259,3 @@ namespace Dune {
 } // Dune
 
 #endif	/* DUNE_GESIS_VECTOR_HH */
-

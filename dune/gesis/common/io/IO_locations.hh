@@ -10,7 +10,7 @@ namespace Dune {
 
       std::string outputpath;
       std::string inputfile;
-    
+
       std::string datadir;
       std::string bufferdir;
       std::string outputdir;
@@ -24,10 +24,10 @@ namespace Dune {
       std::string logdir;
       std::string vtudir;
       std::string hdf5dir;
-  
+
       std::string likelihood_file;
       std::string measurement_file;
-  
+
       std::vector<std::string> R_YY_h5file;
       std::vector<std::string> EV_h5file;
       std::vector<std::string> zonation_matrix;
@@ -37,8 +37,8 @@ namespace Dune {
 
       std::string kfield_h5file_without_wells;
 
-  
-  
+
+
       std::string unconditionalField_h5file;
       std::string kfield_properties_file;
       std::string Y_old_h5file;
@@ -49,18 +49,18 @@ namespace Dune {
       std::string Y_try_xmffile;
       std::string Y_estimated_h5file;
       std::string Y_estimated2_h5file;
-  
+
       std::string ksi_old_h5file;
       std::string beta_old_h5file;
       std::string L_prior_h5file;
-  
+
       std::vector<std::string> likelihood_cond_file;
       std::vector<std::string> measurement_cond_file;
       std::vector<std::string> Y_cond_h5file;
 
       std::vector<std::string> Y_cond_vtu;
 
-  
+
       std::string Y_est_h5file;
 
       std::vector<std::string> vchead_old_h5file;
@@ -71,44 +71,44 @@ namespace Dune {
 
       std::vector<std::string> vcM1_old_h5file;
       std::vector<std::string> vcM1_est_h5file;
-  
+
       std::vector<std::string> vchead_orig_h5file;
       std::vector<std::string> vcM0_cg_orig_h5file;
       std::vector<std::string> vcM1_cg_orig_h5file;
-  
+
       std::vector<std::string> vcheatM0_cg_orig_h5file;
       std::vector<std::string> vcheatM1_cg_orig_h5file;
       std::vector<std::string> vcheatArrival_Time_orig_h5file;
-  
+
       std::vector<std::string> vcheatM0_old_h5file;
       std::vector<std::string> vcheatM1_old_h5file;
 
       std::vector<std::vector<std::string> > vcM0phi_old_h5file;
       std::vector<std::vector<std::string> > vcM1phi_old_h5file;
-  
-      std::string logsigma0_h5file; 
+
+      std::string logsigma0_h5file;
       std::string logkappa_h5file;
       std::vector<std::vector<std::string> > vcphi0_orig_h5file;
       std::vector<std::vector<std::string> > vcM0phi_orig_h5file;
       std::vector<std::vector<std::string> > vcM1phi_orig_h5file;
       std::vector<std::vector<std::string> > vcATphi_orig_h5file;
 
-  
+
       std::vector<std::string> JQ_h5file;
       std::vector<std::string> Sensitivity_h5file;
       std::vector<std::string> iSensitivity_h5file;
       std::vector<std::string> aSensitivity_h5file;
-  
+
       std::string vtu_suffix;
       std::string Y_estimated_vtu;
-  
+
 #ifdef ESTIMATION_VARIANCE
       std::string estimation_variance_h5file;
       std::string V_est2_h5file;
       std::string estimation_variance_vtu;
       std::string cokriging_inverse_h5file;
 #endif
-  
+
 
       std::vector<std::string> vchead_estimated_vtu;
       std::vector<std::string> vcM0_estimated_vtu;
@@ -119,10 +119,10 @@ namespace Dune {
       std::vector<std::vector<std::string> > vcGPM0_estimated_vtu;
       std::vector<std::vector<std::string> > vcGPM1_estimated_vtu;
       std::vector<std::vector<std::string> > vcGPAT_estimated_vtu;
-  
 
-  
-  
+
+
+
 
       std::string Y_orig_vtu;
       std::vector<std::string> head_orig_vtu;
@@ -130,7 +130,7 @@ namespace Dune {
       std::vector<std::string> m0_orig_vtu;
       std::vector<std::string> m1_orig_vtu;
 
-    
+
       std::vector<std::string> heatM0_orig_vtu;
       std::vector<std::string> heatM1_orig_vtu;
       std::vector<std::string> heatArrival_Time_orig_vtu;
@@ -140,7 +140,7 @@ namespace Dune {
       std::vector<std::vector<std::string> > M1phi_orig_vtu;
       std::vector<std::vector<std::string> > ATphi_orig_vtu;
 
-    
+
       std::string vchead_adj_prefix;
       std::string vchead_heat_tomography_adj_prefix;
       std::string vchead_GP_adj_prefix;
@@ -175,17 +175,17 @@ namespace Dune {
 
       std::string Y_try_vtu;
 
-   
-  
+
+
       IO_Locations( const int dim,
                     const std::string _outputpath,
-                    const std::string _inputfile ) 
+                    const std::string _inputfile )
         : outputpath(_outputpath),
           inputfile(_inputfile) {
 
         std::stringstream sDim;
         sDim << dim;
-    
+
         datadir   = outputpath+"DATA";
 
 #if defined TEST_GLOBAL_REFINE
@@ -223,8 +223,8 @@ namespace Dune {
 
         likelihood_file=logdir+"/Likelihood.txt";
         measurement_file=logdir+"/measurements.txt";
-    
-    
+
+
         kfield_properties_file=yfielddir+"/yfield_properties.dat";
         kfield_h5file = yfielddir+"/Yfield.h5";
         extended_yfield_h5file = yfielddir+"/ext_Yfield.h5";
@@ -241,21 +241,21 @@ namespace Dune {
 
         Y_try_h5file  = bufferdimdir + "/Y_try.h5";
         Y_try_xmffile = bufferdimdir + "/Y_try.xmf";
-    
+
         Y_estimated_h5file = bufferdimdir + "/Y_estimated.h5";
         Y_estimated2_h5file = bufferdimdir + "/Y_estimated2.h5"; // same as Y_estimated, but on a finer grid
-    
+
         ksi_old_h5file    =bufferdimdir + "/ksi_old.h5";
         beta_old_h5file   =bufferdimdir + "/beta_old.h5";
         L_prior_h5file    =bufferdimdir + "/L_prior.h5";
 
-    
+
         logsigma0_h5file=yfielddir+"/logsigma0_field.h5";
         logkappa_h5file=yfielddir+"/logkappa_field.h5";
 
         vtu_suffix=".vtu";
         Y_estimated_vtu = vtudir + "/Y_estimated";
-    
+
 #ifdef ESTIMATION_VARIANCE
         estimation_variance_h5file = bufferdimdir + "/Estimation_Variance.h5";
         V_est2_h5file = bufferdimdir + "/V_est2.h5";
@@ -302,7 +302,7 @@ namespace Dune {
         JQ_vtu_prefix=vtudir + "/JQ";
 
       }
-  
+
       void set_zonation(const UINT& nzones){
         EV_h5file.resize(nzones);
         zonation_matrix.resize(nzones);
@@ -315,8 +315,8 @@ namespace Dune {
           R_YY_h5file[ii] = yfielddir + "/R_YY_Zone_" + sii.str() + ".h5";
         }
       }
-  
-  
+
+
       void set_setups(const UINT& setups){
         vchead_orig_h5file.resize(setups);
         vcM0_cg_orig_h5file.resize(setups);
@@ -324,27 +324,27 @@ namespace Dune {
         vcheatM0_cg_orig_h5file.resize(setups);
         vcheatM1_cg_orig_h5file.resize(setups);
         vcheatArrival_Time_orig_h5file.resize(setups);
-      
+
         vcphi0_orig_h5file.resize(setups);
         vcM0phi_orig_h5file.resize(setups);
         vcM1phi_orig_h5file.resize(setups);
         vcATphi_orig_h5file.resize(setups);
-      
+
         vchead_old_h5file.resize(setups);
         vchead_est_h5file.resize(setups);
-      
+
         vcM0_old_h5file.resize(setups);
         vcM0_est_h5file.resize(setups);
         vcM1_old_h5file.resize(setups);
         vcM1_est_h5file.resize(setups);
-      
+
         vcheatM0_old_h5file.resize(setups);
         vcheatM1_old_h5file.resize(setups);
-      
+
         vcM0phi_old_h5file.resize(setups);
         vcM1phi_old_h5file.resize(setups);
-      
-      
+
+
 
         head_orig_vtu.resize(setups);
 
@@ -358,13 +358,13 @@ namespace Dune {
         heatM1_orig_vtu.resize(setups);
         heatArrival_Time_orig_vtu.resize(setups);
 
-    
+
         phi0_orig_vtu.resize(setups);
         M0phi_orig_vtu.resize(setups);
         M1phi_orig_vtu.resize(setups);
         ATphi_orig_vtu.resize(setups);
 
-    
+
 
         vchead_estimated_vtu.resize(setups);
         vcM0_estimated_vtu.resize(setups);
@@ -378,18 +378,18 @@ namespace Dune {
 
 
         Y_est_h5file = hdf5dir + "/Y_est.h5";
-      
+
         for(UINT ii=0; ii<setups; ii++){
           std::stringstream sii;
           sii << ii;
           vchead_orig_h5file[ii] = bufferdimdir + "/vchead_s" +sii.str() + "_orig.h5";
           vcM0_cg_orig_h5file[ii] = bufferdimdir + "/vcM0_cg_s"+sii.str() +"_orig.h5";
           vcM1_cg_orig_h5file[ii] = bufferdimdir + "/vcM1_cg_s"+sii.str() +"_orig.h5";
-        
+
           vcheatM0_cg_orig_h5file[ii] = bufferdimdir + "/vcheatM0_cg_s" + sii.str() + "_orig.h5";
           vcheatM1_cg_orig_h5file[ii] = bufferdimdir + "/vcheatM1_cg_s" + sii.str() + "_orig.h5";
           vcheatArrival_Time_orig_h5file[ii] = bufferdimdir + "/vcheatArrival_Time_s" + sii.str() + "_orig.h5";
-        
+
           vchead_old_h5file[ii] = bufferdimdir + "/vchead_old_s" + sii.str() + ".h5";
           vchead_est_h5file[ii] = hdf5dir + "/vchead_est_s" + sii.str() + ".h5";
 
@@ -398,10 +398,10 @@ namespace Dune {
 
           vcM1_old_h5file[ii] = bufferdimdir + "/vcM1_old_s" + sii.str() + ".h5";
           vcM1_est_h5file[ii] = hdf5dir + "/vcM1_est_s" + sii.str() + ".h5";
-        
+
           vcheatM0_old_h5file[ii] = bufferdimdir + "/vcheatM0_s" + sii.str() + "_old.h5";
           vcheatM1_old_h5file[ii] = bufferdimdir + "/vcheatM1_s" + sii.str() + "_old.h5";
-        
+
           head_orig_vtu[ii] = vtudir + "/head_orig_"+sii.str();
 
           q_orig_vtu[ii] = vtudir + "/q_orig_"+sii.str();
@@ -430,10 +430,10 @@ namespace Dune {
         vcM0phi_orig_h5file[iSetup].resize(nconfigs);
         vcM1phi_orig_h5file[iSetup].resize(nconfigs);
         vcATphi_orig_h5file[iSetup].resize(nconfigs);
-    
+
         vcM0phi_old_h5file[iSetup].resize(nconfigs);
         vcM1phi_old_h5file[iSetup].resize(nconfigs);
-    
+
 
         phi0_orig_vtu[iSetup].resize(nconfigs);
         M0phi_orig_vtu[iSetup].resize(nconfigs);
@@ -445,18 +445,18 @@ namespace Dune {
         vcGPM1_estimated_vtu[iSetup].resize(nconfigs);
         vcGPAT_estimated_vtu[iSetup].resize(nconfigs);
 
-    
+
         for(UINT ii=0; ii<nconfigs; ii++){
           std::stringstream sjj;
           sjj << iSetup;
           std::stringstream sii;
           sii << ii;
-        
+
           vcphi0_orig_h5file[iSetup][ii] = bufferdimdir + "/vcphi0_" + sjj.str() + "_config_" + sii.str() + "_orig.h5";
           vcM0phi_orig_h5file[iSetup][ii] = bufferdimdir + "/vcM0phi_" + sjj.str() + "_config_"  + sii.str() + "_orig.h5";
           vcM1phi_orig_h5file[iSetup][ii] = bufferdimdir + "/vcM1phi_" + sjj.str() + "_config_"  + sii.str() + "_orig.h5";
           vcATphi_orig_h5file[iSetup][ii] = bufferdimdir + "/vcATphi_" + sjj.str() + "_config_" + sii.str() + "_orig.h5";
-        
+
           vcM0phi_old_h5file[iSetup][ii] = bufferdimdir + "/vcGPM0_old_" + sjj.str() + "_config_" + sii.str() + "_orig.h5";
           vcM1phi_old_h5file[iSetup][ii] = bufferdimdir + "/vcGPM1_old_" + sjj.str() + "_config_" + sii.str() + "_orig.h5";
 
@@ -489,7 +489,7 @@ namespace Dune {
           aSensitivity_h5file[ii] = bufferdimdir + "/aSens_" + sii.str() + ".h5";
         }
       };
-      
+
 
       void set_CR(const UINT& nCR,const UINT& start){
         likelihood_cond_file.resize(nCR);
@@ -510,7 +510,7 @@ namespace Dune {
 
         }
       };
-      
+
     }; // class IO_locations
 
   }
@@ -518,4 +518,3 @@ namespace Dune {
 }
 
 #endif // DUNE_GESIS_IO_LOCATIONS_HH
-

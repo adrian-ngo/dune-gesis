@@ -1,9 +1,8 @@
-/* 
+/*
  * File:   general.hh
- * Author: ngo
+ * Author: A. Ngo
  *
- * Created on June 25, 2010, 3:46 PM
- * Last Modified on July 29 2014
+ * 2010-2014
  */
 
 #ifndef DUNE_GESIS_GENERAL_HH
@@ -18,10 +17,7 @@
 #include <stdlib.h>
 
 #include <sys/stat.h> // for mkdir()
-
 #include <vector>
-
-//#include "boost/filesystem.hpp"
 
 extern CLogfile logger; // declared + initalized in the main function!
 
@@ -32,12 +28,12 @@ namespace Dune {
 
 
     class General{
-      
+
     private:
       General(){};
-      
+
     public:
-      
+
       static int verbosity; // must be initialized down below
 
       static double elapsed_MARK;
@@ -50,7 +46,7 @@ namespace Dune {
       static double elapsed_REDIST;
 
 
-      
+
       static bool bDirectoryExists( const char *dirname )
       {
         struct stat st;
@@ -111,9 +107,9 @@ namespace Dune {
         for( int i=0; i<standard_vector.size(); ++i )
           backend_vector.base()[i] = standard_vector[i];
       }
-      
 
-      inline static UINT indexconversion_3d_to_1d( 
+
+      inline static UINT indexconversion_3d_to_1d(
                                                   const UINT iz
                                                   , const UINT iy
                                                   , const UINT ix
@@ -122,7 +118,7 @@ namespace Dune {
                                                   , const UINT Nx
                                                    )
       {
-        // Adrian: I got this formula from "http://www.fftw.org/doc/Dynamic-Arrays-in-C.html#Dynamic-Arrays-in-C"!
+        // See "http://www.fftw.org/doc/Dynamic-Arrays-in-C.html#Dynamic-Arrays-in-C"!
         UINT l = ix + Nx * ( iy + Ny*iz );
         return l;
       };
@@ -131,7 +127,7 @@ namespace Dune {
       inline static UINT indexconversion_to_1d( const Vector<UINT>& index,
                                                 const Vector<UINT>& nCells )
       {
-        // Adrian: I got this formula from "http://www.fftw.org/doc/Dynamic-Arrays-in-C.html#Dynamic-Arrays-in-C"!
+        // See "http://www.fftw.org/doc/Dynamic-Arrays-in-C.html#Dynamic-Arrays-in-C"!
 #ifdef DIMENSION3
         UINT l = index[0] + nCells[0] * ( index[1] + nCells[1] * index[2] ); // 3d to 1d
 #else
@@ -143,8 +139,8 @@ namespace Dune {
 
 
       // index conversion from 1d-index to 3d-index, opposite of "indexconversion_3d_to_1d"
-      inline static void indexconversion_1d_to_3d( 
-                                                  UINT i 
+      inline static void indexconversion_1d_to_3d(
+                                                  UINT i
                                                   ,UINT& iz
                                                   ,UINT& iy
                                                   ,UINT& ix
@@ -153,12 +149,12 @@ namespace Dune {
                                                   , const UINT Nx
                                                    )
       {
-        // Adrian: I got this formula from "http://www.fftw.org/doc/Dynamic-Arrays-in-C.html#Dynamic-Arrays-in-C"!
+        // See "http://www.fftw.org/doc/Dynamic-Arrays-in-C.html#Dynamic-Arrays-in-C"!
         UINT tmp;
-  
+
         tmp=i%(Nx*Ny);
         iz=(i-tmp)/(Nx*Ny);
-  
+
         i=tmp;
         ix=i%Nx;
         iy=(i-ix)/Nx;
@@ -167,7 +163,7 @@ namespace Dune {
 
 
       // index conversion from 2d-index to 1d-index
-      inline static UINT indexconversion_2d_to_1d( 
+      inline static UINT indexconversion_2d_to_1d(
                                                   const UINT iy
                                                   , const UINT ix
                                                   , const UINT Ny
@@ -179,7 +175,7 @@ namespace Dune {
       };
 
       // index conversion from 1d-index to 2d-index, opposite of indexconversion_2d_to_1d
-      inline static void indexconversion_1d_to_2d( 
+      inline static void indexconversion_1d_to_2d(
                                                   UINT i
                                                   , UINT& iy
                                                   , UINT& ix
@@ -197,11 +193,11 @@ namespace Dune {
 
 
       template<typename REAL>
-      inline static REAL autocovariancefunction( 
-                                         REAL variance, 
-                                         std::vector<REAL> x, 
-                                         std::vector<REAL> lambda, 
-                                         std::string model  ) {
+      inline static REAL autocovariancefunction(
+                                                REAL variance,
+                                                std::vector<REAL> x,
+                                                std::vector<REAL> lambda,
+                                                std::string model  ) {
 
         // Ref. Olaf Cirpka's "Stochastic Methods" Script, p. 25, equation (2.9) and (2.15)-(2.7)
 
@@ -257,7 +253,7 @@ namespace Dune {
       {
         std::ofstream filestr( filename.c_str(), std::ios::out );
         if( filestr.is_open() ) {
-        
+
           std::cout << "Saving Y-Field properties to "
                     << filename
                     << std::endl;
@@ -274,11 +270,11 @@ namespace Dune {
           for(UINT i=0; i<dim; i++)
             filestr << " " << nCells[i];
           filestr << std::endl;
-	
+
           filestr << "vertical_zones= " << kfield_data.nz << std::endl;
-	
+
           for(UINT ii=0;ii<kfield_data.nz;ii++){
-        
+
             filestr << "model= " << kfield_data.zones[ii].model;
             filestr << std::endl;
 
@@ -314,20 +310,20 @@ namespace Dune {
 
       template<typename PROP>
       static bool load_kfield_properties(
-                                         const std::string filename, 
-                                         const UINT dim, 
-                                         const std::vector<CTYPE>& extensions, 
-                                         const std::vector<UINT>& nCells, 
+                                         const std::string filename,
+                                         const UINT dim,
+                                         const std::vector<CTYPE>& extensions,
+                                         const std::vector<UINT>& nCells,
                                          const PROP& kfield_data,
                                          const int my_rank
                                          )
-      {    
+      {
         std::ifstream filestr( filename.c_str(), std::ios::in );
         if( filestr.is_open() ) {
 
           if( verbosity>=VERBOSITY_INVERSION && my_rank==0 )
             std::cout << "Loading " << filename << std::endl;
-      
+
           std::string str;
 
           UINT read_dim;
@@ -397,7 +393,7 @@ namespace Dune {
             logger << "Drop obsolete Y-field with : vertical_zones = " << vertical_zones << std::endl;
             return false;
           }
-        
+
           for(UINT ii=0; ii<kfield_data.nz;ii++){
 
             std::string read_model;
@@ -463,7 +459,7 @@ namespace Dune {
                 if(        kfield_data.zones[ii].correlation_lambda[0] !=read_correlation_lambda[0]
                            || kfield_data.zones[ii].correlation_lambda[1] != read_correlation_lambda[1] )
                   {
-                  if( verbosity>=VERBOSITY_INVERSION && my_rank==0 )
+                    if( verbosity>=VERBOSITY_INVERSION && my_rank==0 )
                       std::cout << "New 2D random field with lambda_x = " << kfield_data.zones[ii].correlation_lambda[0]
                                 << " lambda_y = " << kfield_data.zones[ii].correlation_lambda[1]
                                 << " inside zone " << ii
@@ -515,22 +511,22 @@ namespace Dune {
         if(rank == 0){
           double check_interval = check.elapsed();
 
-          std::cout << "Duration:|" 
+          std::cout << "Duration:|"
                     << std::setw(6)
                     << "CHECK" << "|"
                     << std::setw(15)
                     << std::setprecision(4)
-                    << check_interval << " sec." 
+                    << check_interval << " sec."
                     << " for "
                     << marker
                     << std::endl;
 
-          std::cout << "Duration:|" 
+          std::cout << "Duration:|"
                     << std::setw(6)
                     << "MARK" << "|"
                     << std::setw(15)
                     << std::setprecision(4)
-                    << General::elapsed_MARK << " sec." 
+                    << General::elapsed_MARK << " sec."
                     << " for "
                     << marker
                     << std::endl;
@@ -547,7 +543,7 @@ namespace Dune {
                                     MPI_Comm communicator,
                                     int verbosity,
                                     std::string jobtype,
-                                    std::string jobtitle 
+                                    std::string jobtitle
                                     ){
 
         if( verbosity >= VERBOSITY_TIMER_SUMMARY ){
@@ -566,7 +562,7 @@ namespace Dune {
                       << jobtype << "|"
                       << std::setw(15)
                       << std::setprecision(4)
-                      << elapsed_time << " sec." 
+                      << elapsed_time << " sec."
                       << " for "
                       << jobtitle
                       << std::endl;
@@ -598,7 +594,7 @@ namespace Dune {
           }
         }
       }
-      
+
       // sequential version:
       static void log_elapsed_time( REAL elapsed_time,
                                     int verbosity,
@@ -606,12 +602,12 @@ namespace Dune {
                                     std::string jobtitle ){
 
         if( verbosity >= VERBOSITY_TIMER_DETAILS ){
-          std::cout << "Duration:[" 
+          std::cout << "Duration:["
                     << std::setw(6)
                     << jobtype << "]"
                     << std::setw(15)
                     << std::setprecision(4)
-                    << elapsed_time << " sec." 
+                    << elapsed_time << " sec."
                     << " for "
                     << jobtitle
                     << std::endl;
@@ -645,10 +641,10 @@ namespace Dune {
 
       static REAL reportTotalTime( const int my_rank ){
 
-        REAL totalCountedTime 
-          = General::elapsed_PDE 
-          + General::elapsed_IO 
-          + General::elapsed_FFTW 
+        REAL totalCountedTime
+          = General::elapsed_PDE
+          + General::elapsed_IO
+          + General::elapsed_FFTW
           + General::elapsed_EVAL
           + General::elapsed_REDIST
           ;
@@ -658,41 +654,41 @@ namespace Dune {
 
           std::cout << std::fixed << std::endl;
           std::cout << "TIMER: ========= OVERVIEW OF TIME CONSUMPTION ====================" << std::endl;
-          std::cout << "TIMER:" 
-                    << std::setw(10) << "IO:" 
+          std::cout << "TIMER:"
+                    << std::setw(10) << "IO:"
                     << std::setw(15) << General::elapsed_IO << " sec."
                     << std::setw(15) << 100.0 * General::elapsed_IO / totalCountedTime << " %"
                     << std::endl;
-          std::cout << "TIMER:" 
-                    << std::setw(10) << "PDEs:" 
+          std::cout << "TIMER:"
+                    << std::setw(10) << "PDEs:"
                     << std::setw(15) << General::elapsed_PDE << " sec."
                     << std::setw(15) << 100.0 * General::elapsed_PDE / totalCountedTime << " %"
                     << std::endl;
-          std::cout << "TIMER:" 
-                    << std::setw(10) << "FFTW:" 
+          std::cout << "TIMER:"
+                    << std::setw(10) << "FFTW:"
                     << std::setw(15) << General::elapsed_FFTW << " sec."
                     << std::setw(15) << 100.0 * General::elapsed_FFTW / totalCountedTime << " %"
                     << std::endl;
-          std::cout << "TIMER:" 
-                    << std::setw(10) << "REDIST:" 
+          std::cout << "TIMER:"
+                    << std::setw(10) << "REDIST:"
                     << std::setw(15) << General::elapsed_REDIST << " sec."
                     << std::setw(15) << 100.0 * General::elapsed_REDIST / totalCountedTime << " %"
                     << std::endl;
-          std::cout << "TIMER:" 
-                    << std::setw(10) << "EVAL:" 
+          std::cout << "TIMER:"
+                    << std::setw(10) << "EVAL:"
                     << std::setw(15) << General::elapsed_EVAL << " sec."
                     << std::setw(15) << 100.0 * General::elapsed_EVAL / totalCountedTime << " %"
                     << std::endl;
-          std::cout << "TIMER:" 
+          std::cout << "TIMER:"
                     << "===========================================================" << std::endl;
-          std::cout << "TIMER:" 
-                    << std::setw(10) << "TOTAL:" 
+          std::cout << "TIMER:"
+                    << std::setw(10) << "TOTAL:"
                     << std::setw(15) << totalCountedTime << " sec."
                     << std::endl;
         }
 
 
-        if( my_rank==0 
+        if( my_rank==0
             && General::verbosity >= VERBOSITY_TIMER_SUMMARY ){
           std::cout << std::endl;
           std::cout << "Duration CHECK (total) = " << General::elapsed_CHECK << std::endl;
@@ -706,9 +702,9 @@ namespace Dune {
 
 
       static void createPVDfromVtuList(
-                                const std::string& filename
-                                , const std::vector< std::string >& vtu_list 
-                                )
+                                       const std::string& filename
+                                       , const std::vector< std::string >& vtu_list
+                                       )
       {
         logger << "Create PVD out of list of VTUs..." << std::endl;
 
@@ -720,7 +716,7 @@ namespace Dune {
             file << "<Collection>" << std::endl;
 
             //for( std::vector<std::string>::iterator it = vtu_list.begin()
-            //	 ; it != vtu_list.end() 
+            //	 ; it != vtu_list.end()
             //	 ; it++ )
             logger << "Collecting VTU-files:  ";
             for( UINT i=0; i<vtu_list.size(); i++ )
@@ -749,7 +745,7 @@ namespace Dune {
         if( stat( filename.c_str(), &buf ) != -1 ){
 
           UINT filesize = (UINT) buf.st_size;
-          logger << "File found: " << filename 
+          logger << "File found: " << filename
                  << ", file size = " << filesize
                  << std::endl;
           if( filesize > 0 ){
@@ -777,36 +773,36 @@ namespace Dune {
 
 
       static std::string textfile2string( const std::string filename ){
-        
+
         std::ifstream is;
         is.open( filename.c_str(), std::ios::binary );
-        
+
         // get length of file:
         is.seekg (0, std::ios::end);
         long length = is.tellg();
         is.seekg (0, std::ios::beg);
-        
+
         // allocate memory:
         char *buffer = new char [length];
-        
+
         // read data as a block:
         is.read (buffer,length);
-        
+
         std::string contents( buffer );
         delete[] buffer;
         is.close();
 
         return contents;
       }
-      
 
-      static std::string readTextFile2String( const std::string filename, 
-                                              const Dune::MPIHelper& helper ) 
+
+      static std::string readTextFile2String( const std::string filename,
+                                              const Dune::MPIHelper& helper )
       {
         std::istringstream instream; // Declare an input string stream
         // ------------------------------------------------------------------
         // Read text file as a stringstream only on one processor.
-        // Then, send this stream to all other processes using 
+        // Then, send this stream to all other processes using
         // a dynamic character buffer.
         // ------------------------------------------------------------------
         std::string contents;
@@ -814,7 +810,7 @@ namespace Dune {
 
         if( helper.rank() == 0 ) {
           logger << "readTextFile2String: Read text file as string stream on P0..." << std::endl;
-          
+
           char *textbuffer;
           std::filebuf *pFileBuffer;
           std::ifstream filestream ( filename.c_str() );
@@ -823,26 +819,26 @@ namespace Dune {
             // get file size using buffer's members
             filesize=pFileBuffer->pubseekoff (0,std::ios::end,std::ios::in);
             pFileBuffer->pubseekpos (0,std::ios::in);
-            
+
             // allocate memory to contain file data, reserve one more char for ending null
             textbuffer = new char[filesize+1];
-            
-            // get file data  
+
+            // get file data
             pFileBuffer->sgetn (textbuffer,filesize);
 
             // Important: append null character to string makes sure that the string ends here!
             textbuffer[filesize] = '\0';
-        
+
             contents = std::string( textbuffer );
-            
+
             filestream.close();
-            
+
           }
           else {
             std::cout << "Warning: Unable to open textfile " << filename.c_str() << std::endl;
             return std::string("");
           }
-          
+
           if( helper.size() > 1 ) {
             // Sender:
             // prepare to broadcast data to other processes
@@ -861,11 +857,11 @@ namespace Dune {
           MPI_Bcast( &filesize, 1, MPI_INT, 0, helper.getCommunicator());
 
           char textbuffer[filesize]; // Do not use char* with new and delete here!
-          
+
           // Receive character buffer with trailing '\0':
           MPI_Bcast( textbuffer, filesize+1, MPI_CHAR, 0, helper.getCommunicator());
           //std::cout.write (textbuffer,filesize);
-          
+
           contents = std::string( textbuffer );
         }
         return contents;
@@ -965,20 +961,20 @@ namespace Dune {
                 class GFS,
                 class UType
                 >
-      static void extract_two_indicators( const PowerGFS& powergfs, 
-                                   const UPowerType& xpower, 
-                                   const GFS& gfs, 
-                                   UType & u1, 
-                                   UType & u2 
-                                   ){
+      static void extract_two_indicators( const PowerGFS& powergfs,
+                                          const UPowerType& xpower,
+                                          const GFS& gfs,
+                                          UType & u1,
+                                          UType & u2
+                                          ){
         /*
-        for(std::size_t j=0; j<gfs.globalSize(); j++){
+          for(std::size_t j=0; j<gfs.globalSize(); j++){
           u1.base()[j] = xpower.base()[j];
-        }
-  
-        for(std::size_t j=0; j<gfs.globalSize(); j++){
+          }
+
+          for(std::size_t j=0; j<gfs.globalSize(); j++){
           u2.base()[j] = xpower.base()[gfs.size()+j];
-        }
+          }
         */
 
         for(std::size_t j=0; j<gfs.globalSize(); j++){
@@ -990,8 +986,8 @@ namespace Dune {
 
 
       template<typename IntegerType>
-      static void factorize_two_optimally( const IntegerType product, 
-                                           IntegerType& factor1, 
+      static void factorize_two_optimally( const IntegerType product,
+                                           IntegerType& factor1,
                                            IntegerType& factor2 )
       {
         REAL squareroot = sqrt( (REAL) product );
@@ -1028,9 +1024,9 @@ namespace Dune {
 
 
       template<typename IntegerType>
-      static void factorize_three_optimally( const IntegerType product, 
-                                             IntegerType& factor1, 
-                                             IntegerType& factor2, 
+      static void factorize_three_optimally( const IntegerType product,
+                                             IntegerType& factor1,
+                                             IntegerType& factor2,
                                              IntegerType& factor3 )
       {
         REAL cuberoot = pow( (REAL) product, 1.0/3.0 );
@@ -1094,28 +1090,28 @@ namespace Dune {
       }
 
       //
-      // Harmonic averaging of two K-Field values between two rectangular cells 
+      // Harmonic averaging of two K-Field values between two rectangular cells
       // of different sizes:
-      // Required for CCFV with locally adaptive mesh refinement 
+      // Required for CCFV with locally adaptive mesh refinement
       // on hanging nodes refinement with cubical cells:
       //
       // Let x1 be the center of C1.
       // Let x2 be the center of C2.
       // Let x1-x2 will cut the big face between C1 and C2 in some point z0.
-      // 
+      //
       // k1 = K-value of the cell C1
       // k2 = K-value of the neighbouring cell C2
       // l1 = |x1 - z0|
       // l2 = |x2 - z0|
       //
-      // Note: 
+      // Note:
       // Since we are only interested in the proportion l1/(l1+l2) and l2/(l1+l2),
-      // we can as well consider l1 = |x1-f1| and l2 = |x1-f2| where 
+      // we can as well consider l1 = |x1-f1| and l2 = |x1-f2| where
       // f1 is the face-center of the face of C1 facing the direction of C2
       // and
       // f2 is the face-center of the face of C2 facing the direction of C1.
       // Or, even easier: We consider the face-lengths instead.
-      // 
+      //
       template<typename T>
       static T harmonicAverageWeightedByDistance(T k1, T k2, T l1, T l2)
       {
@@ -1126,7 +1122,7 @@ namespace Dune {
           << " k2=" << k2
           << " l1=" << l1
           << " l2=" << l2
-          << " average=" << average 
+          << " average=" << average
           << std::endl;
         */
         return average;
@@ -1135,11 +1131,11 @@ namespace Dune {
 
 
       /*
-        This class is used to get the minimum and the maximum of a 
+        This class is used to get the minimum and the maximum of a
         solution whose FEM is represented by the Lagrange Basis!
       */
       template<typename VCType, typename COMM>
-      static void logMinAndMax( const VCType& vc, 
+      static void logMinAndMax( const VCType& vc,
                                 const COMM& communicator,
                                 REAL& minimum,
                                 REAL& maximum
@@ -1150,13 +1146,13 @@ namespace Dune {
           minimum = std::min( minimum, vc_flat[i] );
           maximum = std::max( maximum, vc_flat[i] );
         }
-        logger << "=====> process local maximum/minimum = " 
+        logger << "=====> process local maximum/minimum = "
                << maximum << " / "
                << minimum << std::endl;
         maximum = communicator.max( maximum );
         minimum = communicator.min( minimum );
         if(communicator.rank()==0 && verbosity>=VERBOSITY_EQ_SUMMARY){
-          std::cout << "=====> Global maximum/minimum = " 
+          std::cout << "=====> Global maximum/minimum = "
                     << maximum << " / "
                     << minimum << std::endl;
         }
@@ -1164,11 +1160,11 @@ namespace Dune {
 
 
       /*
-        This class is used to get the minimum and the maximum of a 
+        This class is used to get the minimum and the maximum of a
         solution whose FEM is represented by the Lagrange Basis!
       */
       template<typename VCType, typename COMM>
-      static void logMinAndMax( const VCType& vc, 
+      static void logMinAndMax( const VCType& vc,
                                 const COMM& communicator
                                 ){
         REAL minimum = 1E+100;
@@ -1179,13 +1175,13 @@ namespace Dune {
           minimum = std::min( minimum, vc_flat[i] );
           maximum = std::max( maximum, vc_flat[i] );
         }
-        logger << "=====> process local maximum/minimum = " 
+        logger << "=====> process local maximum/minimum = "
                << maximum << " / "
                << minimum << std::endl;
         maximum = communicator.max( maximum );
         minimum = communicator.min( minimum );
         if(communicator.rank()==0 && verbosity>=VERBOSITY_EQ_SUMMARY){
-          std::cout << "=====> Global maximum/minimum = " 
+          std::cout << "=====> Global maximum/minimum = "
                     << maximum << " / "
                     << minimum << std::endl;
         }
@@ -1196,11 +1192,11 @@ namespace Dune {
       // Multiply a solution vector with the zone-wise porosity
       //
       template<typename VC_Type,typename GV,typename IDT>
-      static void vc_times_theta( VC_Type& out, 
+      static void vc_times_theta( VC_Type& out,
                                   const GV& gv,
                                   const IDT& inputdata )
       {
-        
+
         // types and constants
         int id = 0;
         const int dim = GV::dimension;
@@ -1208,30 +1204,30 @@ namespace Dune {
         typedef typename GV::template Codim < dim > ::Iterator ElementLeafIterator;
 
         const typename GV::IndexSet& is = gv.indexSet();
-        
+
         Dune::FieldVector<REAL,dim> global(0.0);
-        
+
         UINT nzones = inputdata.yfield_properties.nz;
         UINT zone;
-        
+
         if(nzones>1){
           // loop over the grid
           for (ElementLeafIterator it = gv.template begin < dim > (); it != gv.template end < dim > (); ++it) {
-    
+
             id = is.index(*it);
-    
+
             global=it->geometry().center();
-    
+
             zone=0;
             while(zone<nzones-1){
               if(global[dim_minus1]<inputdata.yfield_properties.zones[zone].bottom){
                 break;
               }else{
-                zone+=1; 
+                zone+=1;
               }
             }
             out.base()[id]*=inputdata.yfield_properties.zones[zone].porosity;
-    
+
           }
         }else{
           out*= inputdata.yfield_properties.zones[0].porosity;
@@ -1248,7 +1244,7 @@ namespace Dune {
        * calculate vector container times theta*RT(retardation factor of heat)
        */
       template<typename VC_Type,typename GV,typename IDT>
-      static void vc_times_thetaRT( VC_Type& out, 
+      static void vc_times_thetaRT( VC_Type& out,
                                     const GV& gv,
                                     const IDT& inputdata )
       {
@@ -1257,11 +1253,11 @@ namespace Dune {
         const int dim = GV::dimension;
         const int dim_minus1 = dim-1;
         typedef typename GV::template Codim<dim>::Iterator ElementLeafIterator;
-        
+
         const typename GV::IndexSet& is = gv.indexSet();
-        
+
         Dune::FieldVector<REAL,dim> global(0.0);
-        
+
         UINT nzones = inputdata.yfield_properties.nz;
         UINT zone;
 
@@ -1277,33 +1273,33 @@ namespace Dune {
           // loop over the grid
           for (ElementLeafIterator it = gv.template begin<dim> ()
                  ; it != gv.template end<dim> (); ++it) {
-            
+
             id = is.index(*it);
-    
+
             global=it->geometry().center();
-    
+
             zone=0;
             while(zone<nzones-1){
               if(global[dim_minus1] < inputdata.yfield_properties.zones[zone].bottom){
                 break;
               }else{
-                zone+=1; 
+                zone+=1;
               }
             }
             porosity  = inputdata.yfield_properties.zones[zone].porosity;
             rho_s     = inputdata.yfield_properties.zones[zone].rho;
             c_s       = inputdata.yfield_properties.zones[zone].c_s;
             rho_m_c_m = porosity*rho_w*c_w + (1.0-porosity)*rho_s*c_s;
-      
+
             out.base()[id] *= rho_m_c_m / ( rho_w * c_w );
-    
+
           }
         }else{
           porosity  = inputdata.yfield_properties.zones[0].porosity;
           rho_s     = inputdata.yfield_properties.zones[0].rho;
           c_s       = inputdata.yfield_properties.zones[0].c_s;
           rho_m_c_m = porosity * rho_w * c_w + ( 1.0 - porosity ) * rho_s * c_s;
-    
+
           out *= rho_m_c_m / ( rho_w * c_w );
         }
 
@@ -1320,7 +1316,7 @@ namespace Dune {
         struct tm * now = localtime( & t );
 
         std::stringstream current_time;
-        current_time << (now->tm_year + 1900) << '-' 
+        current_time << (now->tm_year + 1900) << '-'
                      << std::setw(2) << std::setfill('0') << (now->tm_mon + 1) << '-'
                      << std::setw(2) << std::setfill('0') <<  now->tm_mday
                      << " "
@@ -1337,8 +1333,8 @@ namespace Dune {
 
       // This function is taken from "convectiondiffusiondg.hh"
       template<class GEO>
-      static void element_size( const GEO& geo, 
-                                typename GEO::ctype& hmin, 
+      static void element_size( const GEO& geo,
+                                typename GEO::ctype& hmin,
                                 typename GEO::ctype& hmax )
       {
         typedef typename GEO::ctype DF;
@@ -1383,7 +1379,7 @@ namespace Dune {
           index = 0;
         }
         return index;
-        
+
       }
 
       template<typename IDT>
@@ -1395,9 +1391,9 @@ namespace Dune {
         for(UINT iSetup=0; iSetup<inputdata.setups.size(); iSetup++){
           for(UINT iWell=0; iWell<inputdata.setups[iSetup].wdlist.pointdata_vector.size(); iWell++){
 
-            /* 
-               Translate the global coordinate '(x,y,z)' into its corresponding Yfield-tensor-index 'global_index'. 
-               This requires only the virtual gridsize of the virtual Yfield grid. 
+            /*
+               Translate the global coordinate '(x,y,z)' into its corresponding Yfield-tensor-index 'global_index'.
+               This requires only the virtual gridsize of the virtual Yfield grid.
                So 'global_index' is just a virtual index.
             */
             Vector<UINT> global_index;
@@ -1427,56 +1423,56 @@ namespace Dune {
                                                             inputdata.domain_data.nCells );
 
               if( myIndex >= YField.size() )
-                std::cout << "ERROR: add_wells_to_field: myIndex = " << myIndex 
+                std::cout << "ERROR: add_wells_to_field: myIndex = " << myIndex
                           << " > YField.size() = " << YField.size()
                           << std::endl;
-              
+
               YField[ myIndex ] = well_conductivity;
-              
-              std::cout << " myIndex = " << myIndex 
+
+              std::cout << " myIndex = " << myIndex
                         << " <=> globalindex = (" << global_index[0]
 #ifdef DIMENSION3
                         << "," << global_index[1]
 #endif
                         << "," << global_index[dim-1]
-                        << ") to " << well_conductivity 
+                        << ") to " << well_conductivity
                         << " for Setup " << iSetup
-                        << " for iWell " << iWell 
+                        << " for iWell " << iWell
                         << std::endl;
             }
-            
-            /*            
-            if(l_int>=0){
-#ifdef DIMENSION3
-              int myindex = indexconversion_3d_to_1d(l_int-1,y_int,x_int,inputdata.domain_data.nCells[2],inputdata.domain_data.nCells[1],inputdata.domain_data.nCells[0]);
-#else
-              int myindex = indexconversion_2d_to_1d(l_int-1,x_int,inputdata.domain_data.nCells[1],inputdata.domain_data.nCells[0]);
-#endif    
-              YField[ myindex ]=-100.0;
-              std::cout << " l_int = " << l_int
-                        << " myindex = " << myindex << std::endl;
-            }
-            
-            if(u_int<inputdata.domain_data.nCells[inputdata.dim-1]-1){
-#ifdef DIMENSION3
-              int myindex = indexconversion_3d_to_1d(u_int+1,y_int,x_int,inputdata.domain_data.nCells[2],inputdata.domain_data.nCells[1],inputdata.domain_data.nCells[0]);
-#else
-              int myindex = indexconversion_2d_to_1d(u_int+1,x_int,inputdata.domain_data.nCells[1],inputdata.domain_data.nCells[0]);
-#endif    
-              YField[ myindex ]=-100.0;
-              std::cout << " u_int = " << u_int
-                        << " myindex = " << myindex << std::endl;
-            }
+
+            /*
+                          if(l_int>=0){
+                          #ifdef DIMENSION3
+                          int myindex = indexconversion_3d_to_1d(l_int-1,y_int,x_int,inputdata.domain_data.nCells[2],inputdata.domain_data.nCells[1],inputdata.domain_data.nCells[0]);
+                          #else
+                          int myindex = indexconversion_2d_to_1d(l_int-1,x_int,inputdata.domain_data.nCells[1],inputdata.domain_data.nCells[0]);
+                          #endif
+                          YField[ myindex ]=-100.0;
+                          std::cout << " l_int = " << l_int
+                          << " myindex = " << myindex << std::endl;
+                          }
+
+                          if(u_int<inputdata.domain_data.nCells[inputdata.dim-1]-1){
+                          #ifdef DIMENSION3
+                          int myindex = indexconversion_3d_to_1d(u_int+1,y_int,x_int,inputdata.domain_data.nCells[2],inputdata.domain_data.nCells[1],inputdata.domain_data.nCells[0]);
+                          #else
+                          int myindex = indexconversion_2d_to_1d(u_int+1,x_int,inputdata.domain_data.nCells[1],inputdata.domain_data.nCells[0]);
+                          #endif
+                          YField[ myindex ]=-100.0;
+                          std::cout << " u_int = " << u_int
+                          << " myindex = " << myindex << std::endl;
+                          }
             */
-           
+
           }
-        
+
         }
 
       }
 
 
-      
+
       template<typename Coord,typename GV>
       static bool doesPointBelongToGridPartition( const Coord& xglobal, const GV& gv ){
 
@@ -1484,17 +1480,17 @@ namespace Dune {
         typedef typename GV::template Codim<0>::template Partition<Dune::All_Partition>::Iterator ElementLeafIterator;
         for (ElementLeafIterator it = gv.template begin<0,Dune::All_Partition> ()
                ; it != gv.template end<0,Dune::All_Partition> (); ++it) {
-          
+
           Dune::FieldVector<REAL,dim> xlocal = it->geometry().local(xglobal);
           Dune::GeometryType gt = it->geometry().type();
-          
+
           if( Dune::ReferenceElements<CTYPE,dim>::general(gt).checkInside( xlocal ) ){
             return true;
           }
-          
+
         }
         return false;
-        
+
       }
 
 
@@ -1502,7 +1498,7 @@ namespace Dune {
 
       template<typename GV,typename REAL>
       static void vector2histogram( const GV& gv,
-                                    const Vector<REAL>& v, 
+                                    const Vector<REAL>& v,
                                     const int nBins,
                                     const std::string filename
                                     )
@@ -1520,8 +1516,8 @@ namespace Dune {
         int N = v.size();
         for( int i=0; i<v.size(); ++i ){
           for( int j=0; j<nBins; ++j ){
-            if( v[i] >= minimum + j*interval 
-                && 
+            if( v[i] >= minimum + j*interval
+                &&
                 v[i] < minimum + (j+1)*interval ){
               bins[j] += 1.0;
               //break;
@@ -1548,9 +1544,9 @@ namespace Dune {
 
         if( gv.comm().rank() == 0 ) {
 
-          std::cout << "Histogram for " 
-                    << N << " values on " 
-                    << nBins << " bins written to data file " 
+          std::cout << "Histogram for "
+                    << N << " values on "
+                    << nBins << " bins written to data file "
                     << filename.c_str()
                     << " on process " << gv.comm().rank()
                     << std::endl;
@@ -1573,7 +1569,7 @@ namespace Dune {
             }
             std::cout << "Total number of values = " << total << std::endl;
             std::cout << "Normalized integral = " << total / REAL(N) / interval << std::endl;
-          
+
             outfile.close();
 
           }
@@ -1600,7 +1596,7 @@ namespace Dune {
         Dune::Timer watch;
         int tmp = system( cmdline.c_str() );
         if(tmp!=0)
-          std::cout << "Warning: systemCall to " << cmdline 
+          std::cout << "Warning: systemCall to " << cmdline
                     << " returns " << tmp << std::endl;
         assert(tmp==0);
         std::stringstream jobtitle;
@@ -1619,7 +1615,7 @@ namespace Dune {
 
     double General::elapsed_MARK=0;   // must be initialized here
     double General::elapsed_CHECK=0;  // must be initialized here
-    
+
     double General::elapsed_IO=0;     // must be initialized here
     double General::elapsed_FFTW=0;   // must be initialized here
     double General::elapsed_PDE=0;    // must be initialized here
@@ -1633,4 +1629,3 @@ namespace Dune {
 
 
 #endif	/* DUNE_GESIS_GENERAL_HH */
-

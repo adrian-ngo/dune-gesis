@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   VTKPlot.hh
  * Author: A. Ngo
  *
@@ -28,15 +28,15 @@ namespace Dune {
 
     public:
 
-      // There are three functions with different signatures serving 
-      // different input types 
-      // 
+      // There are three functions with different signatures serving
+      // different input types
+      //
       // 1.) output2vtu:                    VCType    ---> vertex data
       // 2.) output_vector_to_vtu:          VECTOR    ---> cell-data / vertex data
       // 3.) output_dgf_to_vtu:             DGF       ---> vertex-data
       // 4.) output_hdf5data_to_gridview    HDF5 file ---> cell-data / vertex data
       // 5.) plotDataToRefinedGrid          HDF5 file ---> HDF5 file
-      // 
+      //
 
 
       // *******************************************************************
@@ -46,7 +46,7 @@ namespace Dune {
       static void output2vtu( const GFS& gfs
                               , const VCType& xSolution
                               , const std::string filename
-                              , const std::string title 
+                              , const std::string title
                               , const int verbosity=0
                               , bool bSubSampling = false
                               , int nSubSampling = 0
@@ -65,13 +65,13 @@ namespace Dune {
         typedef Dune::PDELab::DiscreteGridFunction<GFS,VCType> DGF;
         DGF dgf(gfs,xSolution);
 
-        if( gv.comm().rank()==0 
+        if( gv.comm().rank()==0
             &&
             verbosity >= VERBOSITY_DEBUG_LEVEL )
           std::cout << "VTK output of vertex-data " << title.c_str() << " to file '" << filename.c_str() << ".vtu'" <<  std::endl;
 
         if(bSubSampling){
-    
+
 #ifdef PLOT_GHOST
           Dune::SubsamplingVTKWriter<GV,Dune::All_Partition> vtkwriter(gv,nSubSampling);
 #else
@@ -81,10 +81,10 @@ namespace Dune {
             vtkwriter.addCellData( new Dune::PDELab::VTKGridFunctionAdapter<DGF > ( dgf, "celldata" ) );
           else
             vtkwriter.addVertexData( new Dune::PDELab::VTKGridFunctionAdapter<DGF> ( dgf, title.c_str() ) );
-          
+
           //find '/' or '\' in the filename
           size_t found=filename.find_last_of("/\\");
-          
+
           //if parallel and complete path is given, use the pwrite() function
           if(found<filename.size()&& gv.comm().size() > 1) {
             vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", vtkOutputType );
@@ -103,7 +103,7 @@ namespace Dune {
 
           //find '/' or '\' in the filename
           size_t found=filename.find_last_of("/\\");
-  
+
           //if parallel and complete path is given, use the pwrite() function
           if(found<filename.size()&& gv.comm().size() > 1) {
             vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", vtkOutputType );
@@ -135,11 +135,11 @@ namespace Dune {
       // 2.) output_vector_to_vtu:          VECTOR    ---> cell-data / vertex data
       // *************************************************************************
       template<typename GV, typename VECTOR >
-      static void output_vector_to_vtu( 
+      static void output_vector_to_vtu(
                                        const GV& gv
                                        , const VECTOR& vCellData
                                        , const std::string filename
-                                       , const std::string title 
+                                       , const std::string title
                                        , const int verbosity=0
                                        , bool bSubSampling = false
                                        , int nSubSampling = 0
@@ -152,22 +152,22 @@ namespace Dune {
         //Dune::VTK::OutputType vtkOutputType = Dune::VTK::ascii;
         Dune::VTK::OutputType vtkOutputType = Dune::VTK::appendedraw;
 
-        if( gv.comm().rank()==0 
+        if( gv.comm().rank()==0
             &&
             verbosity >= VERBOSITY_DEBUG_LEVEL )
           std::cout << "VTK output of cell-data " << title.c_str() << " to file '" << filename.c_str() << ".vtu'" <<  std::endl;
-  
+
 
         if(bSubSampling){
 
-          // This will plot the cell data as they are, 
+          // This will plot the cell data as they are,
           // namely in a non-conforming way.
 
           const int dim = GV::dimension;
           typedef Dune::PDELab::P0LocalFiniteElementMap<CTYPE,REAL,dim> P0FEM;
           typedef Dune::PDELab::NoConstraints NOCONS;
           typedef Dune::PDELab::ISTLVectorBackend<> VBE1;
-    
+
 #ifdef USE_SIMPLEX
           P0FEM p0fem(Dune::GeometryType(Dune::GeometryType::simplex,dim));
 #else
@@ -209,10 +209,10 @@ namespace Dune {
           Dune::VTKWriter<GV> vtkwriter(gv);
 #endif
           vtkwriter.addCellData( vCellData, title.c_str() );
-  
+
           //find '/' or '\' in the filename
           size_t found=filename.find_last_of("/\\");
-  
+
           //if parallel and complete path is given, use the pwrite() function
           if(found<filename.size()&& gv.comm().size() > 1) {
             vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", vtkOutputType );
@@ -239,12 +239,12 @@ namespace Dune {
       // 3.) output_dgf_to_vtu:             DGF       ---> vertex-data
       // *******************************************************************
       template<typename GV, typename GFS, typename DGF >
-      static void output_dgf_to_vtu( 
+      static void output_dgf_to_vtu(
                                     const GV& gv
                                     , const GFS& gfs
                                     , const DGF& dgf
                                     , const std::string filename
-                                    , const std::string title 
+                                    , const std::string title
                                     , const int verbosity=0
                                     , bool bSubSampling = false
                                     , int nSubSampling = 0
@@ -260,7 +260,7 @@ namespace Dune {
         if( gv.comm().rank()==0 &&
             verbosity >= VERBOSITY_DEBUG_LEVEL )
           std::cout << "VTK output of vertex-data '" << title.c_str() << "' to file '" << filename.c_str() << ".vtu'" <<  std::endl;
-  
+
         if( bSubSampling )
           {
 #ifdef PLOT_GHOST
@@ -270,10 +270,10 @@ namespace Dune {
 #endif
             ss_vtkwriter.addVertexData( new Dune::PDELab::VTKGridFunctionAdapter<DGF > ( dgf, title.c_str() ) );
             ss_vtkwriter.addCellData( new Dune::PDELab::VTKGridFunctionAdapter<DGF > ( dgf, "celldata" ) );
-          
+
             //find '/' or '\' in the filename
             size_t found=filename.find_last_of("/\\");
-	  
+
             //if parallel and complete path is given, use the pwrite() function
             if(found<filename.size()&& gv.comm().size() > 1) {
               ss_vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", vtkOutputType );
@@ -289,10 +289,10 @@ namespace Dune {
             //Dune::VTKWriter<GV> vtkwriter( gv, Dune::VTK::nonconforming );
 
             vtkwriter.addVertexData( new Dune::PDELab::VTKGridFunctionAdapter<DGF> ( dgf, title.c_str() ) );
-	  
+
             //find '/' or '\' in the filename
             size_t found=filename.find_last_of("/\\");
-	  
+
             //if parallel and complete path is given, use the pwrite() function
             if(found<filename.size()&& gv.comm().size() > 1) {
               vtkwriter.pwrite( filename.substr(found+1),filename.substr(0,found), "", vtkOutputType );
@@ -392,7 +392,7 @@ namespace Dune {
                                          const IDT& inputdata,
                                          const DIR& dir
                                          ) {
-      
+
         //const int dim = GV_GW::dimension;
         // What is this good for? This is for step 3 of ...
         // Idea:
@@ -402,26 +402,26 @@ namespace Dune {
         // 4a) mv Y_estimated_2.h5 Y_estimated.h5
         // 4b) rm L_prior.h5 (very important: Its value from L0 will be too small for L1.)
         // 5.) Run a second inversion on level L1 with using_existing_Yold="yes" and start geo_inversion with -c.
-        // 
+        //
         // Background: Step 3) works as a speeded up the generation of an initial estimation for step 5)
         // For example, one can start with head inversion in step 3) and carry on with m0m1 inversion in step 5)
         //
-          
+
         Vector<UINT> local_count,local_offset;
         Vector<REAL> Y_est_parallel;
 
         HDF5Tools::
           read_parallel_from_HDF5( gv_0
-                                 , inputdata
-                                 , Y_est_parallel
-                                 , groupname
-                                 , local_count
-                                 , local_offset
-                                 , filename1
-                                 , 1 // P0 blocksize
-                                 , FEMType::DG // P0
-                                 , 0 // structure is on grid level 0
-                                 );
+                                   , inputdata
+                                   , Y_est_parallel
+                                   , groupname
+                                   , local_count
+                                   , local_offset
+                                   , filename1
+                                   , 1 // P0 blocksize
+                                   , FEMType::DG // P0
+                                   , 0 // structure is on grid level 0
+                                   );
         YFG yfg_Y_est( inputdata, dir, gv_0.comm() );
 
         if( gv_0.comm().size() > 1 )
@@ -443,7 +443,7 @@ namespace Dune {
                                                   );
 
 
-        VTKPlot::output_vector_to_vtu( gv_1, 
+        VTKPlot::output_vector_to_vtu( gv_1,
                                        Y_est2,
                                        dir.vtudir + "/Y_est2",
                                        "Y_est2",
@@ -456,16 +456,16 @@ namespace Dune {
         HDF5Tools::
           write_parallel_to_HDF5(
                                  gv_1
-                               , inputdata
-                               , Y_est2
-                               , groupname
-                               , inputdata.domain_data.nCells
-                               , filename2
-                               , 1
-                               , FEMType::DG
-                               , 1
-                               , true
-                               );
+                                 , inputdata
+                                 , Y_est2
+                                 , groupname
+                                 , inputdata.domain_data.nCells
+                                 , filename2
+                                 , 1
+                                 , FEMType::DG
+                                 , 1
+                                 , true
+                                 );
         theGrid.globalRefine(-1);
 
       } // end of void plotDataToRefinedGrid
@@ -477,7 +477,7 @@ namespace Dune {
          \tparam GV The gridview type.
          \param gv The gridview.
          \param filename The name of the VTK file.
-       */
+      */
 
       template<typename GV>
       static void outputGridviewIndexToDGF( const GV& gv,
@@ -494,7 +494,7 @@ namespace Dune {
           gt.makeCube(dim);
         else
           gt.makeSimplex(dim);
-  
+
         typedef Dune::PDELab::P0LocalFiniteElementMap<double,double,dim> P0FEM;
         P0FEM p0fem( gt );
 
@@ -507,7 +507,7 @@ namespace Dune {
         typedef Dune::PDELab::GridFunctionSpace<GV,P0FEM,NOCON,VBE> P0GFS;
         P0GFS p0gfs(gv, p0fem, nocon );
 
-        typedef typename Dune::PDELab::BackendVectorSelector<P0GFS,double>::Type UType;    
+        typedef typename Dune::PDELab::BackendVectorSelector<P0GFS,double>::Type UType;
         UType u0(p0gfs, 0.0);
 
 
@@ -525,13 +525,13 @@ namespace Dune {
         it!=gv.template end<0,Dune::All_Partition>();++it) {
 
         // plotting element level
-        //u0[gv.indexSet().index(*it)] = (*it).level(); 
+        //u0[gv.indexSet().index(*it)] = (*it).level();
         // plotting element index
         u0[gv.indexSet().index(*it)] = gv.indexSet().index(*it);
         iElement++;
         }
         */
-    
+
         typedef Dune::PDELab::DiscreteGridFunction<P0GFS,UType> P0DGF;
         P0DGF u0dgf(p0gfs,u0);
 
@@ -543,12 +543,12 @@ namespace Dune {
                                    "IO",
                                    jobtitle.str() );
 
-        output2vtu( p0gfs, 
-                    u0, 
-                    filename, 
-                    "elementorder", 
-                    General::verbosity, 
-                    true, 
+        output2vtu( p0gfs,
+                    u0,
+                    filename,
+                    "elementorder",
+                    General::verbosity,
+                    true,
                     0
                     );
 

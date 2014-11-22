@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-/*  
+/*
     We use the XML Parser Boost.PropertyTree.
     See for example
     http://www.boost.org/doc/libs/1_47_0/doc/html/property_tree.html
@@ -141,11 +141,11 @@ namespace Dune{
       bool synthetic;
       bool using_existing_Yold;  // set by commandline argument --continue or -c
       int refine_estimate;       // Y_est gets replicated on a finer level
-      bool head_forward;         // 
+      bool head_forward;         //
       bool lnK_inversion;        //
       bool head_inversion;       //
-      bool transport_forward;    // 
-      bool heat_forward;    // 
+      bool transport_forward;    //
+      bool heat_forward;    //
       bool heat_mean_arrival_time_inversion;
       bool moments_geoeletric_potential_forward;
       bool moments_geoeletric_potential_inversion;
@@ -264,7 +264,7 @@ namespace Dune{
         bRecycleMatrixHierarchy= false;
         injection_time=0.0;
       }
-  
+
       void initialize(UINT dim_) {
         if( dim_ == 3 )
           nBoundaries = 6;
@@ -315,7 +315,7 @@ namespace Dune{
     };
 
 
-    enum MEASURE_TYPE { 
+    enum MEASURE_TYPE {
       UNDEF_MEASURE_TYPE,
       PUMPING_DATA,
       WELL_DATA,
@@ -340,21 +340,21 @@ namespace Dune{
     // The PointType specifies input data format.
     enum PointType {
       UNDEFINED,
-      SOURCE_POINT,   // XML expects the 2d(3d)-format: x, y, (z,) value 
+      SOURCE_POINT,   // XML expects the 2d(3d)-format: x, y, (z,) value
       WELL_POINT,     // XML expects the 2d(3d)-format: x, (y,) zTop, zBottom, k_well, flow_rate
-      //  INJECTION_SOURCE_POINT,   // XML expects the 2d(3d)-format: x, y, (z,) value 
+      //  INJECTION_SOURCE_POINT,   // XML expects the 2d(3d)-format: x, y, (z,) value
       //  INJECTION_WELL_POINT,     // XML expects the 2d(3d)-format: x, (y,) zTop, zBottom, k_well, flow_rate
-      MEASURE_POINT,   // XML expects the 2d(3d)-format: x, y, (z,) rel_error, abs_error, value 
-      DIFF_MEASURE_POINT,   // XML expects the 2d(3d)-format: x, y, (z,),x2,y2,(z2) rel_error, abs_error, value 
-      DIPOLE_POINT		// XML expects the 2d(3d)-format: x, y, (z,),x2,y2,(z2) value 	
+      MEASURE_POINT,   // XML expects the 2d(3d)-format: x, y, (z,) rel_error, abs_error, value
+      DIFF_MEASURE_POINT,   // XML expects the 2d(3d)-format: x, y, (z,),x2,y2,(z2) rel_error, abs_error, value
+      DIPOLE_POINT		// XML expects the 2d(3d)-format: x, y, (z,),x2,y2,(z2) value
     };
 
 
     /**********************************************************************************
      *
-     *  CPointData can represent 
+     *  CPointData can represent
      *  1.) a mesauring point (MEASURE_POINT)
-     *  or 
+     *  or
      *  2.) a point with pumping data (SOURCE_POINT)!
      *
      **********************************************************************************
@@ -413,7 +413,7 @@ namespace Dune{
       };
 
       void print(){
-        logger << "  x=" << x 
+        logger << "  x=" << x
                << "  y=" << y
 #ifdef DIMENSION3
                << "  z=" << z
@@ -456,14 +456,14 @@ namespace Dune{
         pointdata_vector.resize(0);
         total=0;  // IMPORTANT!!!
       };
-  
+
       // Copy constructor needed to create a copy of this list!
       CListOfDataPoints( const CListOfDataPoints & original_list )
       {
         pointtype = original_list.pointtype;
         total = original_list.total;
         pointdata_vector = original_list.pointdata_vector;
-      };  
+      };
     };
 
 
@@ -501,10 +501,10 @@ namespace Dune{
       int maxNComm;
       UINT JQJ_max;
       UINT JQJ_slices;
-      CParallelFineTuning():maxNComm(1),JQJ_max(4096),JQJ_slices(1){    
+      CParallelFineTuning():maxNComm(1),JQJ_max(4096),JQJ_slices(1){
       };
-   
-    
+
+
     };
 
     /**********************************************************************************
@@ -518,11 +518,11 @@ namespace Dune{
       UINT total;
       UINT start;
       UINT max_redo;
-    
-    
+
+
       //constructor
       CCRParameters():total(0),start(1),max_redo(1){
-        
+
       };
 
     };
@@ -634,9 +634,9 @@ namespace Dune{
     struct CGeoelectrical_Potential_Inversion_Data
     {
     public:
-      //constructor setting nconfig to 0;  
-      CGeoelectrical_Potential_Inversion_Data():nconfig(0){};  
-    
+      //constructor setting nconfig to 0;
+      CGeoelectrical_Potential_Inversion_Data():nconfig(0){};
+
       UINT nconfig;
       std::string kappa_hdf5_file;
       std::string sigma0_hdf5_file;
@@ -683,16 +683,16 @@ namespace Dune{
 
         lnk_inversion_data.mplist.pointtype = MEASURE_POINT;
         head_inversion_data.mplist.pointtype = MEASURE_POINT;
-    
+
         solute_concentration_inversion_data.m0_inversion_data.mplist.pointtype = MEASURE_POINT;
         solute_concentration_inversion_data.m0_inversion_data.sampling_volume.resize(dim,0.0);
         solute_concentration_inversion_data.m0_inversion_data.SV_limit = 0.0;
         solute_concentration_inversion_data.m0_inversion_data.SV_max.resize(dim,0.0);
         solute_concentration_inversion_data.m0_inversion_data.SV_step.resize(dim,0.0);
-    
+
         solute_concentration_inversion_data.m1_inversion_data.mplist.pointtype = MEASURE_POINT;
         solute_concentration_inversion_data.m1_inversion_data.sampling_volume.resize(dim,0.0);
-    
+
         heat_inversion_data.mpM0list.pointtype = MEASURE_POINT;
         heat_inversion_data.mpM1list.pointtype = MEASURE_POINT;
         heat_inversion_data.mplist.pointtype = MEASURE_POINT;
@@ -723,14 +723,14 @@ namespace Dune{
       typedef CSetupData SDT;
       typedef CDomainData DDT;
 
-      // global verbosity level for std::cout 
-      // 0=silent (ideally no logging at all), 
-      // 1=workflow logging (with ISTL logging off), 
+      // global verbosity level for std::cout
+      // 0=silent (ideally no logging at all),
+      // 1=workflow logging (with ISTL logging off),
       // 2=more detailed logging (with ISTL logging off),
       // 3=more detailed logging (with ISTL verbosity level 1)
       // 4=more detailed logging (with ISTL verbosity level 2)
       // 9=debug logging
-      int verbosity;  
+      int verbosity;
 
 #ifdef DIMENSION3
       static const UINT dim = 3;
@@ -744,8 +744,8 @@ namespace Dune{
       CTransportParameters transport_parameters;
       CInversionParameters inversion_parameters;
       CCRParameters CR_parameters;
-  
-      std::vector< CSetupData > setups; 
+
+      std::vector< CSetupData > setups;
 
       std::vector<      // how many setups?
         std::vector<    // how many wells per setup?
@@ -756,7 +756,7 @@ namespace Dune{
         > listOfAllWellCenters;
 
       CParallelFineTuning parallel_fine_tuning;
-  
+
       // The constructor
       CInputData( const Dune::MPIHelper &helper_ )
         : helper( helper_ ),verbosity(0)
@@ -803,34 +803,34 @@ namespace Dune{
         if( (well_list.pointtype!= WELL_POINT) || (pumping_list.pointtype != SOURCE_POINT ) ){
           logger<<"ERROR in: well2pumpingdata_for_simple_well_model; inputfile.hh: wrong list-type"<<std::endl;
           std::cout<<"ERROR in: well2pumpingdata_for_simple_well_model; inputfile.hh: wrong list-type"<<std::endl;
-          return -1; 
+          return -1;
         }
-      
+
         //loop over all wells and put them intopoint sources
         for(UINT iWell=0; iWell<well_list.pointdata_vector.size(); iWell++){
           int dim=2;
 #ifdef DIMENSION3
           dim=3;
 #endif
-          
+
           double lower=well_list.pointdata_vector[iWell].well_bottom;
           double upper=well_list.pointdata_vector[iWell].well_top;
-          
+
           UINT   l_int=(UINT)std::floor(lower/dd.virtual_gridsizes[dim-1]);
           UINT   u_int=(UINT)std::floor(upper/dd.virtual_gridsizes[dim-1]);
-          
-          
+
+
           for(UINT ii=l_int; ii<=u_int; ii++){
-              
+
             pumping_list.pointdata_vector.push_back(well_list.pointdata_vector[iWell]);
-            /*          
+            /*
                         #ifdef DIMENSION3
                         pumping_list.pointdata_vector[pumping_list.total].z=0.5*(pumping_list.pointdata_vector[pumping_list.total].well_top+pumping_list.pointdata_vector[pumping_list.total].well_bottom);
                         double tmp=pumping_list.pointdata_vector[pumping_list.total].z/dd.gridsizes[2];
                         pumping_list.pointdata_vector[pumping_list.total].z= (dd.gridsizes[2]*std::floor(tmp))+ (dd.gridsizes[2]*0.5);
-          
+
                         #else
-                        pumping_list.pointdata_vector[pumping_list.total].y=0.5*(pumping_list.pointdata_vector[pumping_list.total].well_top+pumping_list.pointdata_vector[pumping_list.total].well_bottom);      
+                        pumping_list.pointdata_vector[pumping_list.total].y=0.5*(pumping_list.pointdata_vector[pumping_list.total].well_top+pumping_list.pointdata_vector[pumping_list.total].well_bottom);
                         #endif
             */
 
@@ -844,81 +844,81 @@ namespace Dune{
 #else
             pumping_list.pointdata_vector[pumping_list.total].y=(double)(dd.virtual_gridsizes[1]*ii)+(dd.virtual_gridsizes[1]*0.5);
 #endif
-          
+
             tmp2=pumping_list.pointdata_vector[pumping_list.total].x/dd.virtual_gridsizes[0];
             pumping_list.pointdata_vector[pumping_list.total].x= (dd.virtual_gridsizes[0]*std::floor(tmp2))+ (dd.virtual_gridsizes[0]*0.5);
 
-          
+
             pumping_list.pointdata_vector[pumping_list.total].value=pumping_list.pointdata_vector[pumping_list.total].well_rate/( (u_int-l_int)+1 );
-      
+
             pumping_list.pointdata_vector[pumping_list.total].well_top=0.0;
             pumping_list.pointdata_vector[pumping_list.total].well_bottom=0.0;
             pumping_list.pointdata_vector[pumping_list.total].well_conductivity=0.0;
             pumping_list.pointdata_vector[pumping_list.total].well_rate=0.0;
-      
-          
+
+
             if(helper.rank()==0){
-         
+
               std::cout<<"well #"<<iWell<<" pointsource added at : "<<pumping_list.pointdata_vector[pumping_list.total].x<<", "
                        << pumping_list.pointdata_vector[pumping_list.total].y
 #ifdef DIMENSION3
                        <<", "<<pumping_list.pointdata_vector[pumping_list.total].z
 #endif
                        <<"."<<std::endl;
-            }                                 
+            }
             pumping_list.total+=1;
           }
         }
         return well_list.pointdata_vector.size();
-      
+
       }
 
       int convert_well_pumping_data(const REAL & dz, CListOfDataPoints& well_list, CListOfDataPoints& pumping_list)
       {
         std::vector<UINT> to_be_converted(0);
-    
+
         if( (well_list.pointtype!= WELL_POINT) || (pumping_list.pointtype != SOURCE_POINT ) ){
           logger<<"ERROR in: convert_well_pumping_data; inputfile.hh: wrong list-type"<<std::endl;
           std::cout<<"ERROR in: convert_well_pumping_data; inputfile.hh: wrong list-type"<<std::endl;
-          return -1; 
+          return -1;
         }
-    
+
         for(UINT ii=0; ii< well_list.pointdata_vector.size(); ii++){
           if(std::fabs(well_list.pointdata_vector[ii].well_top-well_list.pointdata_vector[ii].well_bottom)<dz){
             logger<<"found a pumping location in the wells at index: "<<ii<<std::endl;
             to_be_converted.push_back(ii);
           }
         }
-    
+
         for(UINT ii=0; ii< to_be_converted.size(); ii++){
           UINT last_pumping=pumping_list.total;
-      
+
           pumping_list.pointdata_vector.push_back(well_list.pointdata_vector[to_be_converted[ii]]);
-      
+
 #ifdef DIMENSION3
           pumping_list.pointdata_vector[last_pumping].z=0.5*(pumping_list.pointdata_vector[last_pumping].well_top+pumping_list.pointdata_vector[last_pumping].well_bottom);
 #else
           pumping_list.pointdata_vector[last_pumping].y=0.5*(pumping_list.pointdata_vector[last_pumping].well_top+pumping_list.pointdata_vector[last_pumping].well_bottom);
 #endif
           pumping_list.pointdata_vector[last_pumping].value=pumping_list.pointdata_vector[last_pumping].well_rate;
-      
+
           pumping_list.pointdata_vector[last_pumping].well_top=0.0;
           pumping_list.pointdata_vector[last_pumping].well_bottom=0.0;
           pumping_list.pointdata_vector[last_pumping].well_conductivity=0.0;
           pumping_list.pointdata_vector[last_pumping].well_rate=0.0;
-      
+
           pumping_list.total+=1;
 
         }
-    
+
         // delete from well list in reverse order!
-        for(INT ii= to_be_converted.size()-1; ii>=0; ii-=1 ){ 
+        for(INT ii= to_be_converted.size()-1; ii>=0; ii-=1 ){
           well_list.total-=1;
           well_list.pointdata_vector.erase(well_list.pointdata_vector.begin()+to_be_converted[ii]);
         }
         return to_be_converted.size();
       }
-    
+
 
 
       /** \brief reads measurement data from a string
@@ -927,7 +927,7 @@ namespace Dune{
        *  \param[in]  datastring row-wise listed set of measurement data
        *  \param[out] list Object containing pointdata vector
        *  \returns success(true) or failure(false)
-       *  \note 
+       *  \note
        */
       template<typename LIST>
       bool readDataToList( int nTotal,
@@ -970,7 +970,7 @@ namespace Dune{
           z = 0;
           z2 = 0;
 #endif
-          
+
           well_conductivity = 0.0;
           well_rate = 0.0;
           well_top = 0.0;
@@ -979,11 +979,11 @@ namespace Dune{
           temperature_injection_time=0.0;
           concentration=0.0;
           concentration_injection_time=0.0;
-          
+
           value = 0;
           rel_error = 0;
           abs_error = 0;
-          
+
           // Reading data...
           if( list.pointtype == WELL_POINT ){
             // ...for well location only:
@@ -1043,7 +1043,7 @@ namespace Dune{
 #endif
             instream >> value;
           }
-          
+
 
           if( list.pointtype == WELL_POINT ){
             logger << "  x=" << x;
@@ -1121,7 +1121,7 @@ namespace Dune{
             x2=std::floor(x2+0.5);
             if(std::fabs(std::floor(y2+0.5)-y2)<GEO_EPSILON)
             y2=std::floor(y2+0.5);
-            #ifdef DIMENSION3           
+            #ifdef DIMENSION3
             if(std::fabs(std::floor(z+0.5)-z)<GEO_EPSILON)
             z=std::floor(z+0.5);
             if(std::fabs(std::floor(z2+0.5)-z2)<GEO_EPSILON)
@@ -1132,7 +1132,7 @@ namespace Dune{
             if(std::fabs(std::floor(well_bottom+0.5)-well_bottom)<GEO_EPSILON)
             well_bottom=std::floor(well_bottom+0.5);
           */
-          
+
           list.pointdata_vector[iLineCounter].x = x;
           list.pointdata_vector[iLineCounter].y = y;
 #ifdef DIMENSION3
@@ -1144,7 +1144,7 @@ namespace Dune{
           list.pointdata_vector[iLineCounter].z2 = z2;
 #endif
           list.pointdata_vector[iLineCounter].value = value;
-          
+
           list.pointdata_vector[iLineCounter].well_top = well_top;
           list.pointdata_vector[iLineCounter].well_bottom = well_bottom;
           list.pointdata_vector[iLineCounter].well_conductivity = well_conductivity;
@@ -1153,18 +1153,18 @@ namespace Dune{
           list.pointdata_vector[iLineCounter].temperature_injection_time = temperature_injection_time;
           list.pointdata_vector[iLineCounter].concentration = concentration;
           list.pointdata_vector[iLineCounter].concentration_injection_time = concentration_injection_time;
-          
-	  
+
+
           list.pointdata_vector[iLineCounter].abs_error = abs_error;
           list.pointdata_vector[iLineCounter].rel_error = rel_error;
 
           list.pointdata_vector[iLineCounter].measure_type = measure_type;
-          
+
           iLineCounter++;
 
           char c=instream.peek();
           if(c=='\n'){
-            instream.readsome(&c,1);  
+            instream.readsome(&c,1);
             c=instream.peek();
             while (c==' '){
               instream.readsome(&c,1);
@@ -1172,7 +1172,7 @@ namespace Dune{
             }
           }
         } // end while
-    
+
         return true;
       }
 
@@ -1187,15 +1187,15 @@ namespace Dune{
        *  \returns vec vector to be filled with numbers from the dataline
        */
       template<typename NUMBER_TYPE>
-      void readVectorFromString( const std::string& dataline, 
+      void readVectorFromString( const std::string& dataline,
                                  std::vector<NUMBER_TYPE>& vec,
                                  const std::vector<NUMBER_TYPE>& defaultvector=std::vector<NUMBER_TYPE>(0) )
       {
         vec.clear();
         std::istringstream instream; // Declare an input string stream
         instream.clear(); // Reset from possible previous errors.
-        instream.str( dataline ); 
-    
+        instream.str( dataline );
+
         NUMBER_TYPE zahl;
         while(!instream.eof()) {
           if (instream >> zahl) {
@@ -1205,7 +1205,7 @@ namespace Dune{
         }
         if(vec.size()==0)
           vec = defaultvector;
-    
+
       }
 
 
@@ -1231,7 +1231,7 @@ namespace Dune{
           list.pointdata_vector.resize(0);
           return true;
         }
-        std::string datafile = pt.second.get("<xmlattr>.datafile","");    
+        std::string datafile = pt.second.get("<xmlattr>.datafile","");
         std::string datastring = "";
         if(datafile=="")
           datastring = pt.second.get("","");
@@ -1246,7 +1246,7 @@ namespace Dune{
             pFileBuffer->pubseekpos (0,std::ios::in);
             // allocate memory to contain file data
             textbuffer=new char[filesize];
-            // get file data  
+            // get file data
             pFileBuffer->sgetn (textbuffer,filesize);
             datastring = std::string( textbuffer );
             delete[] textbuffer;
@@ -1262,7 +1262,7 @@ namespace Dune{
         else
           return false;
       }
-  
+
 
 
 
@@ -1277,12 +1277,12 @@ namespace Dune{
       bool readBoundaryToBoundaryObject( const PT& pt, BoundaryObject& boundary ){
 
         try {
-          boundary.bctype 
+          boundary.bctype
             = pt.second.get("<xmlattr>.bctype",1); // Dirichlet B.C. is default
 
-          boundary.orientation 
+          boundary.orientation
             = pt.second.get("<xmlattr>.orientation","west");
-    
+
           UINT nAvailableStripes = pt.second.get_child("").size();
           if( nAvailableStripes < 1 ){
             std::cerr << "Error: Stripe is missing!" << std::endl;
@@ -1297,9 +1297,9 @@ namespace Dune{
                 = v.second.get("<xmlattr>.value",0.0);
               newstripe.regularization_factor
                 = v.second.get("<xmlattr>.regularization_factor",1.0);
-              newstripe.bfixedwidth = 
+              newstripe.bfixedwidth =
                 ("fixed"==v.second.get("<xmlattr>.regularization_type","dynamic")) ? true : false;
-          
+
               readVectorFromString<REAL>( v.second.get("startpoint","0 0"), newstripe.startpoint );
               readVectorFromString<REAL>( v.second.get("endpoint", "1 1"), newstripe.endpoint );
               boundary.stripes.push_back( newstripe );
@@ -1315,8 +1315,8 @@ namespace Dune{
         }
 
 
-      }    
-    
+      }
+
 
 
       /** \brief reads a list of measurement data from a string
@@ -1355,7 +1355,7 @@ namespace Dune{
           std::cout << "WARNING in readCommonEquationData(): " << ex.what() << std::endl;
           return false;
         }
-    
+
       }
 
 
@@ -1368,10 +1368,10 @@ namespace Dune{
        *
        *  \note The XML file is read as one single file stream into a text buffer on the root process.
        *        The contents of the textbuffer is then being sent to all other processes.
-       *        Afterwards a copy of the textbuffer is moved to a string stream used as input 
+       *        Afterwards a copy of the textbuffer is moved to a string stream used as input
        *        for the XML parser's input function read_xml().
        */
-      bool readInputFileXml(const std::string filename) 
+      bool readInputFileXml(const std::string filename)
       {
 
         Dune::Timer watch;
@@ -1380,7 +1380,7 @@ namespace Dune{
         // -------------------------------------------------------------------------------
         // Read XML document as a stringstream only on one processor.
         // Then, send this stream to all other processes using a dynamic character buffer.
-        // -------------------------------------------------------------------------------	
+        // -------------------------------------------------------------------------------
         std::string xmlstring;
         int filesize = 0;
 
@@ -1400,13 +1400,13 @@ namespace Dune{
 
             // allocate memory to contain file data, reserve one more char for ending null
             textbuffer=new char[filesize+1];
-            
-            // get file data  
+
+            // get file data
             pFileBuffer->sgetn (textbuffer,filesize);
 
             // Important: append null character to string makes sure that the string ends here!
             textbuffer[filesize] = '\0';
-        
+
             xmlstring = std::string( textbuffer );
 
             filestream.close();
@@ -1432,7 +1432,7 @@ namespace Dune{
         }
 
         else {
-          
+
           if( verbosity==9 ){
             std::cout << "Broadcast XML stream to process " << helper.rank() << std::endl;
           }
@@ -1441,7 +1441,7 @@ namespace Dune{
           MPI_Bcast( &filesize, 1, MPI_INT, 0, helper.getCommunicator());
 
           char textbuffer[filesize]; // Do not use char* with new and delete here!
-          
+
           // Receive character buffer with trailing '\0':
           MPI_Bcast( textbuffer, filesize+1, MPI_CHAR, 0, helper.getCommunicator());
           //std::cout.write (textbuffer,filesize);
@@ -1469,7 +1469,7 @@ namespace Dune{
 
         //std::cout << xmlstring << std::endl;
         //std::cout << xmlstream.str() << std::endl;
-    
+
 
         // starting try-block for XML-Parsing
         try{
@@ -1536,13 +1536,13 @@ namespace Dune{
           // "<problem_types>":
 
           // (This shows how to read a string attribute of an XML-element with a given default value "no".)
-          problem_types.new_YField 
+          problem_types.new_YField
             = ("yes" == pt.get("inputfile.problem_types.<xmlattr>.new_YField","no")) ? true : false;
-          problem_types.new_Eigenvalues  
+          problem_types.new_Eigenvalues
             = ("yes" == pt.get("inputfile.problem_types.<xmlattr>.new_Eigenvalues","no")) ? true : false;
 
           // (This shows how to read a string attribute of an XML-element with a given default value "yes".)
-          problem_types.synthetic 
+          problem_types.synthetic
             = ("yes" == pt.get("inputfile.problem_types.<xmlattr>.synthetic","yes")) ? true : false;
 
           problem_types.using_existing_Yold
@@ -1552,17 +1552,17 @@ namespace Dune{
             = pt.get("inputfile.problem_types.<xmlattr>.refine_estimate",0);
 
           // (This shows how to read a string attribute of an XML-element with a given default value "off".)
-          problem_types.head_forward 
+          problem_types.head_forward
             = ("on" == pt.get("inputfile.problem_types.<xmlattr>.head_forward","off")) ? true : false;
-          problem_types.transport_forward 
+          problem_types.transport_forward
             = ("on" == pt.get("inputfile.problem_types.<xmlattr>.transport_forward","off")) ? true : false;
-          problem_types.heat_forward 
+          problem_types.heat_forward
             = ("on" == pt.get("inputfile.problem_types.<xmlattr>.heat_forward","off")) ? true : false;
-          problem_types.moments_geoeletric_potential_forward 
+          problem_types.moments_geoeletric_potential_forward
             = ("on" == pt.get("inputfile.problem_types.<xmlattr>.moments_geoeletric_potential_forward","off")) ? true : false;
-          problem_types.lnK_inversion 
+          problem_types.lnK_inversion
             = ("on" == pt.get("inputfile.problem_types.<xmlattr>.lnK_inversion","off")) ? true : false;
-          problem_types.head_inversion 
+          problem_types.head_inversion
             = ("on" == pt.get("inputfile.problem_types.<xmlattr>.head_inversion","off")) ? true : false;
           problem_types.heat_mean_arrival_time_inversion
             = ("on" == pt.get("inputfile.problem_types.<xmlattr>.heat_mean_arrival_time_inversion","off")) ? true : false;
@@ -1570,9 +1570,9 @@ namespace Dune{
             = ("on" == pt.get("inputfile.problem_types.<xmlattr>.transport_inversion_m0","off")) ? true : false;
           problem_types.transport_inversion_m1
             = ("on" == pt.get("inputfile.problem_types.<xmlattr>.transport_inversion_m1","off")) ? true : false;
-          problem_types.moments_geoeletric_potential_inversion 
+          problem_types.moments_geoeletric_potential_inversion
             = ("on" == pt.get("inputfile.problem_types.<xmlattr>.moments_geoeletric_potential_inversion","off")) ? true : false;
-          problem_types.CR 
+          problem_types.CR
             = ("on" == pt.get("inputfile.problem_types.<xmlattr>.conditional_realization","off")) ? true : false;
           problem_types.estimation_variance_only
             = ("on" == pt.get("inputfile.problem_types.<xmlattr>.estimation_variance_only","off")) ? true : false;
@@ -1583,11 +1583,11 @@ namespace Dune{
           // "<domain_data>":
           // ================
           domain_data.initialize(dim);
-        
+
           readVectorFromString<REAL>( pt.get("inputfile.domain_data.extensions","1   1"), domain_data.extensions );
           readVectorFromString<UINT>( pt.get("inputfile.domain_data.virtual_nCells","1   1"), domain_data.nCells );
           readVectorFromString<UINT>( pt.get("inputfile.domain_data.chunks","1   1"), domain_data.nChunks );
-      
+
           readVectorFromString<REAL>( pt.get("inputfile.domain_data.lineplot.startpoint","0 0"), domain_data.lineplot.startpoint );
           readVectorFromString<REAL>( pt.get("inputfile.domain_data.lineplot.endpoint","0 0"), domain_data.lineplot.endpoint );
 
@@ -1599,11 +1599,11 @@ namespace Dune{
             pt.get("inputfile.domain_data.yasp_grid.<xmlattr>.baselevel",0);
           domain_data.yasp_maxlevel =
             pt.get("inputfile.domain_data.yasp_grid.<xmlattr>.maxlevel",0);
-          domain_data.yasp_overlap = 
+          domain_data.yasp_overlap =
             pt.get("inputfile.domain_data.yasp_grid.<xmlattr>.overlap",1);
           for(UINT i = 0; i < dim; i++){
             UINT nYaspGridCells_i = pow( 2, this->domain_data.yasp_baselevel ) * this->domain_data.yasp_nCells[i];
-            this->domain_data.yasp_gridsizes[i] 
+            this->domain_data.yasp_gridsizes[i]
               = this->domain_data.extensions[i] / (double) nYaspGridCells_i;
           }
           domain_data.baselevel_gridsizes = domain_data.yasp_gridsizes;
@@ -1611,47 +1611,47 @@ namespace Dune{
 
 
 #ifdef USE_ALUGRID
-          domain_data.alugrid_globalrefine = 
+          domain_data.alugrid_globalrefine =
             pt.get("inputfile.domain_data.alu_grid.<xmlattr>.globalrefine",0);
-          domain_data.alugrid_baselevel = 
+          domain_data.alugrid_baselevel =
             pt.get("inputfile.domain_data.alu_grid.<xmlattr>.baselevel",0);
-          domain_data.alugrid_maxsteps = 
+          domain_data.alugrid_maxsteps =
             pt.get("inputfile.domain_data.alu_grid.<xmlattr>.maxsteps",0);
-          domain_data.alugrid_refinementfraction = 
+          domain_data.alugrid_refinementfraction =
             pt.get("inputfile.domain_data.alu_grid.<xmlattr>.refinementfraction",0.1);
-          domain_data.alugrid_coarseningfraction = 
+          domain_data.alugrid_coarseningfraction =
             pt.get("inputfile.domain_data.alu_grid.<xmlattr>.coarseningfraction",0.0);
-          domain_data.alugrid_tolerance = 
+          domain_data.alugrid_tolerance =
             pt.get("inputfile.domain_data.alu_grid.<xmlattr>.TOL",0.1);
-          domain_data.alugrid_strategy = 
+          domain_data.alugrid_strategy =
             pt.get("inputfile.domain_data.alugrid_grid.<xmlattr>.strategy",1);
           // Compute gridsizes of alugrid along directions parallel to the coordinate axis
           for(UINT i = 0; i < dim; i++){
             UINT nAluGridCells_i = std::pow( 2, this->domain_data.alugrid_globalrefine ) * this->domain_data.nCells[i];
-            this->domain_data.alugrid_gridsizes[i] 
+            this->domain_data.alugrid_gridsizes[i]
               = this->domain_data.extensions[i] / (double) nAluGridCells_i;
           }
           domain_data.baselevel_gridsizes = domain_data.alugrid_gridsizes;
 #endif
 
 #ifdef USE_UG
-          domain_data.ug_heapsize = 
+          domain_data.ug_heapsize =
             pt.get("inputfile.domain_data.ug_grid.<xmlattr>.heapsize",1000);
-          domain_data.ug_globalrefine = 
+          domain_data.ug_globalrefine =
             pt.get("inputfile.domain_data.ug_grid.<xmlattr>.globalrefine",0);
-          domain_data.ug_baselevel = 
+          domain_data.ug_baselevel =
             pt.get("inputfile.domain_data.ug_grid.<xmlattr>.baselevel",0);
-          domain_data.ug_maxsteps = 
+          domain_data.ug_maxsteps =
             pt.get("inputfile.domain_data.ug_grid.<xmlattr>.maxsteps",0);
-          domain_data.ug_refinementtype = 
+          domain_data.ug_refinementtype =
             pt.get("inputfile.domain_data.ug_grid.<xmlattr>.refinementtype","nonconforming");
-          domain_data.ug_refinementfraction = 
+          domain_data.ug_refinementfraction =
             pt.get("inputfile.domain_data.ug_grid.<xmlattr>.refinementfraction",0.1);
-          domain_data.ug_coarseningfraction = 
+          domain_data.ug_coarseningfraction =
             pt.get("inputfile.domain_data.ug_grid.<xmlattr>.coarseningfraction",0.0);
-          domain_data.ug_tolerance = 
+          domain_data.ug_tolerance =
             pt.get("inputfile.domain_data.ug_grid.<xmlattr>.TOL",0.1);
-          domain_data.ug_strategy = 
+          domain_data.ug_strategy =
             pt.get("inputfile.domain_data.ug_grid.<xmlattr>.strategy",1);
           for(UINT i = 0; i < dim; i++) {
             // Take care: This here works only for a rectangular domain:
@@ -1663,20 +1663,20 @@ namespace Dune{
 
           // Calculate the virtual gridsizes for each dimension:
           for (UINT index = 0; index < dim; index++) {
-            domain_data.virtual_gridsizes[index] 
+            domain_data.virtual_gridsizes[index]
               = domain_data.extensions[index] / (CTYPE) domain_data.nCells[index];
-          }        
+          }
 
 
           // yfield properties:
           UINT nz = pt.get("inputfile.yfield_properties.<xmlattr>.vertical_zones",1);
-          UINT nz_available = pt.get_child("inputfile.yfield_properties").size(); 
+          UINT nz_available = pt.get_child("inputfile.yfield_properties").size();
           // Be careful though! The number of children could be more than the real number of available zones.
-        
+
           logger << "active zones = " << nz << std::endl;
           logger << "available zones = " << nz_available << std::endl;
 
-          std::string well_type = 
+          std::string well_type =
             pt.get("inputfile.yfield_properties.<xmlattr>.well_type","line");
 
           if( nz_available < nz ){
@@ -1684,7 +1684,7 @@ namespace Dune{
             return false;
           }
           yfield_properties.initialize( nz_available );
-    
+
           // Reading all children of an element
           int count=0;
           BOOST_FOREACH( ptree::value_type &v, pt.get_child("inputfile.yfield_properties") ){
@@ -1701,7 +1701,7 @@ namespace Dune{
               yfield_properties.zones[count].sigma0 = v.second.get("<xmlattr>.sigma0",0.03);
               yfield_properties.zones[count].c_s = v.second.get("<xmlattr>.heat_capacity",800);
               yfield_properties.zones[count].lambda_s = v.second.get("<xmlattr>.thermal_conductivity",1.5);
-           
+
               readVectorFromString<REAL>(v.second.get("correlationlengths","1   1"),
                                          yfield_properties.zones[count].correlation_lambda,
                                          domain_data.extensions);
@@ -1765,7 +1765,7 @@ namespace Dune{
 
           transport_parameters.istl_atOnceAccu
             = pt.get("inputfile.transport_parameters.<xmlattr>.istl_atOnceAccu","on");
-      
+
           // point source regularization
           transport_parameters.point_smearing
             = pt.get("inputfile.transport_parameters.<xmlattr>.point_smearing",0.1);
@@ -1832,18 +1832,18 @@ namespace Dune{
           inversion_parameters.m1relerror
             = pt.get("inputfile.inversion_parameters.<xmlattr>.m1relerror",0.0);
 
-      
+
           // =========================
           // "<parallel_fine_tuning>":
-          // =========================     
+          // =========================
 
           parallel_fine_tuning.maxNComm
             = pt.get("inputfile.parallel_fine_tuning.<xmlattr>.maxNComm",1);
 
           if(parallel_fine_tuning.maxNComm>helper.size()){
-            if( helper.rank()==0) 
-              std::cout<<"Set maximum possible maxNComm!!! ( "<<helper.size()<<" )"<<std::endl; 
-            logger<<"Set maximum possible maxNComm!!! ( "<<helper.size()<<" )"<<std::endl;  
+            if( helper.rank()==0)
+              std::cout<<"Set maximum possible maxNComm!!! ( "<<helper.size()<<" )"<<std::endl;
+            logger<<"Set maximum possible maxNComm!!! ( "<<helper.size()<<" )"<<std::endl;
             parallel_fine_tuning.maxNComm=helper.size();
           }
 
@@ -1884,7 +1884,7 @@ namespace Dune{
             logger << "-----------------------------------------" << std::endl;
             logger << "Reading Setups! total: " << total_setups << std::endl;
             logger << "-----------------------------------------" << std::endl;
-        
+
             setups.resize(total_setups);
 
             int nSetups=0; // setup counter
@@ -1982,11 +1982,11 @@ namespace Dune{
                   //<head_inversion_data>
                   //======================
                   if( setup_child.first == "head_inversion_data" ) {
-                
+
                     setups[nSetups].head_inversion_data.regularization_factor
                       = setup_child.second.get("<xmlattr>.regularization_factor",1.0);
 
-                    setups[nSetups].head_inversion_data.bfixedwidth = 
+                    setups[nSetups].head_inversion_data.bfixedwidth =
                       ("fixed"==setup_child.second.get("<xmlattr>.regularization_type","dynamic")) ? true : false;
 
                     BOOST_FOREACH( ptree::value_type measurements_node, setup_child.second.get_child("") ){
@@ -2011,18 +2011,18 @@ namespace Dune{
                     //====================
                     BOOST_FOREACH( ptree::value_type subtype_node, setup_child.second.get_child("") ){
                       if( subtype_node.first == "m0_inversion_data" ) {
-                    
-                    
+
+
                         readVectorFromString<REAL>( subtype_node.second.get("<xmlattr>.sampling_volume",""),
                                                     setups[nSetups].solute_concentration_inversion_data.m0_inversion_data.sampling_volume );
 
                         logger << "sampling volume = " << setups[nSetups].solute_concentration_inversion_data.m0_inversion_data.sampling_volume[0] << std::endl;
                         logger << "sampling volume = " << setups[nSetups].solute_concentration_inversion_data.m0_inversion_data.sampling_volume[1] << std::endl;
 
-                    
+
                         readVectorFromString<REAL>( subtype_node.second.get("<xmlattr>.SV_max",""),
                                                     setups[nSetups].solute_concentration_inversion_data.m0_inversion_data.SV_max );
-                    
+
                         readVectorFromString<REAL>( subtype_node.second.get("<xmlattr>.SV_step",""),
                                                     setups[nSetups].solute_concentration_inversion_data.m0_inversion_data.SV_step );
 
@@ -2034,7 +2034,7 @@ namespace Dune{
                         setups[nSetups].solute_concentration_inversion_data.regularization_factor
                           = setup_child.second.get("<xmlattr>.regularization_factor",1.0);
 
-                        setups[nSetups].solute_concentration_inversion_data.bfixedwidth = 
+                        setups[nSetups].solute_concentration_inversion_data.bfixedwidth =
                           ("fixed"==setup_child.second.get("<xmlattr>.regularization_type","dynamic")) ? true : false;
 
                         BOOST_FOREACH( ptree::value_type measurements_node, subtype_node.second.get_child("") ){
@@ -2046,7 +2046,7 @@ namespace Dune{
                           }
                         }
                         //std::cout << "DEBUG: " << setups[nSetups].solute_concentration_inversion_data.m0_inversion_data.mplist.pointdata_vector[1].x << std::endl;
-                    
+
                       }
                     }
                     //====================
@@ -2054,7 +2054,7 @@ namespace Dune{
                     //====================
                     BOOST_FOREACH( ptree::value_type subtype_node, setup_child.second.get_child("") ){
                       if( subtype_node.first == "m1_inversion_data" ) {
-                    
+
                         readVectorFromString<REAL>( subtype_node.second.get("<xmlattr>.sampling_volume",""),
                                                     setups[nSetups].solute_concentration_inversion_data.m1_inversion_data.sampling_volume );
 
@@ -2065,7 +2065,7 @@ namespace Dune{
                           if( measurements_node.first == "m1_measurements" ) {
                             readDataListToVectorList( measurements_node, setups[nSetups].solute_concentration_inversion_data.m1_inversion_data.mplist, M1_DATA );
                           }
-                        }                    
+                        }
                       }
                     }
                   }
@@ -2078,8 +2078,8 @@ namespace Dune{
 
                     setups[nSetups].heat_inversion_data.regularization_factor
                       = setup_child.second.get("<xmlattr>.regularization_factor",1.0);
-                
-                    setups[nSetups].heat_inversion_data.bfixedwidth = 
+
+                    setups[nSetups].heat_inversion_data.bfixedwidth =
                       ("fixed"==setup_child.second.get("<xmlattr>.regularization_type","dynamic")) ? true : false;
 
                     //====================
@@ -2091,7 +2091,7 @@ namespace Dune{
                       }
                     }
                     //std::cout << "DEBUG: " << setups[nSetups].heat_inversion_data.mpM0list.pointdata_vector[1].x << std::endl;
-                    
+
                     //====================
                     // <m1_measurements>
                     //====================
@@ -2119,7 +2119,7 @@ namespace Dune{
                       nmeas=this->setups[nSetups].heat_inversion_data.mpM0list.pointdata_vector.size();
                       this->setups[nSetups].heat_inversion_data.mpM1list.pointdata_vector.resize(nmeas);
                     }
-                    
+
                     std::vector<UINT> ToBeErased;
                     for(UINT ii=0; ii<nmeas; ii++){
                       if( std::fabs(this->setups[nSetups].heat_inversion_data.mpM0list.pointdata_vector[ii].x-this->setups[nSetups].heat_inversion_data.mpM1list.pointdata_vector[ii].x)< GEO_EPSILON
@@ -2129,17 +2129,17 @@ namespace Dune{
 #endif
                           ){
                         CPointData tmp_data_point=this->setups[nSetups].heat_inversion_data.mpM1list.pointdata_vector[ii];
-    
+
                         if(std::fabs(this->setups[nSetups].heat_inversion_data.mpM0list.pointdata_vector[ii].value)>GEO_EPSILON*0.5)
                           tmp_data_point.value/=this->setups[nSetups].heat_inversion_data.mpM0list.pointdata_vector[ii].value;
                         else{
                           logger<<"measurement of heat m0 too small in measurement #"<<ii<<" (use: "<<(GEO_EPSILON*0.5)<<")!"<<std::endl;
                           tmp_data_point.value/=(GEO_EPSILON*0.5);
                         }
-           
+
                         this->setups[nSetups].heat_inversion_data.mplist.pointdata_vector.push_back(tmp_data_point);
                       }else{
-                        logger<<"drop measurement: missmatch in m0 and m1 location! "<<std::endl; 
+                        logger<<"drop measurement: missmatch in m0 and m1 location! "<<std::endl;
                         logger<<"m0( "<<this->setups[nSetups].heat_inversion_data.mpM0list.pointdata_vector[ii].x;
                         logger<<", "<<this->setups[nSetups].heat_inversion_data.mpM0list.pointdata_vector[ii].y;
 #ifdef DIMENSION3
@@ -2154,8 +2154,8 @@ namespace Dune{
                         logger<<" )"<<std::endl;
                         ToBeErased.push_back(ii);
                       }
-                    } 
-          
+                    }
+
                     for(UINT ii=0; ii<ToBeErased.size(); ii++){
                       this->setups[nSetups].heat_inversion_data.mpM0list.pointdata_vector.erase(this->setups[nSetups].heat_inversion_data.mpM0list.pointdata_vector.begin()+ToBeErased[ii]);
                       this->setups[nSetups].heat_inversion_data.mpM1list.pointdata_vector.erase(this->setups[nSetups].heat_inversion_data.mpM1list.pointdata_vector.begin()+ToBeErased[ii]);
@@ -2167,7 +2167,7 @@ namespace Dune{
                   // ==============================
                   // <geoelectrical_potential_data>
                   // ==============================
-              
+
                   if( setup_child.first == "geoelectrical_potential_data" ) {
 
                     setups[nSetups].geoelectrical_potential_inversion_data.kappa_hdf5_file =
@@ -2192,12 +2192,12 @@ namespace Dune{
                             break;
                           }
                           logger<<std::endl<<"geoelectrical_potential_configuration #"<<nGP+1<<std::endl;
-              
+
                           CListOfDataPoints inoutlist_tmp;
                           CListOfDataPoints mpM0list_tmp;
                           CListOfDataPoints mpM1list_tmp;
                           CListOfDataPoints mplist_tmp;
-                        
+
                           inoutlist_tmp.pointtype = DIPOLE_POINT;
                           mpM0list_tmp.pointtype = DIFF_MEASURE_POINT;
                           mpM1list_tmp.pointtype = DIFF_MEASURE_POINT;
@@ -2233,29 +2233,29 @@ namespace Dune{
                             }
 
                           } // end of loop over measurement types
-                      
+
                           // Ask Ronnie: What is this good for?
                           logger<<"-----------------------------------------"<<std::endl;
-          
+
                           //correction if something directly on the domain boundary (only for the maximal extension)
                           for(UINT ii=0; ii<inoutlist_tmp.pointdata_vector.size(); ii++){
-                        
+
                             if( std::fabs(domain_data.extensions[0]-inoutlist_tmp.pointdata_vector[ii].x)<GEO_EPSILON )
                               inoutlist_tmp.pointdata_vector[ii].x=domain_data.extensions[0]-GEO_EPSILON;
-                        
+
                             if(std::fabs(domain_data.extensions[0]-inoutlist_tmp.pointdata_vector[ii].x2)<GEO_EPSILON )
                               inoutlist_tmp.pointdata_vector[ii].x2=domain_data.extensions[0]-GEO_EPSILON;
-                        
+
                             if(std::fabs(domain_data.extensions[1]-inoutlist_tmp.pointdata_vector[ii].y)<GEO_EPSILON )
                               inoutlist_tmp.pointdata_vector[ii].y=domain_data.extensions[1]-GEO_EPSILON;
-                        
+
                             if(std::fabs(domain_data.extensions[1]-inoutlist_tmp.pointdata_vector[ii].y2)<GEO_EPSILON )
                               inoutlist_tmp.pointdata_vector[ii].y2=domain_data.extensions[1]-GEO_EPSILON;
-                        
+
 #ifdef DIMENSION3
                             if(std::fabs(domain_data.extensions[2]-inoutlist_tmp.pointdata_vector[ii].z)<GEO_EPSILON )
                               inoutlist_tmp.pointdata_vector[ii].z=domain_data.extensions[2]-GEO_EPSILON;
-                          
+
                             if(std::fabs(domain_data.extensions[2]-inoutlist_tmp.pointdata_vector[ii].z2)<GEO_EPSILON )
                               inoutlist_tmp.pointdata_vector[ii].z2=domain_data.extensions[2]-GEO_EPSILON;
 #endif
@@ -2287,19 +2287,19 @@ namespace Dune{
 #endif
                                ){
                               CPointData tmp_data_point=mpM1list_tmp.pointdata_vector[ii];
-    
+
                               if(std::fabs(mpM0list_tmp.pointdata_vector[ii].value)>GEO_EPSILON*0.5)
                                 tmp_data_point.value/=mpM0list_tmp.pointdata_vector[ii].value;
                               else{
                                 logger<<"measurement of m0 too small in measurement #"<<ii<<" (use: "<<(GEO_EPSILON*0.5)<<")!"<<std::endl;
                                 tmp_data_point.value/=(GEO_EPSILON*0.5);
                               }
-           
+
                               mplist_tmp.pointdata_vector.push_back(tmp_data_point);
                             }else{
-                              logger<<"drop measurement: missmatch in m0 and m1 location! "<<std::endl; 
+                              logger<<"drop measurement: missmatch in m0 and m1 location! "<<std::endl;
                               logger<<"m0_1( "<<mpM0list_tmp.pointdata_vector[ii].x;
-                              logger<<", "<<mpM0list_tmp.pointdata_vector[ii].y;          
+                              logger<<", "<<mpM0list_tmp.pointdata_vector[ii].y;
 #ifdef DIMENSION3
                               logger<<", "<<mpM0list_tmp.pointdata_vector[ii].z;
 #endif
@@ -2325,13 +2325,13 @@ namespace Dune{
                               ToBeErased.push_back(ii);
                             }
                           }
-          
+
                           for(UINT ii=0; ii<ToBeErased.size(); ii++){
                             mpM0list_tmp.pointdata_vector.erase(mpM0list_tmp.pointdata_vector.begin()+ToBeErased[ii]);
                             mpM1list_tmp.pointdata_vector.erase(mpM1list_tmp.pointdata_vector.begin()+ToBeErased[ii]);
                           }
-        
-          
+
+
                           this->setups[nSetups].geoelectrical_potential_inversion_data.inoutlist.push_back(inoutlist_tmp);
                           this->setups[nSetups].geoelectrical_potential_inversion_data.mpM0list.push_back(mpM0list_tmp);
                           this->setups[nSetups].geoelectrical_potential_inversion_data.mpM1list.push_back(mpM1list_tmp);
@@ -2341,20 +2341,20 @@ namespace Dune{
                         } // end if "geoelectrical_potential_configuration"
 
                       } // end of configuration loop
-                  
+
                       if(total_GP>nGP){ // warning more HT setups requested then in the input file
-                        logger << std::endl 
-                               << "WARNING: " << total_GP 
+                        logger << std::endl
+                               << "WARNING: " << total_GP
                                << " geoelectrical potential configurations requested but only "
-                               << nGP << " configurations found!!" 
+                               << nGP << " configurations found!!"
                                << std::endl << std::endl;
                       }
                       setups[nSetups].geoelectrical_potential_inversion_data.nconfig = nGP;
 
                     }
                     else {
-                      logger << std::endl 
-                             << "No geoelectrical potential data in the InputFile-XML." 
+                      logger << std::endl
+                             << "No geoelectrical potential data in the InputFile-XML."
                              << std::endl << std::endl;
                       setups[nSetups].geoelectrical_potential_inversion_data.nconfig = 0;
                     } // end if ( total_GP > 0 )
@@ -2372,13 +2372,13 @@ namespace Dune{
               } // end if(setup_node.first == "Setup")
 
             } // end of loop over all setups
-        
+
           }
 
         } catch(std::exception const&  ex) {
-      
+
           std::cout << "WARNING: " << ex.what() << std::endl;
-      
+
         }
 
 
@@ -2389,10 +2389,10 @@ namespace Dune{
                                                 verbosity,
                                                 "IO",
                                                 jobtitle.str() );
-	
+
         return true;
-    
-      }; // end of readInputFileXml(const std::string filename) 
+
+      }; // end of readInputFileXml(const std::string filename)
 
 
 
@@ -2402,11 +2402,11 @@ namespace Dune{
       void writeToScreen() {
 
         if( helper.rank()==0 ){
-        
+
           std::cout << "----------------------" << std::endl;
           std::cout << "Summary of input file:" << std::endl;
           std::cout << "----------------------" << std::endl;
-        
+
 
           std::cout << " Physical domain sizes in meters :   ";
           for( UINT index=0; index<dim; index++ )
@@ -2433,17 +2433,17 @@ namespace Dune{
 
           std::cout << "Scheidegger Dispersion Parameters: " << std::endl;
 
-          std::cout 
+          std::cout
             << " a_l = " << transport_parameters.a_longitudinal
             << std::endl;
-          std::cout 
+          std::cout
             << " a_t = " << transport_parameters.a_transversal
             << std::endl;
-          std::cout 
+          std::cout
             << " D_m = " << transport_parameters.D_molecular
             << std::endl;
 
-          std::cout 
+          std::cout
             << "Total number of setups specified in the inputfile = "
             << setups.size()
             << std::endl;
@@ -2457,7 +2457,7 @@ namespace Dune{
         logger << "----------------------" << std::endl;
         logger << "Summary of input file:" << std::endl;
         logger << "----------------------" << std::endl;
-	  
+
         logger << "extensions = ";
         for (UINT index = 0; index < dim; index++)
           logger << this->domain_data.extensions[index] << "   ";
@@ -2507,7 +2507,7 @@ namespace Dune{
           logger << "variance = " << this->yfield_properties.zones[ii].variance << std::endl;
           logger << "embedding_factor = " << this->yfield_properties.zones[ii].embedding_factor << std::endl;
           logger << "porosity = " << this->yfield_properties.zones[ii].porosity << std::endl;
-	  
+
           logger << "correlation lengths  = " << std::endl;
           for (UINT index = 0; index < dim; index++)
             logger << this->yfield_properties.zones[ii].correlation_lambda[index] << "   ";
@@ -2525,4 +2525,3 @@ namespace Dune{
 
 
 #endif	/* DUNE_GESIS_INPUTFILE_HH */
-

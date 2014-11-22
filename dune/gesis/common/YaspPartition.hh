@@ -16,14 +16,14 @@ namespace Dune {
     private:
       typedef Dune::FieldVector<int,dim> iTupel;
       const IntegerVector& yasppartitions;
-      
+
     public:
       //constructor:
       YaspPartition( const IntegerVector& yasppartitions_ )
         : yasppartitions( yasppartitions_ )
       {
       }
-      
+
       void loadbalance (const iTupel& size, int P, iTupel& dims) const
       {
         for(UINT i=0;i<dim;i++)

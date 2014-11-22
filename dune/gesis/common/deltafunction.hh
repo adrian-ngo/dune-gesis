@@ -3,7 +3,7 @@
 
 // If the smearing is below this level it does not make sense to use the Gaussian.
 // The quadrature point might miss the peak of the Gaussian resulting in a zero solution!
-#define PEAK_THRESHOLD 0.125  
+#define PEAK_THRESHOLD 0.125
 
 namespace Dune{
   namespace Gesis{
@@ -15,9 +15,9 @@ namespace Dune{
      ***********************************************************************************
      */
     template<typename GV, typename RF, typename COORDINATES, typename IDT>
-    class DeltaFunction 
+    class DeltaFunction
       : public Dune::PDELab::GridFunctionBase
-    < 
+    <
       Dune::PDELab::GridFunctionTraits< GV,RF,1,Dune::FieldVector<RF,1> >
       , DeltaFunction<GV,RF,COORDINATES,IDT> >
     {
@@ -25,8 +25,8 @@ namespace Dune{
       typedef Dune::PDELab::GridFunctionTraits<GV,RF,1,Dune::FieldVector<RF,1> > Traits;
       typedef typename GV::ctype ctype;
       enum{ dim = GV::dimension }; //Traits::GridViewType::Grid::dimension;
-  
-    private:  
+
+    private:
       const GV& gv;
       const IDT& inputdata;
       const COORDINATES& global_location;
@@ -37,16 +37,16 @@ namespace Dune{
       Dune::FieldMatrix<CTYPE,dim,dim> Sigma;
       RF detV;
       RF scale_factor;
-  
+
     public:
-  
+
       //! construct from grid view
       DeltaFunction (const GV& gv_,
                      const IDT& inputdata_,
                      const COORDINATES& global_location_,
                      const RF pointValue_=1.0,
                      const RF pointSmearing_=1.0,
-                     const bool bfixedwidth_=false) 
+                     const bool bfixedwidth_=false)
         : gv(gv_)
         , inputdata(inputdata_)
         , global_location(global_location_)
@@ -76,7 +76,7 @@ namespace Dune{
           sigma = pointSmearing;
         else
           sigma *= pointSmearing;
-        
+
         for( int i=0;i<dim;i++ )
           Sigma[i][i] = sigma[i]*sigma[i];
         detV = Sigma.determinant();
@@ -87,7 +87,7 @@ namespace Dune{
       // http://en.wikipedia.org/wiki/Multivariate_normal_distribution#Definition
 
       //! evaluate extended function on element
-      inline void evaluate( const typename Traits::ElementType& e, 
+      inline void evaluate( const typename Traits::ElementType& e,
                             const typename Traits::DomainType& xlocal,
                             typename Traits::RangeType& y ) const
       {
@@ -101,9 +101,9 @@ namespace Dune{
 
         return;
       }
-  
+
       //! get a reference to the grid view
-      inline const GV& getGridView () 
+      inline const GV& getGridView ()
       {
         return gv;
       }
