@@ -10,26 +10,26 @@ private:
   ContainerType& data_container;
 
 public:
-  // Note: 
-  // 1.) 
-  // For adaptive refinement with load balancing, 
+  // Note:
+  // 1.)
+  // For adaptive refinement with load balancing,
   // we do not use IndexType idx = gv.indexSet().index(e) here,
-  // because the index of a cell might get changed after 
+  // because the index of a cell might get changed after
   // adaptive mesh refinement + load balancing,
   // whereas the LocalIdSet keeps the numbering of unchanged elements.
-  // 
+  //
   // LocalIdSet is good enough for the purpose of MPI communications.
   // Its structure is much simpler than that of the GlobalIdSet and it is just enough
   // for an element index to be locally unique.
   //
   // 2.)
   // For uniform refinement on YASP grid, the LocalIdSet index type
-  // relies on bigunsignedint<k>::touint() which has produced reoccuring 
+  // relies on bigunsignedint<k>::touint() which has produced reoccuring
   // and therefore non-unique indices!!!
   // Since we are do not have to deal with load-balancing here, all coarse elements
   // will remain on the partition and won't get changed indices.
   // Here we can use gv.indexSet().index(e).
-  // 
+  //
 #ifndef USE_ALUGRID
   typedef typename GV::IndexSet IdSet;
   typedef typename IdSet::IndexType Idx;
@@ -41,11 +41,11 @@ public:
   /* constructor */
   CoarseGridP0Datahandle( const GV& gv_,
                           ContainerType& data_container_ )
-    : 
+    :
     gv(gv_),
     data_container(data_container_)
   {}
-  
+
   bool contains(int dim, int codim) const{
     return (codim==0);
   }

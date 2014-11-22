@@ -2,19 +2,19 @@
 #ifndef DUNE_GESIS_L2PROJECTION_OPERATOR_HH
 #define DUNE_GESIS_L2PROJECTION_OPERATOR_HH
 
-    //! \addtogroup LocalOperator
-    //! \ingroup PDELab
-    //! \{
+//! \addtogroup LocalOperator
+//! \ingroup PDELab
+//! \{
 
-    /** a local operator for solving the stationary groundwater equation
-     *
-     * \f{align*}{
-     * \nabla \cdot\{ - K(x) \nabla u \}  & = & f               \mbox{ in } \Omega,          \\
-     *                                  u & = & g               \mbox{ on } \partial\Omega_D \\
-     *              ( - K(x) \nabla u ) \cdot \nu & = & j       \mbox{ on } \partial\Omega_N \\
-     * \f}
-     * with conforming finite elements on all types of grids in any dimension
-     */
+/** a local operator for solving the stationary groundwater equation
+ *
+ * \f{align*}{
+ * \nabla \cdot\{ - K(x) \nabla u \}  & = & f               \mbox{ in } \Omega,          \\
+ *                                  u & = & g               \mbox{ on } \partial\Omega_D \\
+ *              ( - K(x) \nabla u ) \cdot \nu & = & j       \mbox{ on } \partial\Omega_N \\
+ * \f}
+ * with conforming finite elements on all types of grids in any dimension
+ */
 
 #include<vector>
 
@@ -40,18 +40,18 @@ namespace Dune {
   namespace Gesis {
 
     template<typename DGF>
-	class L2ProjectionOperator 
-      : 
+	class L2ProjectionOperator
+      :
       public Dune::PDELab::FullVolumePattern,
       public Dune::PDELab::LocalOperatorDefaultFlags
 	{
-      
+
     private:
       const DGF& dgf;
       const REAL l2_diffusion;
 
 	public:
-      
+
       // pattern assembly flags
       enum { doPatternVolume = true };
 
@@ -62,7 +62,7 @@ namespace Dune {
 
       // The constructor ( with a point source )
       L2ProjectionOperator(const DGF& dgf_,
-                           const REAL l2_diffusion_) 
+                           const REAL l2_diffusion_)
         : dgf(dgf_),
           l2_diffusion(l2_diffusion_)
       {
@@ -73,7 +73,7 @@ namespace Dune {
 
 	  // volume integral depending on test and ansatz functions
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  void alpha_volume( 
+	  void alpha_volume(
                         const EG& eg
                         , const LFSU& lfsu
                         , const X& x
@@ -92,7 +92,7 @@ namespace Dune {
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSU::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = EG::Geometry::dimension;
         //const int dimw = EG::Geometry::dimensionworld;
@@ -103,7 +103,7 @@ namespace Dune {
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
-        
+
 
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
@@ -120,7 +120,7 @@ namespace Dune {
             RF u=0.0;
             for (size_type i=0; i<lfsu.size(); i++)
               u += x(lfsu,i)*phi[i];
-            
+
             // integrate u*phi_i
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
 
@@ -162,7 +162,7 @@ namespace Dune {
 
           }  // end of loop over quadrature points
 
-              
+
 	  }
 
 
@@ -206,7 +206,7 @@ namespace Dune {
             // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
             std::vector<JacobianType> js(lfsu.size());
             lfsu.finiteElement().localBasis().evaluateJacobian(it->position(),js);
-           
+
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
             lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
@@ -251,8 +251,8 @@ namespace Dune {
       }
 
 
-      
-      
+
+
  	  // volume integral depending only on test functions
 	  template<typename EG, typename LFSV, typename R>
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
@@ -270,7 +270,7 @@ namespace Dune {
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSV::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = EG::Geometry::dimension;
         //const int dimw = EG::Geometry::dimensionworld;
@@ -288,7 +288,7 @@ namespace Dune {
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
-            // evaluate shape functions 
+            // evaluate shape functions
             std::vector<RangeType> phi(lfsv.size());
             lfsv.finiteElement().localBasis().evaluateFunction(it->position(),phi);
 
