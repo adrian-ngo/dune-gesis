@@ -145,7 +145,7 @@
 #define GroundWaterEquation GWE_Galerkin
 #define GEP_Equation GWE_Galerkin
 #define TransportEquation TPE_SDFEM
-#define GradientVectorField Dune::PDELab::DiscreteGridFunctionDarcy
+#define GradientVectorField Dune::Gesis::DiscreteGridFunctionDarcy
 #else
 #define L2ProjectionOfM0
 #define GroundWaterEquation GWE_CCFV
