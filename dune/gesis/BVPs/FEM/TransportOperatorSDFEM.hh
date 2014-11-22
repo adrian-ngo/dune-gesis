@@ -18,9 +18,9 @@
 //
 //
 //
-// special case (bAdjoint==true): 
+// special case (bAdjoint==true):
 // ===================================
-// beta := -beta 
+// beta := -beta
 // ... the adjoint transport problem with reversed velocity field
 //
 
@@ -55,7 +55,7 @@
 namespace Dune {
   namespace Gesis {
 
-    template< 
+    template<
       typename TP,
       typename FEM,
       typename BCType,
@@ -63,7 +63,7 @@ namespace Dune {
       typename IDT,
       typename SDT
       >
-	class StreamlineDiffusionOperator 
+	class StreamlineDiffusionOperator
       :
       public Dune::PDELab::FullVolumePattern,
       public Dune::PDELab::LocalOperatorDefaultFlags
@@ -84,7 +84,7 @@ namespace Dune {
                 , typename RF
                 >
       bool isPointInsideReachOfWell(
-                                    const DFV0& elementpoint, 
+                                    const DFV0& elementpoint,
                                     const RF& reach,
 #ifdef DIMENSION3
                                     const RF& reach_y,
@@ -117,7 +117,7 @@ namespace Dune {
 #else
            elementpoint[1] > well_bottom - GEO_EPSILON
            &&
-           elementpoint[1] < well_top + GEO_EPSILON           
+           elementpoint[1] < well_top + GEO_EPSILON
 #endif
            )
           return true;
@@ -171,7 +171,7 @@ namespace Dune {
       {
         sourceterm.set_rhs( vc_solution );
       }
-      
+
       template<typename VType,typename UType>
       void set_rhs( const VType& vc_1,const UType& vc_2 )
       {
@@ -195,10 +195,10 @@ namespace Dune {
                                   const Passenger::Type passenger_,
                                   const EQ::Mode equationMode_
                                   )
-        : 
+        :
         inputdata( inputdata_ ),
         setupdata( setupdata_ ),
-        tp(tp_), 
+        tp(tp_),
         bctype( bctype_ ),
         sourceterm( sourceterm_ ),
         passenger( passenger_ ),
@@ -207,14 +207,14 @@ namespace Dune {
       {
         logger << "StreamlineDiffusionOperator constructor" << std::endl;
       }
-      
-      
 
 
 
 
 
-     
+
+
+
 
       template<
         typename EG,
@@ -223,12 +223,12 @@ namespace Dune {
         typename M
         >
       void addPointSourceToJacobianVolumeMatrix(
-                                        const int& iWell, 
-                                        const EG& eg, 
-                                        const LFSU& lfsu,
-                                        const X& x, 
-                                        M& mat 
-                                        ) const
+                                                const int& iWell,
+                                                const EG& eg,
+                                                const LFSU& lfsu,
+                                                const X& x,
+                                                M& mat
+                                                ) const
       {
 
         return; // testwise
@@ -239,10 +239,10 @@ namespace Dune {
 		typedef typename LFSU::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
 
-		
+
 		// dimensions
         const int dim = EG::Geometry::dimension;
-	
+
         RF pumping_rate = setupdata.pdlist.pointdata_vector[iWell].value;
         if( equationMode == EQ::adjoint )
           pumping_rate=-pumping_rate;
@@ -269,7 +269,7 @@ namespace Dune {
 
             RF factor=eg.geometry().volume();
             RF nPoints=eg.geometry().corners();
-            
+
             for( UINT i=0; i<lfsu.size(); i++ ) {
               for( UINT j=0; j<lfsu.size(); j++ ) {
                 mat.accumulate( lfsu, i,lfsu, j, ( pumping_rate/factor*nPoints)* shapefunctions[i]*shapefunctions[j]);
@@ -278,7 +278,7 @@ namespace Dune {
           }
         }
       }
-      
+
 
 
 
@@ -286,11 +286,11 @@ namespace Dune {
                typename LFSU,
                typename X,
                typename M>
-      void addWellTo_Jacobian_Volume( const int& iWell, 
-                                      const EG& eg, 
+      void addWellTo_Jacobian_Volume( const int& iWell,
+                                      const EG& eg,
                                       const LFSU& lfsu,
-                                      const X& x, 
-                                      M& mat 
+                                      const X& x,
+                                      M& mat
                                       ) const
       {
 		// domain and range field type
@@ -302,19 +302,19 @@ namespace Dune {
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSU::Traits::SizeType size_type;
-		
+
         //Dune::GeometryType gt = eg.geometry().type();
 
         RF well_rate = setupdata.wdlist.pointdata_vector[iWell].well_rate;
         if( equationMode == EQ::adjoint )
           well_rate *= -1;
-          
+
         if( well_rate > GEO_EPSILON*0.5 ) {
-        
+
           if( w_outside != isElementWithinWellZone( eg, iWell, inputdata, setupdata ) ){
 
             const int dim = EG::Geometry::dimension;
-        
+
             RF well_top = setupdata.wdlist.pointdata_vector[iWell].well_top;
             RF well_bottom = setupdata.wdlist.pointdata_vector[iWell].well_bottom;
 
@@ -339,7 +339,7 @@ namespace Dune {
 
             //Dune::FieldVector<REAL,dim> cellcenter = eg.geometry().center();
             //REAL z=cellcenter[dim-1];
-            REAL screening_length = well_top - well_bottom;          
+            REAL screening_length = well_top - well_bottom;
             REAL screening_fraction = dz / screening_length;
 
             // element integral along well elements:
@@ -349,7 +349,7 @@ namespace Dune {
             // loop over quadrature points
             for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it) {
 
-              // evaluate shape functions 
+              // evaluate shape functions
               std::vector<RangeType> phi(lfsu.size());
               evalFunctionBasis( it->position(), lfsu, cache, phi );
 
@@ -361,7 +361,7 @@ namespace Dune {
               if( eg.entity().level() > baselevel ){
                 fval *= (refinement_factor_dim / baselevel_factor);
               }
-            
+
               RF factor = it->weight() * eg.geometry().integrationElement( it->position() );
 
               for (size_type j=0; j<lfsu.size(); j++){
@@ -411,7 +411,7 @@ namespace Dune {
         for( typename Dune::QuadratureRule<DF,dim>::const_iterator it = rule.begin()
                ; it != rule.end()
                ; ++it )
-          {            
+          {
             // evaluate velocity at it->position(), because this function expects local coordinates!
             typename TP::Traits::RangeType beta( tp.velocity( eg.entity(), it->position(), equationMode ) );
 
@@ -469,7 +469,7 @@ namespace Dune {
             //============ assemble convection term ============
             //
             // - u * beta * gradv ( standard Galerkin, conservative formulation )
-            // 
+            //
             // compute u
             RF uval( 0.0 );
             for( size_type i=0; i<lfsu.size(); i++)
@@ -490,7 +490,7 @@ namespace Dune {
 
 
           } // end loop over quadrature points
-          
+
 
 	  } // alpha_volume()
 
@@ -500,8 +500,8 @@ namespace Dune {
 
 
       template<typename EG, typename LFSV, typename R>
-      void addWellTo_Lambda_Volume( const UINT iWell, 
-                                    const EG& eg, 
+      void addWellTo_Lambda_Volume( const UINT iWell,
+                                    const EG& eg,
                                     const LFSV& lfsv,
                                     R& residual
                                     ) const {
@@ -540,7 +540,7 @@ namespace Dune {
 
         if(injectiontime<1e-12)
           return; // no inflow contribution
-        
+
         if( w_outside != isElementWithinWellZone( eg, iWell, inputdata, setupdata ) ){
 
 
@@ -548,10 +548,10 @@ namespace Dune {
           UINT baselevel = inputdata.domain_data.yasp_baselevel;
 #endif
 #ifdef USE_ALUGRID
-            UINT baselevel = inputdata.domain_data.alugrid_baselevel;
+          UINT baselevel = inputdata.domain_data.alugrid_baselevel;
 #endif
 #ifdef USE_UG
-            UINT baselevel = inputdata.domain_data.ug_baselevel;
+          UINT baselevel = inputdata.domain_data.ug_baselevel;
 #endif
           REAL baselevel_factor = std::pow(2.0,baselevel);
           REAL level_diff = eg.entity().level() - baselevel;
@@ -559,7 +559,7 @@ namespace Dune {
 
           REAL refinement_factor = std::pow(2.0,level_diff);
           const REAL dz = inputdata.domain_data.baselevel_gridsizes[dim-1] / refinement_factor;
-          
+
           REAL well_top           = setupdata.wdlist.pointdata_vector[iWell].well_top;
           REAL well_bottom        = setupdata.wdlist.pointdata_vector[iWell].well_bottom;
           REAL screening_length   = well_top - well_bottom;
@@ -579,7 +579,7 @@ namespace Dune {
 
             RF u0 = concentration * injectiontime;
             // scaling with 1./eg.geometry().volume() is important due to refinement
-            REAL fval = well_rate * u0 / eg.geometry().volume() * screening_fraction;     // good! 
+            REAL fval = well_rate * u0 / eg.geometry().volume() * screening_fraction;     // good!
 
 
             // Take refinement into account:
@@ -640,18 +640,18 @@ namespace Dune {
                                                    shapefunctions,
                                                    r );
         }
-        
 
 
-        // ============= Source term for adjoint flow problem wrt 
+
+        // ============= Source term for adjoint flow problem wrt
         //
-        // theta*m0 
+        // theta*m0
         //
-        // or: 
+        // or:
         //
-        // m1_adj 
+        // m1_adj
         //
-        
+
         // forward eqn: (63)
         // adjoint eqn: (150)
         if( sourceterm.source_nature == FUNCTIONAL_SOURCE ||
@@ -677,11 +677,11 @@ namespace Dune {
                   typename TP::Traits::RangeFieldType deltaSD
                     = tp.deltaSDFEM( eg.entity(), it->position() );
 
-                
-                  // evaluate shape functions 
+
+                  // evaluate shape functions
                   std::vector<RangeType> phi;
                   evalFunctionBasis( it->position(), lfsv, cache, phi );
-                
+
                   // evaluate right hand side parameter function
                   // evaluate source term
                   typename TP::Traits::RangeFieldType fval = 0.0;
@@ -691,19 +691,19 @@ namespace Dune {
                   sourceterm.evaluate_function( eg.entity(),
                                                 it->position(),
                                                 fval );
-                
+
                   //logger<<"sourceterm value: " << fval << "    at: "<< it->position()<<std::endl;
 
                   // integrate f
                   RF factor = it->weight() * eg.geometry().integrationElement( it->position() );
-                
+
                   // ============= source term (standard Galerkin) ==============
                   //
-                  // - f * v 
+                  // - f * v
                   //
                   for( unsigned int i=0; i<lfsv.size(); i++ )
                     r.accumulate( lfsv, i, - fval * phi[i] * factor );
-                
+
                   // get gradient basis: we assume lfsu = lfsv so that we can use gradphi_u = gradphi_v identically
                   std::vector<Dune::FieldVector<RF,dim> > gradphi( lfsv.size() );
                   evalGradientBasis( eg,
@@ -718,24 +718,24 @@ namespace Dune {
                   //
                   for (unsigned int i=0; i<lfsv.size(); i++)
                     r.accumulate( lfsv, i, - deltaSD * fval * ( beta * gradphi[i] ) * factor );
-                
+
                 } // End of Quadrature Loop
-              
+
             }
-            
-            
+
+
           } // end if( sourceterm.source_nature )
 
 
         // Add inflow or outlow rates for all the wells
         UINT nWells = setupdata.wdlist.total;
         for( UINT iWell=0; iWell<nWells; iWell++ ) {
-          addWellTo_Lambda_Volume( iWell, 
-                                   eg, 
+          addWellTo_Lambda_Volume( iWell,
+                                   eg,
                                    lfsv,
                                    r );
         }
-        
+
       }
 
 
@@ -744,9 +744,9 @@ namespace Dune {
 	  // boundary integral depending on test and ansatz functions
       // Neumann boundary
 	  template<typename IG, typename LFSU, typename X, typename LFSV, typename R>
-	  void alpha_boundary (const IG& ig, 
-                           const LFSU& lfsu_s, 
-                           const X& x_s, 
+	  void alpha_boundary (const IG& ig,
+                           const LFSU& lfsu_s,
+                           const X& x_s,
                            const LFSV& lfsv_s,
                            R& r_s) const
 	  {
@@ -757,7 +757,7 @@ namespace Dune {
 		  Traits::LocalBasisType::Traits::RangeFieldType RF;
 		typedef typename LFSU::Traits::FiniteElementType::
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
-    
+
 
         // dimensions
         const int dim = IG::dimension;
@@ -781,28 +781,28 @@ namespace Dune {
             if( bctype.isDirichlet( ig, it->position() ) )
               continue;
 
-            // position of quadrature point in local coordinates of element 
+            // position of quadrature point in local coordinates of element
             Dune::FieldVector<DF,dim> local = ig.geometryInInside().global( it->position() );
 
             // evaluate velocity
             typename TP::Traits::RangeType beta( tp.velocity( *eg, local, equationMode ) );
 
             RF beta_n = beta * ig.unitOuterNormal( it->position() );
-            
+
             if( beta_n < 1E-12 )
               continue; // skip if we are not on outflow
 
             // We are on an outflow boundary now:
 
-            // evaluate test shape functions 
+            // evaluate test shape functions
             std::vector<RangeType> phi(lfsu_s.size());
             evalFunctionBasis( local, lfsu_s, cache, phi );
-            
+
             // evaluate u
             RF uval = 0.0;
             for (int i=0; i<lfsu_s.size(); i++)
               uval += x_s[i] * phi[i];
-            
+
             // integrate J
             RF factor = it->weight()*ig.geometry().integrationElement( it->position() );
 
@@ -849,16 +849,16 @@ namespace Dune {
             if( bctype.isDirichlet( ig, it->position() ) )
               continue;
 
-            // position of quadrature point in local coordinates of element 
+            // position of quadrature point in local coordinates of element
             Dune::FieldVector<DF,dim> local = ig.geometryInInside().global( it->position() );
 
-            // evaluate test shape functions 
+            // evaluate test shape functions
             std::vector<RangeType> phi;
             evalFunctionBasis( local, lfsv, cache, phi );
-            
+
             // evaluate flux boundary condition
             typename TP::Traits::RangeFieldType jflux = 0.0; // tp.j( *(ig.inside()), local );
-            
+
             // integrate J
             RF factor = it->weight() * ig.geometry().integrationElement( it->position() );
 
@@ -879,10 +879,10 @@ namespace Dune {
 
       // jacobian of volume term
       template<typename EG, typename LFSU, typename X, typename LFSV, typename M>
-	  void jacobian_volume( const EG& eg, 
-							const LFSU& lfsu, 
-							const X& x, 
-							const LFSV& lfsv, 
+	  void jacobian_volume( const EG& eg,
+							const LFSU& lfsu,
+							const X& x,
+							const LFSV& lfsv,
                             M& mat
 							) const
       {
@@ -941,16 +941,16 @@ namespace Dune {
             // compute D * gradient of shape functions
             std::vector<Dune::FieldVector<RF,dim> > Dgradphi( lfsu.size() );
             for( unsigned int i=0; i<lfsu.size(); i++ ) {
-              DispersionTensor.mv( gradphi[i], Dgradphi[i] );  
+              DispersionTensor.mv( gradphi[i], Dgradphi[i] );
               // Dgradu = DispersionTensor * gradu
             }
 
 
-            // Jacobian-term = 
-            //   D * gradphi_j * gradphi_i 
+            // Jacobian-term =
+            //   D * gradphi_j * gradphi_i
             // - phi_j * (beta * gradphi_i)
             // + deltaSD * (beta * gradphi_j) * (beta * gradphi_i)
-            // 
+            //
             for (size_type j=0; j<lfsu.size(); j++)
               for (size_type i=0; i<lfsu.size(); i++)
 				{
@@ -964,17 +964,17 @@ namespace Dune {
 				}
 
           } // loop over quadrature points
-          
-        
+
+
         // Adding well contribution to the stiffness matrix:
         // Note:
         // For well monitoring purposes, the concentration for the TPE should be zero. This is set in the input-XML.
         UINT nWells = setupdata.wdlist.total;
         for( UINT iWell=0; iWell<nWells; iWell++ ) {
-          addWellTo_Jacobian_Volume( iWell, 
-                                     eg, 
+          addWellTo_Jacobian_Volume( iWell,
+                                     eg,
                                      lfsu,
-                                     x, 
+                                     x,
                                      mat );
         }
 
@@ -983,8 +983,8 @@ namespace Dune {
 
       template<typename IG, typename LFSU, typename X, typename LFSV, typename M>
       void jacobian_boundary (const IG& ig,
-                              const LFSU& lfsu_s, 
-							  const X& x, 
+                              const LFSU& lfsu_s,
+							  const X& x,
 							  const LFSV& lfsv_s,
                               M& mat) const
       {
@@ -995,7 +995,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSV::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RangeType;
-        
+
         //typedef typename LFSV::Traits::FiniteElementType::
         //Traits::LocalBasisType::Traits::JacobianType JacobianType;
 
@@ -1020,13 +1020,13 @@ namespace Dune {
             if( bctype.isDirichlet( ig, it->position() ) )
               continue;
 
-            // position of quadrature point in local coordinates of element 
+            // position of quadrature point in local coordinates of element
             Dune::FieldVector<DF,dim> local = ig.geometryInInside().global( it->position() );
-            
+
             // evaluate velocity
             typename TP::Traits::RangeType beta( tp.velocity( *eg, local, equationMode ) );
 
-            // evaluate test shape functions 
+            // evaluate test shape functions
             std::vector<RangeType> phi_u(lfsu_s.size());
             evalFunctionBasis( local, lfsu_s, cache, phi_u );
 

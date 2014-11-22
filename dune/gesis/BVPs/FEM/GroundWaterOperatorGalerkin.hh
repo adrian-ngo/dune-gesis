@@ -4,15 +4,15 @@
 
 
 
-    /** a local operator for solving the stationary groundwater equation
-     *
-     * \f{align*}{
-     * \nabla \cdot\{ - K(x) \nabla u \}  & = & f               \mbox{ in } \Omega,          \\
-     *                                  u & = & g               \mbox{ on } \partial\Omega_D \\
-     *              ( - K(x) \nabla u ) \cdot \nu & = & j       \mbox{ on } \partial\Omega_N \\
-     * \f}
-     * with conforming finite elements on all types of grids in any dimension
-     */
+/** a local operator for solving the stationary groundwater equation
+ *
+ * \f{align*}{
+ * \nabla \cdot\{ - K(x) \nabla u \}  & = & f               \mbox{ in } \Omega,          \\
+ *                                  u & = & g               \mbox{ on } \partial\Omega_D \\
+ *              ( - K(x) \nabla u ) \cdot \nu & = & j       \mbox{ on } \partial\Omega_N \\
+ * \f}
+ * with conforming finite elements on all types of grids in any dimension
+ */
 
 #include<vector>
 
@@ -45,12 +45,12 @@ namespace Dune {
               , typename IDT
               , typename SDT
               >
-	class GwFlowOperator 
-      : 
+	class GwFlowOperator
+      :
       public Dune::PDELab::FullVolumePattern,
       public Dune::PDELab::LocalOperatorDefaultFlags
 	{
-      
+
     private:
       enum{dim=GWP::dim};
       const GWP& gwp;
@@ -62,7 +62,7 @@ namespace Dune {
       const EQ::Mode equationMode;
 
 	public:
-      
+
       // pattern assembly flags
       enum { doPatternVolume = true };
 
@@ -72,7 +72,7 @@ namespace Dune {
       enum { doLambdaBoundary = true };  // lambda_boundary
       enum { doLambdaSkeleton = false };  // lambda_skeleton
 
-      
+
       template<typename VCType>
       void set_rhs( const VCType& vc1 )
       {
@@ -104,7 +104,7 @@ namespace Dune {
       {
         sourceterm.set_PointSourceLocation( x );
       }
-      
+
       template<typename COORDINATES>
       void set_PointSourceLocation( const COORDINATES& x1, const COORDINATES& x2)
       {
@@ -112,16 +112,16 @@ namespace Dune {
       }
 
       // The constructor ( with a point source )
-      GwFlowOperator( 
-                     const GWP& gwp_, 
-                     const BCType& bctype_, 
+      GwFlowOperator(
+                     const GWP& gwp_,
+                     const BCType& bctype_,
                      SourceType& sourceterm_,
                      const IDT& inputdata_,
                      const SDT& setupdata_,
                      const EQ::Mode& equationMode_
-                      ) : 
-        gwp(gwp_), 
-        bctype(bctype_), 
+                      ) :
+        gwp(gwp_),
+        bctype(bctype_),
         sourceterm( sourceterm_ ),
         inputdata( inputdata_ ),
         setupdata( setupdata_ ),
@@ -138,7 +138,7 @@ namespace Dune {
                 , typename RF
                 >
       bool isPointInsideReachOfWell(
-                                    const DFV0& elementpoint, 
+                                    const DFV0& elementpoint,
                                     const RF& reach,
 #ifdef DIMENSION3
                                     const RF& reach_y,
@@ -147,7 +147,7 @@ namespace Dune {
                                     ) const
       {
         // should not be used in the GPE!!!
-        assert( sourceterm.source_nature != GEOELECTRICAL_POTENTIAL_SOURCE && 
+        assert( sourceterm.source_nature != GEOELECTRICAL_POTENTIAL_SOURCE &&
                 sourceterm.source_nature != GEP_FUNCTIONAL_SOURCE );
 
         // extract well-data:
@@ -156,10 +156,10 @@ namespace Dune {
         RF well_bottom =     setupdata.wdlist.pointdata_vector[iWell].well_bottom;
 #ifdef DIMENSION3
         RF well_position_y = setupdata.wdlist.pointdata_vector[iWell].y;
-#endif        
+#endif
         if( elementpoint[0] >= well_position_x - reach
             && elementpoint[0] < well_position_x + reach
-            
+
 #ifdef DIMENSION3
             && elementpoint[1] >= well_position_y - reach_y
             && elementpoint[1] < well_position_y + reach_y
@@ -179,13 +179,13 @@ namespace Dune {
 
 
       template<typename EG, typename LFSV, typename R>
-      void addWellTo_Lambda_Volume( const UINT iWell, 
-                                    const EG& eg, 
+      void addWellTo_Lambda_Volume( const UINT iWell,
+                                    const EG& eg,
                                     const LFSV& lfsv,
                                     R& residual
                                     ) const {
         //return; // testwise
-        
+
         // should not be used in the GPE!!!
         if( sourceterm.source_nature == GEOELECTRICAL_POTENTIAL_SOURCE ||
             sourceterm.source_nature == GEP_FUNCTIONAL_SOURCE ){
@@ -203,13 +203,13 @@ namespace Dune {
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSV::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = EG::Geometry::dimension;
 
         // extract well-data:
         RF well_rate =   setupdata.wdlist.pointdata_vector[iWell].well_rate;
-        
+
         if(std::abs(well_rate)<1e-12)
           return; // no contribution
 
@@ -226,7 +226,7 @@ namespace Dune {
         RF well_top =   setupdata.wdlist.pointdata_vector[iWell].well_top;
         RF well_bottom = setupdata.wdlist.pointdata_vector[iWell].well_bottom;
 
-        if( w_outside != 
+        if( w_outside !=
             isElementPenetratedByWell(eg,iWell,inputdata,setupdata) ){
 
           //REAL refinement_factor = std::pow(2.0,eg.entity().level()*dim);
@@ -238,7 +238,7 @@ namespace Dune {
           // select quadrature rule
           Dune::GeometryType gt = eg.geometry().type();
           const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
-        
+
           // evaluate Y-field tensor at cell center, assume it is constant over elements
           Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
           // typename GWP::Traits::DiffusionTensorType tensor(gwp.DiffusionTensor(eg.entity(),localcenter));
@@ -285,7 +285,7 @@ namespace Dune {
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             RF fval = well_rate * screening_fraction / eg.geometry().volume();
             //fval *= refinement_factor;
-              
+
             for (size_type i=0; i<lfsv.size(); i++)
               residual.accumulate( lfsv, i, -fval*phi[i]*factor );
             // r.accumulate( lfsv, i, ( Kgradu*gradphi[i] + c*u*phi[i] )*factor );
@@ -305,15 +305,15 @@ namespace Dune {
 
       template<
         typename EG,
-        typename LFSU, 
+        typename LFSU,
         typename X,
         typename M
         >
       void addWellToJacobianVolumeMatrix(
-                                         const int& iWell, 
-                                         const EG& eg, 
-                                         const LFSU& lfsu, 
-                                         const X& x, 
+                                         const int& iWell,
+                                         const EG& eg,
+                                         const LFSU& lfsu,
+                                         const X& x,
                                          M& mat
                                          ) const
       {
@@ -323,7 +323,7 @@ namespace Dune {
         return; // testwise
 #endif
 
-	// should not be used in the GPE!!!
+        // should not be used in the GPE!!!
         assert( sourceterm.source_nature!=GEOELECTRICAL_POTENTIAL_SOURCE &&
                 sourceterm.source_nature!=GEP_FUNCTIONAL_SOURCE );
 
@@ -338,7 +338,7 @@ namespace Dune {
 		//  Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSU::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = EG::Geometry::dimension;
         const int dimw = EG::Geometry::dimensionworld;
@@ -348,21 +348,21 @@ namespace Dune {
         // Loop over the corners of the element and find the two corners lying in the vertical well:
         // typename EG::Geometry elementgeometry = eg.geometry();
 
-        
+
         const RF cellReach = inputdata.domain_data.yasp_gridsizes[0];
         const RF cellReach_y=inputdata.domain_data.yasp_gridsizes[1];
         //std::cout << "cellcenter " << eg.geometry().center() << " has " << cellReach << std::endl;
 
 #ifdef DIMENSION3
-	if( !isPointInsideReachOfWell( eg.geometry().center(), cellReach,cellReach_y, iWell) )
+        if( !isPointInsideReachOfWell( eg.geometry().center(), cellReach,cellReach_y, iWell) )
 #else
-        if( !isPointInsideReachOfWell( eg.geometry().center(), cellReach, iWell) )
+          if( !isPointInsideReachOfWell( eg.geometry().center(), cellReach, iWell) )
 #endif
-          {
-            //std::cout << "cellcenter " << eg.geometry().center() << " is not within " << cellReach << " - reach of well no." << iWell << std::endl;
-            return;  // Adrian: This is to improve performance of this algorithm! If Well is not within reach of this element center, there is absolutely no need to run over the corners!
-          }
-        
+            {
+              //std::cout << "cellcenter " << eg.geometry().center() << " is not within " << cellReach << " - reach of well no." << iWell << std::endl;
+              return;  // Adrian: This is to improve performance of this algorithm! If Well is not within reach of this element center, there is absolutely no need to run over the corners!
+            }
+
         std::vector<Dune::FieldVector<RF,dim>> well_points;
         std::vector<size_t> well_points_cornerindex;
 
@@ -371,28 +371,28 @@ namespace Dune {
           {
             const RF epsilonReach = cellReach / 2.0; // GEO_EPSILON;
 #ifdef DIMENSION3
-	    const RF epsilonReach_y = cellReach_y / 2.0; // GEO_EPSILON;
+            const RF epsilonReach_y = cellReach_y / 2.0; // GEO_EPSILON;
 #endif
             Dune::FieldVector<RF,dim> elementcorner = eg.geometry().corner( iElementCorner );
-            
+
 #ifdef DIMENSION3
-	    if( isPointInsideReachOfWell( elementcorner, epsilonReach,epsilonReach_y, iWell ) )
+            if( isPointInsideReachOfWell( elementcorner, epsilonReach,epsilonReach_y, iWell ) )
 #else
-            if( isPointInsideReachOfWell( elementcorner, epsilonReach, iWell ) )
+              if( isPointInsideReachOfWell( elementcorner, epsilonReach, iWell ) )
 #endif
-              {
-                well_points.push_back( elementcorner );
-                well_points_cornerindex.push_back( iElementCorner );
-                
-                //std::cout << "  iElementCorner=" << iElementCorner
-                //          << "  elementcorner=" << elementcorner
-                //          << std::endl;
-              }
+                {
+                  well_points.push_back( elementcorner );
+                  well_points_cornerindex.push_back( iElementCorner );
+
+                  //std::cout << "  iElementCorner=" << iElementCorner
+                  //          << "  elementcorner=" << elementcorner
+                  //          << std::endl;
+                }
           }
 
         if( well_points.size() > 2 ){
           std::cout << "WARNING: Something went wrong. There are more than two element corners lying in one well. This cannot be! well_points.size()= "<<well_points.size() << std::endl;
-	}
+        }
 
         if( well_points.size() > 1 )
           {
@@ -412,11 +412,11 @@ namespace Dune {
               {
                 Dune::FieldVector<RF,1> qPointOnEdge_edgelocal =  it_qPointOnEdge->position();
                 //std::cout << "qPointOnEdge_edgelocal = " << qPointOnEdge_edgelocal << std::endl;
-                
+
                 Dune::FieldVector<RF,dim> qPointOnEdge_global =  well_points[0];
                 qPointOnEdge_global.axpy( qPointOnEdge_edgelocal, edgevector );
                 //std::cout << "qPointOnEdge_global = " << qPointOnEdge_global << std::endl;
-                
+
                 Dune::FieldVector<RF,dim> qPointOnEdge_elementlocal =  eg.geometry().local( qPointOnEdge_global );
                 //std::cout << "qPointOnEdge_elementlocal = " << qPointOnEdge_elementlocal << std::endl;
 
@@ -432,7 +432,7 @@ namespace Dune {
                     gradphi_qPointOnEdge[i] = 0.0;
                     jac_edge.umv( js_edge[i][0], gradphi_qPointOnEdge[i] );
                   }
-                
+
                 // compute gradient of u
                 //Dune::FieldVector<RF,dim> gradu_qPointOnEdge(0.0);
                 //for( size_type i=0; i<lfsu.size(); i++ )
@@ -447,8 +447,8 @@ namespace Dune {
 #else
                 RF dimensional_factor = 0.5;  // each edge is generally surrounded by two elements in 2D
 #endif
-                RF well_conductivity=setupdata.wdlist.pointdata_vector[iWell].well_conductivity;     
-                
+                RF well_conductivity=setupdata.wdlist.pointdata_vector[iWell].well_conductivity;
+
                 for (size_type j=0; j<lfsu.size(); j++)
                   for (size_type i=0; i<lfsu.size(); i++)
                     {
@@ -470,7 +470,7 @@ namespace Dune {
 
 	  // volume integral depending on test and ansatz functions
 	  template<typename EG, typename LFSU, typename X, typename LFSV, typename R>
-	  void alpha_volume( 
+	  void alpha_volume(
                         const EG& eg
                         , const LFSU& lfsu
                         , const X& x
@@ -489,7 +489,7 @@ namespace Dune {
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSU::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = EG::Geometry::dimension;
         const int dimw = EG::Geometry::dimensionworld;
@@ -498,7 +498,7 @@ namespace Dune {
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
-        
+
         // evaluate Y-field tensor at cell center, assume it is constant over elements
         Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
         typename GWP::Traits::DiffusionTensorType tensor(gwp.DiffusionTensor(eg.entity(),localcenter));
@@ -545,7 +545,7 @@ namespace Dune {
             for (size_type i=0; i<lfsu.size(); i++)
               r.accumulate( lfsu, i, ( Kgradu*gradphi[i] + c*u*phi[i] )*factor );
           }  // end of loop over quadrature points
-              
+
 	  }
 
 
@@ -605,7 +605,7 @@ namespace Dune {
             std::vector<Dune::FieldVector<RF,dim> > Kgradphi(lfsu.size());
             for (size_type i=0; i<lfsu.size(); i++)
               tensor.mv(gradphi[i],Kgradphi[i]);
-            
+
             // evaluate basis functions
             std::vector<RangeType> phi(lfsu.size());
             lfsu.finiteElement().localBasis().evaluateFunction(it->position(),phi);
@@ -623,8 +623,8 @@ namespace Dune {
       }
 
 
-      
-      
+
+
  	  // volume integral depending only on test functions
 	  template<typename EG, typename LFSV, typename R>
       void lambda_volume (const EG& eg, const LFSV& lfsv, R& r) const
@@ -642,12 +642,12 @@ namespace Dune {
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSV::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = EG::Geometry::dimension;
         const int dimw = EG::Geometry::dimensionworld;
 
-        
+
 
         // Add to the residual the contributions of the pumping sources or point source in the given locations if needed
         std::vector<RangeType> shapefunctions( lfsv.size() );
@@ -658,7 +658,7 @@ namespace Dune {
                                                      shapefunctions,
                                                      r );
           }
-        
+
         if( sourceterm.source_nature == POINT_SOURCE || sourceterm.source_nature == GEOELECTRICAL_POINT_SOURCE)
           {
             sourceterm.evaluate_residual_on_element( eg.entity(),
@@ -674,24 +674,24 @@ namespace Dune {
                                                      shapefunctions,
                                                      r );
           }
-          
 
-        
+
+
 
         const int qorder = 2 * lfsv.finiteElement().localBasis().order();
         // select quadrature rule
         Dune::GeometryType gt = eg.geometry().type();
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
-/*	
+        /*
 			if (sourceterm.source_nature == FUNCTIONAL_SOURCE)
-logger<<"GWE lambda_volume: "<<std::endl;
-else if (sourceterm.source_nature == GP_FUNCTIONAL_SOURCE)
-  logger<<"GPE lambda_volume: "<<std::endl;
-*/
+            logger<<"GWE lambda_volume: "<<std::endl;
+            else if (sourceterm.source_nature == GP_FUNCTIONAL_SOURCE)
+            logger<<"GPE lambda_volume: "<<std::endl;
+        */
         // loop over quadrature points
         for (typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin(); it!=rule.end(); ++it)
           {
-            // evaluate shape functions 
+            // evaluate shape functions
             std::vector<RangeType> phi(lfsv.size());
             lfsv.finiteElement().localBasis().evaluateFunction(it->position(),phi);
 
@@ -703,9 +703,9 @@ else if (sourceterm.source_nature == GP_FUNCTIONAL_SOURCE)
 
             // ============= Source term for adjoint flow problem wrt m0 or wrt. m0m1:  ==============
             //
-            // - ( psi_m0 Kgrad m0 ) * gradv 
+            // - ( psi_m0 Kgrad m0 ) * gradv
             // or:
-            // - ( psi_m0 Kgrad m0 + psi_m1 Kgrad m1  ) * gradv 
+            // - ( psi_m0 Kgrad m0 + psi_m1 Kgrad m1  ) * gradv
             //
             if( ( equationMode==EQ::adjoint &&
                   sourceterm.source_nature == FUNCTIONAL_SOURCE) ||
@@ -724,12 +724,12 @@ else if (sourceterm.source_nature == GP_FUNCTIONAL_SOURCE)
                     gradphi_v[i] = 0.0;
                     jac.umv(js[i][0],gradphi_v[i]);
                   }
-                
+
                 Dune::FieldVector<RF,dim> fvec(0.0);
                 sourceterm.evaluate_vector( eg.entity(),
                                             it->position(),
                                             fvec );
-		//logger<<"sourceterm value: "<<fvec[0]<<", "<<fvec[1]<<", at:"<< it->position()<<std::endl;
+                //logger<<"sourceterm value: "<<fvec[0]<<", "<<fvec[1]<<", at:"<< it->position()<<std::endl;
                 for( unsigned int i=0; i<lfsv.size(); i++ )
                   r.accumulate( lfsv, i, -(fvec * gradphi_v[i]) * factor );
               }
@@ -744,8 +744,8 @@ else if (sourceterm.source_nature == GP_FUNCTIONAL_SOURCE)
         // Add inflow or outlow rates for all the wells
         UINT nWells = setupdata.wdlist.total;
         for( UINT iWell=0; iWell<nWells; iWell++ ) {
-          addWellTo_Lambda_Volume( iWell, 
-                                   eg, 
+          addWellTo_Lambda_Volume( iWell,
+                                   eg,
                                    lfsv,
                                    r
                                    );
@@ -757,14 +757,14 @@ else if (sourceterm.source_nature == GP_FUNCTIONAL_SOURCE)
 
 
       template<typename IG, typename LFSV, typename R>
-      void lambda_skeleton (const IG& ig, 
-                            const LFSV& lfsv_s, const LFSV& lfsv_n, 
+      void lambda_skeleton (const IG& ig,
+                            const LFSV& lfsv_s, const LFSV& lfsv_n,
                             R& r_s, R& r_n) const
       {
         if( equationMode==EQ::adjoint &&
             sourceterm.source_nature == FUNCTIONAL_SOURCE )
-          sourceterm.evaluate_residual_on_skeleton( ig, 
-                                                    lfsv_s, lfsv_n, 
+          sourceterm.evaluate_residual_on_skeleton( ig,
+                                                    lfsv_s, lfsv_n,
                                                     r_s, r_n );
       }
 
@@ -783,10 +783,10 @@ else if (sourceterm.source_nature == GP_FUNCTIONAL_SOURCE)
 		  Traits::LocalBasisType::Traits::RangeType RangeType;
 
         typedef typename LFSV::Traits::SizeType size_type;
-        
+
         // dimensions
         const int dim = IG::dimension;
-        
+
         const int qorder = 2 * lfsv.finiteElement().localBasis().order();
         // select quadrature rule
         Dune::GeometryType gtface = ig.geometryInInside().type();
@@ -808,17 +808,17 @@ else if (sourceterm.source_nature == GP_FUNCTIONAL_SOURCE)
             if( bctype.isDirichlet( ig, qPoint_local ) )
               continue;
 
-            // position of quadrature point in local coordinates of element 
+            // position of quadrature point in local coordinates of element
             Dune::FieldVector<DF,dim> local = ig.geometryInInside().global( qPoint_local );
             RF factor = it->weight() * ig.geometry().integrationElement( qPoint_local );
 
-            // evaluate test shape functions 
+            // evaluate test shape functions
             std::vector<RangeType> phi(lfsv.size());
             lfsv.finiteElement().localBasis().evaluateFunction(local,phi);
-            
+
             // evaluate flux boundary condition
             typename GWP::Traits::RangeFieldType j = gwp.j( ig.intersection(), it->position() );
-            
+
             // integrate J
             for (size_type i=0; i<lfsv.size(); i++)
               r.accumulate( lfsv, i, j*phi[i]*factor );
@@ -837,7 +837,7 @@ else if (sourceterm.source_nature == GP_FUNCTIONAL_SOURCE)
                 sourceterm.evaluate_vector( *(ig.inside()),
                                             local,
                                             fvec );
-            
+
                 for( unsigned int i=0; i<lfsv.size(); i++ )
                   r.accumulate( lfsv, i, (fvec * ig.unitOuterNormal( qPoint_local )) * phi[i] * factor );
               }
