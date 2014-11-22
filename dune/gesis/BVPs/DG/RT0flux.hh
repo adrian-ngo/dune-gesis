@@ -19,16 +19,16 @@ namespace Dune {
       : public Dune::PDELab::GridFunctionBase<
       Dune::PDELab::GridFunctionTraits<
         typename GFS::Traits::GridViewType,
-        typename GWP::Traits::RangeFieldType, 
+        typename GWP::Traits::RangeFieldType,
         GWP::Traits::dimDomain, // == GV::dimension
         Dune::FieldVector<typename GWP::Traits::RangeFieldType,GWP::Traits::dimDomain>
         >,
-          RT0FluxDGF<GWP,GFS> >
+      RT0FluxDGF<GWP,GFS> >
     {
     public:
       typedef typename GFS::Traits::GridViewType GV;
       enum {dim = GV::dimension};
-      typedef typename GV::ctype DF;      
+      typedef typename GV::ctype DF;
 
       typedef typename GFS::Traits::FiniteElementType::Traits::LocalBasisType::Traits LBTraits;
       typedef typename LBTraits::RangeFieldType RF;
@@ -40,10 +40,10 @@ namespace Dune {
       typedef typename GV::Traits::template Codim<0>::Entity Element;
       typedef typename GV::IntersectionIterator IntersectionIterator;
       typedef typename GV::Intersection Intersection;
-      
+
       typedef typename Dune::PDELab::BackendVectorSelector<GFS,RF>::Type VCType;
       typedef Dune::PDELab::DiscreteGridFunction<GFS,VCType> ScalarDGF;
-      
+
       typedef typename Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
 
     private:
@@ -64,35 +64,35 @@ namespace Dune {
 
 
     public:
-      
-      // No copy constructor allowed, this class contains reference members. 
+
+      // No copy constructor allowed, this class contains reference members.
       // Use pointers instead.
 
       // overloaded constructor, version 1 of 2 (stationary equation):
       RT0FluxDGF ( const GWP& gwp_,
-                  const GFS& gfs_,
-                  const VCType& vc_,
-                  const int baselevel_=0,
-                  const bool withoutK_=false
-                  ) :
+                   const GFS& gfs_,
+                   const VCType& vc_,
+                   const int baselevel_=0,
+                   const bool withoutK_=false
+                   ) :
         pgfs( stackobject_to_shared_ptr( gfs_ ) ),
         gwp(gwp_),
-        scalar(gfs_,vc_), 
+        scalar(gfs_,vc_),
         baselevel(baselevel_),
         withoutK (withoutK_)
       {}
 
       /*
-      inline int getLocalBasisOrder() const {
+        inline int getLocalBasisOrder() const {
 
         LocalFunctionSpace<GFS> lfs(*pgfs);
         return lfs.finiteElement().localBasis().order();
-        
-      }
+
+        }
       */
 
-      inline void evaluate_on_root( const Element& e, 
-                                    const Domain& x, 
+      inline void evaluate_on_root( const Element& e,
+                                    const Domain& x,
                                     //const int maxGridLevel,
                                     VectorRange& flux ) const{
 
@@ -104,7 +104,7 @@ namespace Dune {
         // convert to global coordinate wrt to element e
         Domain global = e.geometry().global(x);
 
-          
+
         if(e.level()>baselevel){
           // get father element
           typedef typename GFS::Traits::GridViewType::Grid::template Codim<0>::EntityPointer ElementPointer;
@@ -115,16 +115,16 @@ namespace Dune {
           Domain xx = (*pAncestor).geometry().local( global );
 
           //const typename GV::IndexSet::IndexType ids = cell_mapper.map(*pAncestor);
-          //std::cout << "Coarse Level a: I am cell number " << ids 
-          //          << " with center " 
+          //std::cout << "Coarse Level a: I am cell number " << ids
+          //          << " with center "
           //          << global
           //          << std::endl;
           this->evaluate( *pAncestor, xx, flux );
         }
         else{
           //const typename GV::IndexSet::IndexType ids = cell_mapper.map(e);
-          //std::cout << "Coarse Level b: I am cell number " << ids 
-          //          << " with center " 
+          //std::cout << "Coarse Level b: I am cell number " << ids
+          //          << " with center "
           //          << global
           //          << std::endl;
           this->evaluate(e, x, flux);
@@ -140,7 +140,7 @@ namespace Dune {
 
 
 
-      inline void evaluate( const Element& e, 
+      inline void evaluate( const Element& e,
                             const Domain& xlocal,
                             VectorRange& y,
                             bool bPiola=true
@@ -158,7 +158,7 @@ namespace Dune {
         Domain        insideCellCenterGlobal = e.geometry().global(insideCellCenterLocal);
 
 
-        //std::cout << "DEBUG: insideCellCenterGlobal = " 
+        //std::cout << "DEBUG: insideCellCenterGlobal = "
         //          << insideCellCenterGlobal
         //          << std::endl;
 
@@ -170,7 +170,7 @@ namespace Dune {
         if(withoutK)
           K_inside = -1.;
         else{
-          // Evaluation of K_inside is depening on the direction of the 
+          // Evaluation of K_inside is depening on the direction of the
           // face to the neighbor.
           // Therefore it must be done in the intersection loop below.
         }
@@ -186,8 +186,8 @@ namespace Dune {
 
 #ifdef OLD_RT0
         // the transformation. Assume it is linear
-        Dune::FieldMatrix<DF,dim,dim> B 
-          = e.geometry().jacobianInverseTransposed(xlocal); 
+        Dune::FieldMatrix<DF,dim,dim> B
+          = e.geometry().jacobianInverseTransposed(xlocal);
         RF determinant = B.determinant();
 #endif
 
@@ -203,12 +203,12 @@ namespace Dune {
             // face geometry
             const IntersectionDomain& faceLocal = Dune::ReferenceElements<DF,dim-1>::general(iit->geometry().type()).position(0,0);
 
-            //std::cout << "DEBUG: iit->indexInInside() = " 
+            //std::cout << "DEBUG: iit->indexInInside() = "
             //<< iit->indexInInside()
             //          << std::endl;
-          
+
             //Domain faceGlobal = iit->geometryInInside().global(faceLocal);
-            //std::cout << "DEBUG: faceGlobal = " 
+            //std::cout << "DEBUG: faceGlobal = "
             //          << faceGlobal
             //          << std::endl;
 
@@ -231,17 +231,17 @@ namespace Dune {
                 RF element_length_n = std::sqrt( element_volume_n );
 #endif
 
-                const Domain& outsideCellCenterLocal = 
+                const Domain& outsideCellCenterLocal =
                   Dune::ReferenceElements<DF,dim>::general(iit->outside()->type()).position(0,0);
-                Domain distance_vector = 
-                  iit->outside()->geometry().global(outsideCellCenterLocal); 
-              
+                Domain distance_vector =
+                  iit->outside()->geometry().global(outsideCellCenterLocal);
+
                 // distance of cell centers
                 distance_vector -= insideCellCenterGlobal;
                 RF distance = distance_vector.two_norm();
                 distance_vector /= distance;
 
-                //std::cout << "DEBUG: distance = " 
+                //std::cout << "DEBUG: distance = "
                 //          << distance
                 //          << std::endl;
 
@@ -271,16 +271,16 @@ namespace Dune {
 
                 // set coefficient
                 if( element_length_s - element_length_n<1E-12 )
-                  vn[iit->indexInInside()] = 
+                  vn[iit->indexInInside()] =
                     - Dune::Gesis::General::harmonicAverage( K_inside, K_outside ) * w;
                 else
-                  vn[iit->indexInInside()] = 
-                    - Dune::Gesis::General::harmonicAverageWeightedByDistance( K_inside, 
-                                                                                      K_outside, 
-                                                                                      element_length_s, 
-                                                                                      element_length_n ) * w;
-              
-                //std::cout << "DEBUG: vn[iit->indexInInside()] = " 
+                  vn[iit->indexInInside()] =
+                    - Dune::Gesis::General::harmonicAverageWeightedByDistance( K_inside,
+                                                                               K_outside,
+                                                                               element_length_s,
+                                                                               element_length_n ) * w;
+
+                //std::cout << "DEBUG: vn[iit->indexInInside()] = "
                 //          << vn[iit->indexInInside()]
                 //          << std::endl;
 
@@ -299,12 +299,12 @@ namespace Dune {
                 // evaluate boundary condition type
                 //int bc = parameter.bc(*iit,faceLocal,time);
                 // liquid phase Dirichlet boundary
-                //if (bc==1) 
+                //if (bc==1)
 
                 BCType bctype = gwp.bctype( *iit, faceLocal );
-                if( !withoutK && 
+                if( !withoutK &&
                     bctype == Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet ) {
-              
+
                   // evaluate Dirichlet boundary condition
                   typename GWP::Traits::RangeFieldType g = gwp.g( *(iit->inside()), iit->geometry().global(faceLocal) );
 
@@ -315,7 +315,7 @@ namespace Dune {
                   RF w = (g-pInside)/distance;
                   vn[iit->indexInInside()] = - K_inside * w;
                 }
-            
+
                 else {
                   // Neumann:
                   RF j = 0.0; // parameter.j(*iit,faceLocal,time);
@@ -360,7 +360,7 @@ namespace Dune {
         for (unsigned int i=0; i<rt0fe.localBasis().size(); i++){
 
           //std::cout << "DEBUG:  i = " << i
-          //          << "  coeff[i] = " << coeff[i] 
+          //          << "  coeff[i] = " << coeff[i]
           //          << "  rt0vectors[i] = " << rt0vectors[i]
           //          << std::endl;
 
@@ -384,7 +384,7 @@ namespace Dune {
         // Note:
         // You have to be sure that the interfaces are indexed like this:
         // In 2D:
-        // 
+        //
         // y^
         //  |  +-----3-----+
         //  |  |           |
@@ -425,7 +425,7 @@ namespace Dune {
         //return 2.0/(1.0/(a+eps) + 1.0/(b+eps));
         return T(2.0)*a*b / ( a + b + eps );
       }
-    }; // class RT0FluxDGF 
+    }; // class RT0FluxDGF
 
   } // Gesis
 

@@ -5,14 +5,14 @@ namespace Dune{
 
   namespace Gesis{
 
-    template<typename Grid, 
-             typename BackendIndexSet, 
+    template<typename Grid,
+             typename BackendIndexSet,
              typename RT0_PF
              >
     class ReorderedIndexSet :
       public Dune::IndexSet<Grid,
-                            ReorderedIndexSet<Grid, 
-                                              BackendIndexSet, 
+                            ReorderedIndexSet<Grid,
+                                              BackendIndexSet,
                                               RT0_PF>,
                             typename BackendIndexSet::IndexType>
     {
@@ -23,7 +23,7 @@ namespace Dune{
     private:
       typedef Dune::IndexSet<Grid, ReorderedIndexSet, IndexType> Base;
       // Extract dimension
-      enum {dim = Grid::dimension };   
+      enum {dim = Grid::dimension };
 
       template<typename PressureType, typename Compare>
       struct PositionIndexCompare {
@@ -55,9 +55,9 @@ namespace Dune{
         //typedef typename std::list<PositionIndex> IndexList;
         typedef typename std::vector<PositionIndex> IndexList;
 
-        // Loop over all entities it and generate a list of pairs 
+        // Loop over all entities it and generate a list of pairs
         // {v(it),index(it)} where v(it) is the center of the entity
-        // and index(it) its index 
+        // and index(it) its index
         IndexList indexlist;
 
         // Map each cell to unique id
@@ -93,7 +93,7 @@ namespace Dune{
             rt0_pf->evaluate_on_root( *it, xlocal, rt0head );
 
             PressureType pressure = rt0head[0]; // <-- we use pressure reconstructed from RT0 velocity
-        
+
             IndexType idx = gridview.indexSet().index(*it);
             indexlist.push_back(std::make_pair(pressure,idx));
           } // for
@@ -124,7 +124,7 @@ namespace Dune{
         backend(other.backend)
         , reorderedindicesElements(other.reorderedindicesElements)
         , reorderedindicesVertices(other.reorderedindicesVertices)
-      {} 
+      {}
 
       /*
         ReorderedIndexSet & operator=(const ReorderedIndexSet& other){
@@ -136,7 +136,7 @@ namespace Dune{
 
       // called from constructor of class ReorderedGridView:
       template<typename GridView, typename Compare>
-      ReorderedIndexSet( const GridView& gridview, 
+      ReorderedIndexSet( const GridView& gridview,
                          Dune::shared_ptr<RT0_PF> rt0_pf,
                          const Compare &compare )
         : backend(&gridview.indexSet())
@@ -152,7 +152,7 @@ namespace Dune{
                                       reorderedindicesVertices,
                                       rt0_pf,
                                       compare);
-    
+
         std::stringstream jobtitle;
         jobtitle << "Reordering elements on initial grid.";
         General::log_elapsed_time( watch.elapsed(),
@@ -164,7 +164,7 @@ namespace Dune{
 
 
       template<typename GridView, typename Compare>
-      void update( const GridView& gridview, 
+      void update( const GridView& gridview,
                    Dune::shared_ptr<RT0_PF> rt0_pf,
                    const Compare &compare
                    ) {
@@ -196,8 +196,8 @@ namespace Dune{
       IndexType index (const typename Dune::remove_const<Grid>::type::
                        Traits::template Codim<cc>::Entity& e) const
       {
-        //std::cout << " this->index(e) = " 
-        //          << this->index(e) 
+        //std::cout << " this->index(e) = "
+        //          << this->index(e)
         //          << std::endl;
         return this->index(e);
       }
@@ -209,7 +209,7 @@ namespace Dune{
         assert( cc == 0 || cc == Backend::dimension );
         if( cc==0 ) {
 
-          //std::cout << " new index = " 
+          //std::cout << " new index = "
           //          << reorderedindicesElements[backend->index(e)]
           //          << " old index = "
           //          << backend->index(e)
@@ -220,7 +220,7 @@ namespace Dune{
         }
 
         else if( cc==dim ) {
-          return reorderedindicesVertices[backend->index(e)]; 
+          return reorderedindicesVertices[backend->index(e)];
         }
 
         else{
@@ -230,7 +230,7 @@ namespace Dune{
                      "called.");
           return 0;
         }
-        
+
       }
 
       template< int cc >
@@ -240,8 +240,8 @@ namespace Dune{
                           //const typename Backend::Traits::template Codim< cc >::Entity &e,
                           int i, unsigned int codim ) const
       {
-        std::cout << "RGV: cc this->subIndex(e," << i << "," << codim << ") = " 
-                  << this->subIndex(e, i, codim) 
+        std::cout << "RGV: cc this->subIndex(e," << i << "," << codim << ") = "
+                  << this->subIndex(e, i, codim)
                   << std::endl;
 
         return this->subIndex(e, i, codim);
@@ -255,9 +255,9 @@ namespace Dune{
         assert( cc == 0 || cc == Backend::dimension );
         int cc_codim = cc+codim;
         if ( cc_codim == 0 )
-          return reorderedindicesElements[backend->subIndex(e,i,codim)]; 
+          return reorderedindicesElements[backend->subIndex(e,i,codim)];
 
-        else if (cc_codim == dim) 
+        else if (cc_codim == dim)
           return reorderedindicesVertices[backend->subIndex(e,i,codim)];
 
         else {
@@ -268,8 +268,8 @@ namespace Dune{
           std::cout << "RGV: ReorderedIndexSet ERROR" << std::endl;
         }
 
-        std::cout << "RGV: Entity this->subIndex(e," << i << "," << codim << ") = " 
-                  << this->subIndex(e, i, codim) 
+        std::cout << "RGV: Entity this->subIndex(e," << i << "," << codim << ") = "
+                  << this->subIndex(e, i, codim)
                   << std::endl;
 
         exit(-1);
@@ -289,7 +289,7 @@ namespace Dune{
       {
         return backend->size(codim);
       }
-  
+
       template<typename EntityType>
       bool contains (const EntityType& e) const
       {

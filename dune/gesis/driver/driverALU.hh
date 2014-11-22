@@ -47,11 +47,11 @@ extern CLogfile logger;
 namespace Dune {
   namespace Gesis {
 
-  template<typename IDT,typename YFG,typename DIR,int dim>
-  REAL driverALU( IDT& inputdata,   // must be non-const because of well-calibration
-                  YFG& yfg_orig,
-                  DIR& dir,
-                  const Dune::MPIHelper& helper )
+    template<typename IDT,typename YFG,typename DIR,int dim>
+    REAL driverALU( IDT& inputdata,   // must be non-const because of well-calibration
+                    YFG& yfg_orig,
+                    DIR& dir,
+                    const Dune::MPIHelper& helper )
     {
       if( helper.rank()==0 && inputdata.verbosity>0 )
         std::cout << "driverALU(...)" << std::endl;
@@ -138,7 +138,7 @@ namespace Dune {
 
       //const GV_GW &gv_gw = grid.levelView(baselevel);
       GV_GW gv_gw = grid.levelGridView(baselevel); // non-const because load-balancing may change the grid for rt0_pressurefield
-      
+
 
       //well-calibration:
       calibrateWellCentersToElementCenters( gv_gw,

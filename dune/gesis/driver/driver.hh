@@ -172,8 +172,8 @@ namespace Dune {
 
       UINT baselevel = inputdata.domain_data.yasp_baselevel;
       if( baselevel > 0 ){
-        std::cout << "Globally refine YASP grid with level " 
-                  << baselevel 
+        std::cout << "Globally refine YASP grid with level "
+                  << baselevel
                   << std::endl;
         grid.globalRefine( baselevel );
       }
@@ -194,7 +194,7 @@ namespace Dune {
 
       //const GV_GW &gv_gw = grid.levelView(baselevel);
       GV_GW gv_gw = grid.levelGridView(baselevel); // non-const because load-balancing may change the grid for rt0_pressurefield
-      
+
       typedef Dune::shared_ptr<GV_GW> PGV;
       PGV pRootGridView;
       if( helper.rank()==0 )
@@ -345,113 +345,113 @@ namespace Dune {
       // smooth plot of original field:
       //{
 
-        // WARNING: assume we have only one zone here!
+      // WARNING: assume we have only one zone here!
       CovarianceMatrix<IDT> C_YY( inputdata.domain_data.nCells,
-                               nCellsExt[0],
+                                  nCellsExt[0],
                                   helper.getCommunicator(),
                                   inputdata );
 
-        local_offset.resize(dim);
-        local_count.resize(dim);
+      local_offset.resize(dim);
+      local_count.resize(dim);
 
-        C_YY.prepare( 0, local_offset, local_count, true );
+      C_YY.prepare( 0, local_offset, local_count, true );
 
-        logger << "DEBUG: Read extended field " << std::endl;
-        logger << "DEBUG: nCellsExt[0] = " << nCellsExt[0];
-        logger << "DEBUG: local_offset = " << local_offset;
-        logger << "DEBUG: local_count  = " << local_count;
+      logger << "DEBUG: Read extended field " << std::endl;
+      logger << "DEBUG: nCellsExt[0] = " << nCellsExt[0];
+      logger << "DEBUG: local_offset = " << local_offset;
+      logger << "DEBUG: local_count  = " << local_count;
 
-        Vector<REAL> Lambdas;
-        HDF5Tools::
-          read_parallel_from_HDF5_without_DUNE( inputdata,
-                                                Lambdas,
-                                                local_count,
-                                                local_offset,
-                                                helper.getCommunicator(),
-                                                "/FFT_R_YY", 
-                                                dir.EV_h5file[0] );
-
-
-        C_YY.prepare( 0, local_offset, local_count, false );
-
-        logger << "DEBUG: Read embedded field " << std::endl;
-        logger << "DEBUG: local_offset = " << local_offset;
-        logger << "DEBUG: local_count  = " << local_count;
-
-        Vector<REAL> orig_YField(1,0);
-        HDF5Tools::
-          read_parallel_from_HDF5_without_DUNE( inputdata,
-                                                orig_YField,
-                                                local_count,
-                                                local_offset,
-                                                helper.getCommunicator(),
-                                                "/YField",
-                                                dir.kfield_h5file );
-
-        orig_YField -= inputdata.yfield_properties.zones[0].beta;
+      Vector<REAL> Lambdas;
+      HDF5Tools::
+        read_parallel_from_HDF5_without_DUNE( inputdata,
+                                              Lambdas,
+                                              local_count,
+                                              local_offset,
+                                              helper.getCommunicator(),
+                                              "/FFT_R_YY",
+                                              dir.EV_h5file[0] );
 
 
-        Vector<REAL> smoothed1_orig_YField( orig_YField.size() );
-        Vector<REAL> smoothed_orig_YField( orig_YField.size() );
-        C_YY.mv( Lambdas, orig_YField, smoothed_orig_YField );
+      C_YY.prepare( 0, local_offset, local_count, false );
 
-        REAL a1 = orig_YField * smoothed_orig_YField;
-        a1 = gv_gw.comm().sum( a1 );
-        REAL a2 = smoothed_orig_YField.two_norm_sqr();
-        a2 = gv_gw.comm().sum( a2 );
-        a1 /= a2;
+      logger << "DEBUG: Read embedded field " << std::endl;
+      logger << "DEBUG: local_offset = " << local_offset;
+      logger << "DEBUG: local_count  = " << local_count;
 
-        if( helper.rank()==0 && inputdata.verbosity>=VERBOSITY_INVERSION )
-          std::cout << "smooth scaling factor = " << a1 << std::endl;
+      Vector<REAL> orig_YField(1,0);
+      HDF5Tools::
+        read_parallel_from_HDF5_without_DUNE( inputdata,
+                                              orig_YField,
+                                              local_count,
+                                              local_offset,
+                                              helper.getCommunicator(),
+                                              "/YField",
+                                              dir.kfield_h5file );
 
-        smoothed_orig_YField *= a1;
-        smoothed_orig_YField += inputdata.yfield_properties.zones[0].beta;
-        
-        logger << "Parallel write to hdf5: smoothed_orig_YField." << std::endl;
-
-        HDF5Tools::
-          write_parallel_to_HDF5_without_DUNE( inputdata,
-                                               inputdata.domain_data.nCells,
-                                               smoothed_orig_YField,
-                                               local_count,
-                                               local_offset,
-                                               helper.getCommunicator(),
-                                               "/YFieldSmoothed",
-                                               dir.kfield_h5file + "_smoothed" );
-
-        logger << "Parallel read of smoothed_orig_YField from hdf5 to gv_gw." << std::endl;
+      orig_YField -= inputdata.yfield_properties.zones[0].beta;
 
 
+      Vector<REAL> smoothed1_orig_YField( orig_YField.size() );
+      Vector<REAL> smoothed_orig_YField( orig_YField.size() );
+      C_YY.mv( Lambdas, orig_YField, smoothed_orig_YField );
 
-        HDF5Tools::read_parallel_from_HDF5( gv_gw
-                                            , inputdata
-                                            , smoothed_orig_YField
-                                            , "/YFieldSmoothed"
-                                            , local_count
-                                            , local_offset
-                                            , dir.kfield_h5file + "_smoothed"
-                                            , 1 // P0 blocksize
-                                            , FEMType::DG // P0
-                                            , 0 // structure is on grid level 0
-                                            );
-        //}
+      REAL a1 = orig_YField * smoothed_orig_YField;
+      a1 = gv_gw.comm().sum( a1 );
+      REAL a2 = smoothed_orig_YField.two_norm_sqr();
+      a2 = gv_gw.comm().sum( a2 );
+      a1 /= a2;
+
+      if( helper.rank()==0 && inputdata.verbosity>=VERBOSITY_INVERSION )
+        std::cout << "smooth scaling factor = " << a1 << std::endl;
+
+      smoothed_orig_YField *= a1;
+      smoothed_orig_YField += inputdata.yfield_properties.zones[0].beta;
+
+      logger << "Parallel write to hdf5: smoothed_orig_YField." << std::endl;
+
+      HDF5Tools::
+        write_parallel_to_HDF5_without_DUNE( inputdata,
+                                             inputdata.domain_data.nCells,
+                                             smoothed_orig_YField,
+                                             local_count,
+                                             local_offset,
+                                             helper.getCommunicator(),
+                                             "/YFieldSmoothed",
+                                             dir.kfield_h5file + "_smoothed" );
+
+      logger << "Parallel read of smoothed_orig_YField from hdf5 to gv_gw." << std::endl;
 
 
-        if( inputdata.plot_options.vtk_plot_y_smooth ) {
-          YFG yfg_smoothed_Yorig(inputdata,dir,helper.getCommunicator());
-          if( helper.size() > 1 )
-            yfg_smoothed_Yorig.parallel_import_from_local_vector( smoothed_orig_YField, local_count, local_offset );
-          else
-            yfg_smoothed_Yorig.import_from_vector( smoothed_orig_YField );
 
-          yfg_smoothed_Yorig.plot2vtu( gv_gw,
-                                       dir.Y_orig_vtu + "_smoothed",
-                                       "Y_smoothed",
-                                       baselevel );
-        }
+      HDF5Tools::read_parallel_from_HDF5( gv_gw
+                                          , inputdata
+                                          , smoothed_orig_YField
+                                          , "/YFieldSmoothed"
+                                          , local_count
+                                          , local_offset
+                                          , dir.kfield_h5file + "_smoothed"
+                                          , 1 // P0 blocksize
+                                          , FEMType::DG // P0
+                                          , 0 // structure is on grid level 0
+                                          );
+      //}
 
 
-        typedef typename IDT::SDT SDT; // Setup Data Type
+      if( inputdata.plot_options.vtk_plot_y_smooth ) {
+        YFG yfg_smoothed_Yorig(inputdata,dir,helper.getCommunicator());
+        if( helper.size() > 1 )
+          yfg_smoothed_Yorig.parallel_import_from_local_vector( smoothed_orig_YField, local_count, local_offset );
+        else
+          yfg_smoothed_Yorig.import_from_vector( smoothed_orig_YField );
+
+        yfg_smoothed_Yorig.plot2vtu( gv_gw,
+                                     dir.Y_orig_vtu + "_smoothed",
+                                     "Y_smoothed",
+                                     baselevel );
+      }
+
+
+      typedef typename IDT::SDT SDT; // Setup Data Type
 
       typedef GroundwaterForwardProblem<GV_GW,REAL,IDT,SDT,YFG> GWP_FWD;
       // 1.) GFS for the Flow Equation:
@@ -472,9 +472,9 @@ namespace Dune {
       typedef typename GRID::LeafGridView OLD_GV_TP;
       typedef ReorderedGridView
         < OLD_GV_TP
-        , RT0_PF
-        , PressureLikeOrdering
-        > GV_TP;
+          , RT0_PF
+          , PressureLikeOrdering
+          > GV_TP;
 #endif
 
 
@@ -609,7 +609,7 @@ namespace Dune {
 
       typedef GradientVectorField<GWP_FWD,GFS_GW> DARCY_FLUX_BASE;
       typedef DarcyVelocityCache<GWP_FWD,GFS_GW,DARCY_FLUX_BASE> DARCY_FLUX_DGF;
-      
+
       /*
        * take measurements of lnK (if needed)
        */
@@ -755,7 +755,7 @@ namespace Dune {
           const SDT& setupdata = inputdata.setups[iSetup];
 
 
-          GWP_FWD gwp_fwd( inputdata, setupdata, 
+          GWP_FWD gwp_fwd( inputdata, setupdata,
                            yfg_orig
                            );
           GEP_FWD gep_fwd( inputdata, setupdata, log_electricalConductivity );
@@ -763,13 +763,13 @@ namespace Dune {
           GEP_FWD log_kappawrapper_gw( inputdata, setupdata, log_kappafield ); // equation (66), (147): kappa
 
           typedef ForwardSimulator<GWP_FWD,
-            GEP_FWD,
-            GFS_GW,
-            GFS_TP,
-            GFS_CG,
-            IDT,
-            SDT,
-            DIR> FWD_SIM;
+                                   GEP_FWD,
+                                   GFS_GW,
+                                   GFS_TP,
+                                   GFS_CG,
+                                   IDT,
+                                   SDT,
+                                   DIR> FWD_SIM;
 
 
           FWD_SIM fwd_sim( gwp_fwd,
@@ -781,7 +781,7 @@ namespace Dune {
                            dir);
 
           if(helper.rank()==0){
-            std::cout << General::getDateAndTime() 
+            std::cout << General::getDateAndTime()
                       << "Forward simulation of original measurements for setup #"
                       << iSetup+1 << std::endl;
           }
@@ -818,7 +818,7 @@ namespace Dune {
                                                       );
           }
 
-          if( inputdata.problem_types.head_forward || 
+          if( inputdata.problem_types.head_forward ||
               inputdata.problem_types.head_inversion ){
 
             std::stringstream datafile_head_measurements;
@@ -833,7 +833,7 @@ namespace Dune {
             if( bReadheadMeasurementDone ){
               if(helper.rank()==0){
                 std::cout << "Reading head measurements from "
-                          << datafile_head_measurements.str() 
+                          << datafile_head_measurements.str()
                           << " was successful." << std::endl;
               }
             }
@@ -846,18 +846,18 @@ namespace Dune {
 
 
             std::stringstream bufferfile_head_measurements;
-            bufferfile_head_measurements << dir.bufferdimdir 
-                                         << "/head_orig.meas.iSetup" << iSetup 
+            bufferfile_head_measurements << dir.bufferdimdir
+                                         << "/head_orig.meas.iSetup" << iSetup
                                          << ".rank" << helper.rank();
 
             orig_measurements.store_measurements( 1, iSetup, bufferfile_head_measurements.str() );
 
             if( helper.rank()==0 && inputdata.verbosity>=VERBOSITY_INVERSION ){
-              std::cout << "Head measurements stored to " 
+              std::cout << "Head measurements stored to "
                         << bufferfile_head_measurements.str() << " etc." << std::endl;
               // copy file to DATA:
               std::stringstream datafile_per_Setup;
-              datafile_per_Setup << dir.datadimdir 
+              datafile_per_Setup << dir.datadimdir
                                  << "/head_orig.meas.iSetup" << iSetup;
 
               if( inputdata.problem_types.generate_measurement_data ){
@@ -1045,10 +1045,10 @@ namespace Dune {
               REAL m0dg_negMass(0), m0dg_posMass(0), m0dg_totMass(0);
               GridFunctionTools::totalMass( gfs_tp, vcM0_orig, m0dg_negMass, m0dg_posMass, m0dg_totMass );
               if( helper.rank() == 0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
-                std::cout << "pos./neg. mass (m0) = " 
+                std::cout << "pos./neg. mass (m0) = "
                           << std::fixed << std::setprecision(5)
                           << m0dg_posMass << " " << m0dg_negMass  << std::endl;
-                std::cout << "total mass (m0) = " 
+                std::cout << "total mass (m0) = "
                           << std::fixed << std::setprecision(5)
                           << m0dg_totMass << std::endl;
               }
@@ -1056,11 +1056,11 @@ namespace Dune {
               REAL m0cg_negMass(0), m0cg_posMass(0), m0cg_totMass(0);
               GridFunctionTools::totalMass( gfs_cg, vcM0_cg, m0cg_negMass, m0cg_posMass, m0cg_totMass );
               if( helper.rank() == 0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
-                std::cout << "pos./neg. mass (m0-L2) = " 
+                std::cout << "pos./neg. mass (m0-L2) = "
                           << std::fixed << std::setprecision(5)
                           << m0cg_posMass << " " << m0cg_negMass << std::endl;
-                std::cout << "total mass (m0-L2) = " 
-                          << std::fixed << std::setprecision(5) 
+                std::cout << "total mass (m0-L2) = "
+                          << std::fixed << std::setprecision(5)
                           << m0cg_totMass << std::endl;
               }
 
@@ -1108,11 +1108,11 @@ namespace Dune {
             orig_measurements.store_measurements( 2, iSetup, bufferfile_M0_measurements.str() );
 
             if( helper.rank()==0 && inputdata.verbosity>=VERBOSITY_INVERSION ){
-              std::cout << "m0 measurements stored to " 
+              std::cout << "m0 measurements stored to "
                         << bufferfile_M0_measurements.str() << " etc." << std::endl;
               // copy file to DATA:
               std::stringstream datafile_per_Setup;
-              datafile_per_Setup << dir.datadimdir 
+              datafile_per_Setup << dir.datadimdir
                                  << "/m0_orig.meas.iSetup" << iSetup;
               if( inputdata.problem_types.generate_measurement_data ){
                 General::systemCall( "cp -v " + bufferfile_M0_measurements.str() + " " + datafile_per_Setup.str() );
@@ -1186,10 +1186,10 @@ namespace Dune {
                 REAL m1dg_negMass(0), m1dg_posMass(0), m1dg_totMass(0);
                 GridFunctionTools::totalMass( gfs_tp, vcM1_orig, m1dg_negMass, m1dg_posMass, m1dg_totMass );
                 if( helper.rank() == 0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
-                  std::cout << "pos./neg. mass (m1) = " 
+                  std::cout << "pos./neg. mass (m1) = "
                             << std::scientific << std::setprecision(5)
                             << m1dg_posMass << " " << m1dg_negMass  << std::endl;
-                  std::cout << "total mass (m1) = " 
+                  std::cout << "total mass (m1) = "
                             << std::scientific << std::setprecision(5)
                             << m1dg_totMass << std::endl;
                 }
@@ -1197,11 +1197,11 @@ namespace Dune {
                 REAL m1cg_negMass(0), m1cg_posMass(0), m1cg_totMass(0);
                 GridFunctionTools::totalMass( gfs_cg, vcM1_cg, m1cg_negMass, m1cg_posMass, m1cg_totMass );
                 if( helper.rank() == 0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
-                  std::cout << "pos./neg. mass (m1-L2) = " 
+                  std::cout << "pos./neg. mass (m1-L2) = "
                             << std::scientific << std::setprecision(5)
                             << m1cg_posMass << " " << m1cg_negMass << std::endl;
-                  std::cout << "total mass (m1-L2) = " 
-                            << std::scientific << std::setprecision(5) 
+                  std::cout << "total mass (m1-L2) = "
+                            << std::scientific << std::setprecision(5)
                             << m1cg_totMass << std::endl;
                 }
 
@@ -1224,14 +1224,14 @@ namespace Dune {
 
 
               if( helper.rank()==0 && inputdata.verbosity>=VERBOSITY_INVERSION ){
-                std::cout << "m1 measurements stored to " 
+                std::cout << "m1 measurements stored to "
                           << bufferfile_M1_measurements.str() << " etc." << std::endl;
                 // copy file to DATA:
                 std::stringstream datafile_per_Setup;
-                datafile_per_Setup << dir.datadimdir 
+                datafile_per_Setup << dir.datadimdir
                                    << "/m1_orig.meas.iSetup" << iSetup;
                 if( inputdata.problem_types.generate_measurement_data ){
-                General::systemCall( "cp -v " + bufferfile_M1_measurements.str() + " " + datafile_per_Setup.str() );
+                  General::systemCall( "cp -v " + bufferfile_M1_measurements.str() + " " + datafile_per_Setup.str() );
                 }
               }
 
@@ -1340,11 +1340,11 @@ namespace Dune {
 
             }  // END if (inputdata.problem_types.transport_forward || inputdata.problem_types.transport_inversion_m1|| inputdata.problem_types.moments_geoeletric_potential_forward || inputdata.problem_types.moments_geoeletric_potential_inversion)
 
-          } 
-          // END if (inputdata.problem_types.transport_forward 
-          //         || inputdata.problem_types.transport_inversion_m0 
+          }
+          // END if (inputdata.problem_types.transport_forward
+          //         || inputdata.problem_types.transport_inversion_m0
           //         || inputdata.problem_types.transport_inversion_m1
-          //         || inputdata.problem_types.moments_geoeletric_potential_forward 
+          //         || inputdata.problem_types.moments_geoeletric_potential_forward
           //         || inputdata.problem_types.moments_geoeletric_potential_inversion )
 
 
@@ -1570,13 +1570,13 @@ namespace Dune {
 
 
               typedef ForwardSimulator<GWP_FWD,
-                GEP_FWD,
-                GFS_GW,
-                GFS_TP,
-                GFS_CG,
-                IDT,
-                SDT,
-                DIR> FWD_SIM;
+                                       GEP_FWD,
+                                       GFS_GW,
+                                       GFS_TP,
+                                       GFS_CG,
+                                       IDT,
+                                       SDT,
+                                       DIR> FWD_SIM;
 
               FWD_SIM fwd_sim( gwp_fwd,
                                gep_fwd,
@@ -1687,7 +1687,7 @@ namespace Dune {
 
 
             if( inputdata.problem_types.generate_measurement_data ){
-              if( helper.rank()==0 
+              if( helper.rank()==0
                   &&
                   inputdata.verbosity>=VERBOSITY_INVERSION
                   ){
@@ -1697,15 +1697,15 @@ namespace Dune {
             else {
 
               REAL L = inversionkernel<GRID,
-                PGV,
-                GFS_GW,
-                GFS_TP,
-                GFS_CG,
-                MEASLIST,
-                DIR,
-                IDT,
-                YFG
-                >
+                                       PGV,
+                                       GFS_GW,
+                                       GFS_TP,
+                                       GFS_CG,
+                                       MEASLIST,
+                                       DIR,
+                                       IDT,
+                                       YFG
+                                       >
                 ( grid,
                   pRootGridView,
                   gfs_gw,
@@ -1719,10 +1719,10 @@ namespace Dune {
                   helper
                   );
 
-              if( helper.rank()==0 
+              if( helper.rank()==0
                   &&
                   inputdata.verbosity>=VERBOSITY_INVERSION )
-                  std::cout << "Return value of the inversion kernel L = " << L << std::endl;
+                std::cout << "Return value of the inversion kernel L = " << L << std::endl;
 
               logger << "Return value of the inversion kernel L = " << L << std::endl;
 

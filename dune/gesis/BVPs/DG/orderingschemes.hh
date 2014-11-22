@@ -9,7 +9,7 @@ namespace Dune{
 
     /** *********************************************************** *
      * Structure for comparing two head values
-     * ************************************************************ 
+     * ************************************************************
      */
     struct PressureLikeOrdering {
       PressureLikeOrdering()
@@ -21,10 +21,10 @@ namespace Dune{
         // This is very tricky:
         // ====================
         // Sort the grid elements in the same ascending order as the
-        // hydraulic head h! This is essential for writing and reading 
+        // hydraulic head h! This is essential for writing and reading
         // the m0 or m1 solution in parallel mode to the HDF5 file
         // using different numbers of processes for writing and retrieving
-        // forward solutions m0 or m1 as is required during the inversion 
+        // forward solutions m0 or m1 as is required during the inversion
         // with more than one MPI_Pools where a repartitioning of the
         // grid is necessary.
         //
@@ -42,9 +42,9 @@ namespace Dune{
      * Structure for comparing two head values
      * To the linear solver is does not matter whether we are sorting
      * in ascending (against the flow) or descending (in flow direction)
-     * order, because BiCGStab is designed to cope with 
+     * order, because BiCGStab is designed to cope with
      * non-sysmmetric matrices!
-     * ************************************************************ 
+     * ************************************************************
      */
     struct ReversePressureLikeOrdering {
       ReversePressureLikeOrdering()
@@ -81,7 +81,7 @@ namespace Dune{
 
 
     /* ************************************************************ *
-     * Structure for comparing two vectors, 
+     * Structure for comparing two vectors,
      * such that highest preference is given to the first index
      * ************************************************************ */
     struct VerticalOrderingCartesian {

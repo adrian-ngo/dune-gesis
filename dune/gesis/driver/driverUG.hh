@@ -138,7 +138,7 @@ namespace Dune {
 
       //const GV_GW &gv_gw = grid.levelView(baselevel);
       GV_GW gv_gw = grid.levelGridView(baselevel); // non-const because load-balancing may change the grid for rt0_pressurefield
-      
+
 
       //well-calibration:
       calibrateWellCentersToElementCenters( gv_gw,
