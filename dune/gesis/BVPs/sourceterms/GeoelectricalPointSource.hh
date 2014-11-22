@@ -7,7 +7,7 @@ namespace Dune {
   namespace Gesis {
 
     //=========================================================================
-    // The template class to define the source term for 
+    // The template class to define the source term for
     // adjoint geoelectrical potential simulations
     //========================================================================
 
@@ -16,7 +16,7 @@ namespace Dune {
              typename IDT,
              bool take_cell_average = false
              >
-    class GeoelectricalPointSource 
+    class GeoelectricalPointSource
       : public SourceTermInterface<
       SourceTermTraits<GV,RF>,
       GeoelectricalPointSource<GV,RF,IDT,take_cell_average>
@@ -34,20 +34,20 @@ namespace Dune {
 
 
     public:
-      
+
       const SourceNature source_nature;
-	  
+
       typedef SourceTermTraits<GV,RF> Traits;
-	  
+
       // The constructor:
       // The 2nd constructor parameter is used to indicate a negative point-source for the adjoint TPE
       GeoelectricalPointSource()
-        : 
+        :
         pointsource_location1_global( 0.0 ),
         pointsource_location2_global( 0.0 ),
         source_nature( GEOELECTRICAL_POINT_SOURCE )
       {}
-      
+
 
 
 
@@ -87,7 +87,7 @@ namespace Dune {
             iOutside++;
           }
         }
-			
+
         if( iOutside==0 ){
           //std::cout << pointsource_location_global << " ... ";
           // pointsource is inside the rectangular cell!
@@ -99,12 +99,12 @@ namespace Dune {
             //std::cout << " --> " << residual[i] << std::endl;
           }
         }
-	
+
         pointsource_local = eg.geometry().local( pointsource_location2_global );
-			
+
         // Code by Olaf Cirpka to evaluate shape functions at a single point source!
         // Check if the point source lies inside the rectangular cell.
-		
+
         iOutside = 0;
         for( UINT i=0; i<dim; i++ ){
           if( (pointsource_local[i] < 0.0 ) ||
@@ -112,7 +112,7 @@ namespace Dune {
             iOutside++;
           }
         }
-			
+
         if( iOutside==0 ){
           //std::cout << pointsource_location_global << " ... ";
           // pointsource is inside the rectangular cell!
@@ -124,7 +124,7 @@ namespace Dune {
             //std::cout << " --> " << residual[i] << std::endl;
           }
         }
-	
+
         return true;
 
       } // bool evaluate_residual_on_element()

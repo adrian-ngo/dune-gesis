@@ -9,7 +9,7 @@ namespace Dune {
     //=========================================================================
     // The template class to define the source term for forward flow simulations
     //========================================================================
-    
+
     template<typename GWP
              , typename GFS
              , typename IDT
@@ -18,7 +18,7 @@ namespace Dune {
       : public SourceTermInterface<
       SourceTermTraits<typename GFS::Traits::GridViewType,REAL>,
       FunctionSource<GWP,GFS,IDT,SDT>
-      > 
+      >
     {
     private:
       typedef typename GFS::Traits::GridViewType GV;
@@ -39,20 +39,20 @@ namespace Dune {
 
       const Passenger::Type passengerType;
       bool well_flag;
-      
+
       int n_RHS_Functions;
 
       inline void zone_parameters(const REAL& zone_coord, REAL & porosity, REAL & rho_s, REAL & c_s) const{
-	
+
         UINT inside=0;
         // only one zone!
         if(inputdata.yfield_properties.nz<2){
           porosity=inputdata.yfield_properties.zones[0].porosity;
           rho_s=inputdata.yfield_properties.zones[0].rho;
           c_s=inputdata.yfield_properties.zones[0].c_s;
-          return; 
+          return;
         }
-	
+
         for(UINT ii=0; ii<inputdata.yfield_properties.nz-1; ii++){
           if(zone_coord<=inputdata.yfield_properties.zones[ii].bottom ){
             porosity=inputdata.yfield_properties.zones[ii].porosity;
@@ -69,12 +69,12 @@ namespace Dune {
           c_s=inputdata.yfield_properties.zones[inputdata.yfield_properties.nz-1].c_s;
         }
 
-      } 
-      
+      }
+
 
 
       template<typename DFV0>   // Dune::FieldVector of codim 0
-      inline bool isPointInsideReachOfWell( const DFV0& elementpoint, 
+      inline bool isPointInsideReachOfWell( const DFV0& elementpoint,
                                             const REAL& reach,
 #ifdef DIMENSION3
                                             const REAL& reach_y,
@@ -106,7 +106,7 @@ namespace Dune {
 #else
            elementpoint[1] > well_bottom - GEO_EPSILON
            &&
-           elementpoint[1] < well_top + GEO_EPSILON           
+           elementpoint[1] < well_top + GEO_EPSILON
 #endif
            )
           return true;
@@ -115,11 +115,11 @@ namespace Dune {
       }
 
     public:
-    
+
       typedef Dune::PDELab::DiscreteGridFunction<GFS,VCType> DGF;
       typedef Dune::Gesis::DiscreteGridFunctionDarcy<GWP,GFS> DARCY_FLUX_DGF;
       typedef REAL RF;
-    
+
       // refined versions evaluating on leaf elements:
       typedef Dune::Gesis::DiscreteRefinedGridFunction<GFS,VCType> DRGF;
 
@@ -140,8 +140,8 @@ namespace Dune {
         gfs( gfs_ ),
         inputdata( inputdata_ ),
         setupdata( setupdata_ ),
-        vc_source( gfs, 0.0 ), 
-        vc_source_1( gfs, 0.0 ), 
+        vc_source( gfs, 0.0 ),
+        vc_source_1( gfs, 0.0 ),
         vc_source_2( gfs, 0.0 ),
         vc_source_3( gfs, 0.0 ),
         vc_source_4( gfs, 0.0 ),
@@ -150,7 +150,7 @@ namespace Dune {
         well_flag(well_flag_),
         source_nature( FUNCTIONAL_SOURCE )
       {
-        logger << "FunctionSource constructor with maxGridLevel = " 
+        logger << "FunctionSource constructor with maxGridLevel = "
                << maxGridLevel
                << std::endl;
       }
@@ -166,8 +166,8 @@ namespace Dune {
 
       void set_rhs( const VCType& vc_solution )
       {
-        // Hint: 
-        // Copying a VCType is easier than copying a DGF! 
+        // Hint:
+        // Copying a VCType is easier than copying a DGF!
         // That's why the DGF will be created out of the VCType inside the function evaluate(...)
         // However, I don't know yet whether this will have a negative effect on performance.
         vc_source_1=VCType(gfs,0.0);
@@ -192,7 +192,7 @@ namespace Dune {
         n_RHS_Functions = 2;
       }
 
-      
+
       void set_rhs( const VCType& vc_1
                     , const VCType& vc_2
                     , const VCType& vc_3
@@ -226,10 +226,10 @@ namespace Dune {
                                          //, UINT& flag_source  // Ask Ronnie: Wofür?
                                          ) const
       {
-        
+
         RF rho_w = inputdata.transport_parameters.heat_rho_w;
         RF c_w   = inputdata.transport_parameters.heat_c_w;
-          
+
         UINT nSources=setupdata.pdlist.total;  // adding Pointsources only!
 
         for( UINT i=0; i<nSources; i++ ) {
@@ -255,7 +255,7 @@ namespace Dune {
           else
             injection_time *= injection_time*0.5;  // Ask Ronnie: Why this?
 
-          
+
           RF porosity(0.3); // just an initialization, overwritten later
 
           if( pumping_rate > GEO_EPSILON*0.5 && std::abs(input) >  GEO_EPSILON*0.5 ) {
@@ -274,9 +274,9 @@ namespace Dune {
 #endif
 
             // get the local coordinate of all the source locations:
-            Dune::FieldVector<RF,dim> pointsource_local 
+            Dune::FieldVector<RF,dim> pointsource_local
               = eg.geometry().local( pointsource_global );
-				
+
             // Check if the point source lies inside the rectangular cell.
             UINT iOutside = 0;
             for( UINT ii=0; ii<dim; ii++ ){
@@ -285,18 +285,18 @@ namespace Dune {
               }
             }
 
-				
+
             if( iOutside==0 ) {
               lfsv.finiteElement().localBasis().evaluateFunction( pointsource_local, shapefunctions );
-            
+
               RF heat_fac=1.0;
 
               if( passengerType == Passenger::heat )
                 heat_fac=(rho_w*c_w)/( (porosity*rho_w*c_w)+((1.0-porosity)*rho_s*c_s) );
-            
+
               RF factor=eg.geometry().volume();
               RF npoints=eg.geometry().corners();
-	    
+
               //UINT flag_source=1; // Ask Ronnie: Wofür?
               for( UINT ii=0; ii<lfsv.size(); ii++ ) {
                 residual.accumulate( lfsv, ii, (-pumping_rate/factor*npoints)*input*injection_time*(heat_fac)* shapefunctions[ii]);
@@ -304,7 +304,7 @@ namespace Dune {
             }
           }
         }
-      
+
         return true;
       }
 
@@ -314,8 +314,8 @@ namespace Dune {
                               , const COORDINATES& xlocal
                               , REAL& fval
                               ) const {
-      
-        DGF dgf( gfs, vc_source );  
+
+        DGF dgf( gfs, vc_source );
         // For the evaluation of the dgf, a Dune::FieldVector of dim 1 is required:
         Dune::FieldVector<RF, 1> fvec(0.0);
         dgf.evaluate( e, xlocal, fvec );
@@ -325,14 +325,14 @@ namespace Dune {
 
 
       // source of the combi-adjoint:
-      // 
-      // Unresolved problem: 
+      //
+      // Unresolved problem:
       // FEM version of combi-adjoint RHS evaluation
       // works properly only in sequential mode.
       // In parallel mode, the set of leaf elements on the overlap of the coarse
-      // grid will not be complete because the refined grid will have only 
+      // grid will not be complete because the refined grid will have only
       // those child elements on overlap=1.
-      // The DG version circumvents this problem by the CCFV discretization of the 
+      // The DG version circumvents this problem by the CCFV discretization of the
       // RHS sourceterm which requires only values on the cell center :-)
       // These values are being communicated in advance :-))
       // See: void evaluate_residual_on_skeleton(...) used inside "GroundWaterOperatorCCFV.hh"
@@ -352,19 +352,19 @@ namespace Dune {
         Dune::FieldVector<RF, 1> fvec1(0.0);
 
         //dgf_1.evaluate( e, xlocal, fvec1 );
-        dgf_1.evaluate_on_leaf( maxGridLevel, baselevel, 
+        dgf_1.evaluate_on_leaf( maxGridLevel, baselevel,
                                 e, xlocal, fvec1 );
-      
+
         // For the evaluation of the dgf_2, a Dune::FieldVector of dim is required:
         Dune::FieldVector<RF, dim> fvec2(0.0);
 
         //dgf_2.evaluate( e, xlocal, fvec2 );
-        dgf_2.evaluate_on_leaf( maxGridLevel, baselevel, 
+        dgf_2.evaluate_on_leaf( maxGridLevel, baselevel,
                                 e, xlocal, fvec2 );
-      
+
         fvec = fvec2;
         fvec *= fvec1[0];   // fvec = m0_adj * (-K grad(m0))
-        
+
 
         if( n_RHS_Functions>2 ){
           //DGF dgf_3( gfs, vc_source_3 );
@@ -373,27 +373,27 @@ namespace Dune {
           // For the evaluation of the dgf_3, a Dune::FieldVector of dim 1 is required:
           Dune::FieldVector<RF, 1> fvec3(0.0);
           //dgf_3.evaluate( e, xlocal, fvec3 );
-          dgf_3.evaluate_on_leaf( maxGridLevel, baselevel, 
+          dgf_3.evaluate_on_leaf( maxGridLevel, baselevel,
                                   e, xlocal, fvec3 );
-      
+
           // For the evaluation of the dgf_2, a Dune::FieldVector of dim is required:
           Dune::FieldVector<RF, dim> fvec4(0.0);
           //dgf_4.evaluate( e, xlocal, fvec4 );
-          dgf_4.evaluate_on_leaf( maxGridLevel, baselevel, 
+          dgf_4.evaluate_on_leaf( maxGridLevel, baselevel,
                                   e, xlocal, fvec4 );
- 
+
           fvec.axpy( fvec3[0], fvec4 );  // fvec = - m0_adj * K grad(m0) - m1_adj * K grad(m1)
         }
         fvec *= -1.0;                 // fvec = + m0_adj * K grad(m0) + m1_adj * K grad(m1)
-      
+
         return true;
       }
 
 
       template<typename IG, typename LFSV, typename R>
-      void evaluate_on_boundary (const IG& ig, 
-                                 const LFSV& lfsv_s, 
-                                 R& r_s 
+      void evaluate_on_boundary (const IG& ig,
+                                 const LFSV& lfsv_s,
+                                 R& r_s
                                  ) const
       {
         // domain and range field type
@@ -403,11 +403,11 @@ namespace Dune {
         //typedef typename LocalBasisTraits::RangeFieldType  RF;
         // typedef typename LocalBasisTraits::RangeType RangeType;
         // typedef typename LFSV::Traits::SizeType size_type;
-        
+
         const int dim = IG::dimension;
         Dune::GeometryType gtface = ig.geometryInInside().type();
-        
-        const Dune::FieldVector<DF,dim-1> 
+
+        const Dune::FieldVector<DF,dim-1>
           face_local = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
         typename GWP::Traits::BCType bctype = gwp.bctype(ig.intersection(),face_local);
 
@@ -430,13 +430,13 @@ namespace Dune {
         const int qorder = 2;
         // select quadrature rule for boundary intergal
         const Dune::QuadratureRule<DF,dim-1>& rule = Dune::QuadratureRules<DF,dim-1>::rule(gtface,qorder);
-        
+
         if (bctype == Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet){
           // loop over quadrature points and integrate normal flux
           for (typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin(); it!=rule.end(); ++it) {
             Dune::FieldVector<DF,dim-1> qPoint_local = it->position(); // local coordinate!
 
-            // position of quadrature point in local coordinates of element 
+            // position of quadrature point in local coordinates of element
             Dune::FieldVector<DF,dim> local = ig.geometryInInside().global( qPoint_local );
             // RF factor = it->weight() * ig.geometry().integrationElement( qPoint_local );
 
@@ -460,8 +460,8 @@ namespace Dune {
               RF nKgrad_m1 = - (n_F * Kgrad_m1);
 
               contribution_s -= (nKgrad_m1 * m1_adj); // - n * m1_adj * K * gradm1
-            }              
-            
+            }
+
             contribution_s *= -1.0; // corresponds to the line fvec *= -1.0;
             //std::cout << "contribution_s = " << contribution_s << std::endl;
             r_s.accumulate(lfsv_s,0,contribution_s);
@@ -476,34 +476,34 @@ namespace Dune {
 
       // See: void evaluate_vector(...) used inside "GroundWaterOperatorGalerkin.hh"
       template<typename IG, typename LFSV, typename R>
-      void evaluate_residual_on_skeleton (const IG& ig, 
-                                          const LFSV& lfsv_s, const LFSV& lfsv_n, 
+      void evaluate_residual_on_skeleton (const IG& ig,
+                                          const LFSV& lfsv_s, const LFSV& lfsv_n,
                                           R& r_s, R& r_n
                                           ) const {
-      
+
         // domain and range field type
         typedef typename LFSV::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits LocalBasisTraits;
         typedef typename LocalBasisTraits::DomainFieldType DF;
         //typedef typename LocalBasisTraits::RangeFieldType  RF;
-        
+
         const int dim = IG::dimension;
-        
+
         // distance between cell centers in global coordinates
         Dune::FieldVector<DF,dim> inside_global = ig.inside()->geometry().center();
         Dune::FieldVector<DF,dim> outside_global = ig.outside()->geometry().center();
         inside_global -= outside_global;
         RF distance = inside_global.two_norm();
-        
+
         // evaluate Y-field tensor at cell center, assume it is constant over elements
-        const Dune::FieldVector<DF,dim>& localcenter_inside 
+        const Dune::FieldVector<DF,dim>& localcenter_inside
           = Dune::ReferenceElements<DF,dim>::general( ig.inside()->type() ).position(0,0);
 
         // get global coordinate
-        //Dune::FieldVector<DF,dim>& globalcenter_inside 
+        //Dune::FieldVector<DF,dim>& globalcenter_inside
         //  = ig.geometryInInside().global(localcenter_inside);
 
-        const Dune::FieldVector<DF,dim>& localcenter_outside 
+        const Dune::FieldVector<DF,dim>& localcenter_outside
           = Dune::ReferenceElements<DF,dim>::general( ig.outside()->type() ).position(0,0);
 
         typename GWP::Traits::DiffusionTensorType tensor_inside(gwp.DiffusionTensor(*(ig.inside()),localcenter_inside));
@@ -521,38 +521,38 @@ namespace Dune {
 #else
         RF element_length_s = std::sqrt( element_volume_s );
 #endif
-        
+
         RF element_volume_n = ig.outside()->geometry().volume();
 #ifdef DIMENSION3
         RF element_length_n = std::pow( element_volume_n, 1.0/3.0 );
 #else
         RF element_length_n = std::sqrt( element_volume_n );
 #endif
-        
+
         RF A_eff = 0.0;
         if( element_length_s - element_length_n<1E-12 )
           A_eff = Dune::Gesis::General::harmonicAverage(A_s,A_n);
         else
-          A_eff = Dune::Gesis::General::harmonicAverageWeightedByDistance( A_s, 
-                                                                                  A_n, 
-                                                                                  element_length_s, 
-                                                                                  element_length_n );
+          A_eff = Dune::Gesis::General::harmonicAverageWeightedByDistance( A_s,
+                                                                           A_n,
+                                                                           element_length_s,
+                                                                           element_length_n );
         //std::cout << "A_eff = " << A_eff << std::endl;
-        
+
 
         // TODO:
         // dgf_1.evaluate_on_leaf() can actually be replaced by
         // dgf_1.evaluate() because we are using the CCFV projected version
-        // of the DG solution. That way, the grid dependent 
+        // of the DG solution. That way, the grid dependent
         // variable 'baselevel' can be removed here.
 
         DRGF dgf_1( gfs, vc_source_1 ); // m0_adj
         DRGF dgf_2( gfs, vc_source_2 ); // m0
-        
+
         // For the evaluation of a dgf_1, a Dune::FieldVector is required:
 
 
-        //std::cout << "DEBUG: dgf_1.evaluate_on_leaf(inside), maxGridLevel = " 
+        //std::cout << "DEBUG: dgf_1.evaluate_on_leaf(inside), maxGridLevel = "
         //          << maxGridLevel << std::endl;
 
 #ifdef USE_YASP
@@ -566,15 +566,15 @@ namespace Dune {
 #endif
 
         Dune::FieldVector<RF, 1> m0_adj_s(0.0);
-        dgf_1.evaluate_on_leaf( maxGridLevel, baselevel, 
+        dgf_1.evaluate_on_leaf( maxGridLevel, baselevel,
                                 *(ig.inside()), localcenter_inside, m0_adj_s );
 
 
-        //std::cout << "DEBUG: dgf_1.evaluate_on_leaf(outside), maxGridLevel = " 
+        //std::cout << "DEBUG: dgf_1.evaluate_on_leaf(outside), maxGridLevel = "
         // << maxGridLevel << std::endl;
 
         Dune::FieldVector<RF, 1> m0_adj_n(0.0);
-        dgf_1.evaluate_on_leaf( maxGridLevel, baselevel, 
+        dgf_1.evaluate_on_leaf( maxGridLevel, baselevel,
                                 *(ig.outside()), localcenter_outside, m0_adj_n );
 
         RF m0_adj = 0.0;
@@ -584,9 +584,9 @@ namespace Dune {
             harmonicAverage(m0_adj_n[0],m0_adj_s[0]);
         else
           m0_adj = Dune::Gesis::General::
-            harmonicAverageWeightedByDistance( m0_adj_s[0], 
-                                               m0_adj_n[0], 
-                                               element_length_s, 
+            harmonicAverageWeightedByDistance( m0_adj_s[0],
+                                               m0_adj_n[0],
+                                               element_length_s,
                                                element_length_n );
 #else
         m0_adj = 0.5 * ( m0_adj_n[0] + m0_adj_s[0] );
@@ -594,10 +594,10 @@ namespace Dune {
         //std::cout << "m0_adj = " << m0_adj << std::endl;
 
         Dune::FieldVector<RF, 1> m0_s(0.0);
-        dgf_2.evaluate_on_leaf( maxGridLevel, baselevel, 
+        dgf_2.evaluate_on_leaf( maxGridLevel, baselevel,
                                 *(ig.inside()), localcenter_inside, m0_s );
         Dune::FieldVector<RF, 1> m0_n(0.0);
-        dgf_2.evaluate_on_leaf( maxGridLevel, baselevel, 
+        dgf_2.evaluate_on_leaf( maxGridLevel, baselevel,
                                 *(ig.outside()), localcenter_outside, m0_n );
         RF Kgrad_m0 = A_eff * ( m0_n[0] - m0_s[0] ) / distance;
 
@@ -611,10 +611,10 @@ namespace Dune {
           DRGF dgf_3( gfs, vc_source_3 ); // m1_adj
           DRGF dgf_4( gfs, vc_source_4 ); // m1
           Dune::FieldVector<RF, 1> m1_adj_s(0.0);
-          dgf_3.evaluate_on_leaf( maxGridLevel, baselevel, 
+          dgf_3.evaluate_on_leaf( maxGridLevel, baselevel,
                                   *(ig.inside()), localcenter_inside, m1_adj_s );
           Dune::FieldVector<RF, 1> m1_adj_n(0.0);
-          dgf_3.evaluate_on_leaf( maxGridLevel, baselevel, 
+          dgf_3.evaluate_on_leaf( maxGridLevel, baselevel,
                                   *(ig.outside()), localcenter_outside, m1_adj_n );
 
           RF m1_adj = 0.0;
@@ -624,9 +624,9 @@ namespace Dune {
               harmonicAverage(m1_adj_n[0],m1_adj_s[0]);
           else
             m1_adj = Dune::Gesis::General::
-              harmonicAverageWeightedByDistance( m1_adj_s[0], 
-                                                 m1_adj_n[0], 
-                                                 element_length_s, 
+              harmonicAverageWeightedByDistance( m1_adj_s[0],
+                                                 m1_adj_n[0],
+                                                 element_length_s,
                                                  element_length_n );
 #else
           m1_adj = 0.5 * ( m1_adj_n[0] + m1_adj_s[0] );
@@ -634,10 +634,10 @@ namespace Dune {
           //std::cout << "m1_adj = " << m1_adj << std::endl;
 
           Dune::FieldVector<RF, 1> m1_s(0.0);
-          dgf_4.evaluate_on_leaf( maxGridLevel, baselevel, 
+          dgf_4.evaluate_on_leaf( maxGridLevel, baselevel,
                                   *(ig.inside()), localcenter_inside, m1_s );
           Dune::FieldVector<RF, 1> m1_n(0.0);
-          dgf_4.evaluate_on_leaf( maxGridLevel, baselevel, 
+          dgf_4.evaluate_on_leaf( maxGridLevel, baselevel,
                                   *(ig.outside()), localcenter_outside, m1_n );
           RF Kgrad_m1 = A_eff * ( m1_n[0] - m1_s[0] ) / distance;
 
@@ -646,7 +646,7 @@ namespace Dune {
           //std::cout << "face_volume = " << face_volume << std::endl;
           contribution_s -= (Kgrad_m1 * m1_adj) * face_volume;
         }
-        
+
         contribution_s *= -1.0; // corresponds to the line fvec *= -1.0;
 
         //std::cout << "contribution_s = " << contribution_s << std::endl;

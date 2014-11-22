@@ -9,10 +9,10 @@ namespace Dune {
 
 
     //===================================================================================
-    // The template class to define the functional source term for transport simulations 
+    // The template class to define the functional source term for transport simulations
     // (needed for adjoint transport for the sensitivity of geoelectrical potential)
     //===================================================================================
-    
+
     template<
       typename GV
       , typename GWP
@@ -55,7 +55,7 @@ namespace Dune {
         gwp(gwp_),
         gfs( gfs_ ),
         inputdata( inputdata_ ),
-        vc_source_1( gfs, 0.0 ), 
+        vc_source_1( gfs, 0.0 ),
         vc_source_2( gfs, 0.0 ),
         source_nature( TP_FUNCTIONAL_SOURCE )
       {
@@ -63,7 +63,7 @@ namespace Dune {
           std::cout << "TP_FunctionSource constructor" << std::endl;
         }
       }
-      
+
 
 
 
@@ -72,7 +72,7 @@ namespace Dune {
         vc_source_1=VCType(gfs,0.0);
         vc_source_2=VCType(gfs,0.0);
       }
-      
+
 
       void set_rhs( const VCType& vc_1, const VCType& vc_2 ) {
         vc_source_1 = vc_1;
@@ -85,28 +85,28 @@ namespace Dune {
                               , const COORDINATES& xlocal
                               , REAL& fval
                               ) const {
-		
-        // Hint: 
+
+        // Hint:
         // The DGF is being created out of the VCType everytime.
         // I don't know yet whether this will have a negative effect on the performance.
         // I hope that this construtor does not do much work here!
         GRADIENT_DGF dgf_1(gfs, vc_source_1);
-		
+
         DARCY_FLUX_DGF dgf_2( gwp, gfs, vc_source_2, inputdata,-1,-1,-1,-1,false );
 
         // For the evaluation of the dgf, a Dune::FieldVector of dim 1 is required:
         Dune::FieldVector<RF, dim> fvec1(0.0);
         dgf_1.evaluate( e, xlocal, fvec1 );
-		
+
         // For the evaluation of the dgf_2, a Dune::FieldVector of dim is required:
         Dune::FieldVector<RF, dim> fvec2(0.0);
         dgf_2.evaluate( e, xlocal, fvec2 );
 
         //logger<<"flux: "<<fvec2[0]<<","<<fvec2[1]<<std::endl;
-		
+
         //scalar product
-        fval = (fvec1*fvec2);	
-                
+        fval = (fvec1*fvec2);
+
         return true;
       }  // bool evaluate_function()
 

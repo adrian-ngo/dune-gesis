@@ -6,9 +6,9 @@ namespace Dune {
 
     /**********************************************************
      *
-     *  SourceNature is an enum-type specifying what kind 
+     *  SourceNature is an enum-type specifying what kind
      *  of source-terms are possible
-     *  
+     *
      *
      **********************************************************
      */
@@ -21,46 +21,44 @@ namespace Dune {
       GEOELECTRICAL_POTENTIAL_SOURCE,
       GEOELECTRICAL_POINT_SOURCE,
       FUNCTIONAL_SOURCE,
-      GEP_FUNCTIONAL_SOURCE, 
-      TP_FUNCTIONAL_SOURCE 
+      GEP_FUNCTIONAL_SOURCE,
+      TP_FUNCTIONAL_SOURCE
     };
 
 
-    // TODO: Is this SourceTermTraits really used???
-
     //============================================================
     //! Define a traits class for both flow and transport problems
-    //============================================================   
+    //============================================================
     template<typename GV, typename RF>
-    struct SourceTermTraits 
-    {      
+    struct SourceTermTraits
+    {
       // brief Export type for range field
       typedef RF RangeFieldType;
-	  
+
       //! \brief the grid view
       typedef GV GridViewType;
-	  
+
       //! \brief Enum for domain dimension
-	  
+
       enum {
         //! \brief dimension of the domain
         dimDomain = GV::dimension
       };
-	  
+
       //! \brief Export type for domain field
       typedef typename GV::Grid::ctype DomainFieldType;
-	  
+
       //! \brief domain type
       typedef Dune::FieldVector<DomainFieldType, dimDomain> DomainType;
-	  
-	  
+
+
       //! \brief range type
       typedef Dune::FieldVector<RF, GV::dimensionworld> RangeType;
       //! grid types
       typedef typename GV::Traits::template Codim< 0 >::Entity ElementType;
-	  
+
     };
-    
+
     //=================================
     //! base class for the source classes
     //=================================
@@ -90,8 +88,8 @@ namespace Dune {
 
 
       template<typename IG, typename LFSV, typename R>
-      void evaluate_residual_on_skeleton (const IG& ig, 
-                                          const LFSV& lfsv_s, const LFSV& lfsv_n, 
+      void evaluate_residual_on_skeleton (const IG& ig,
+                                          const LFSV& lfsv_s, const LFSV& lfsv_n,
                                           R& r_s, R& r_n
                                           ) const {
         return;
@@ -99,15 +97,15 @@ namespace Dune {
 
 
       template<typename IG, typename LFSV, typename R>
-      void evaluate_residual_on_boundary (const IG& ig, 
-                                          const LFSV& lfsv_s, 
+      void evaluate_residual_on_boundary (const IG& ig,
+                                          const LFSV& lfsv_s,
                                           R& r_s
                                           ) const {
         return;
       }
 
 
-      
+
       template<typename EG, typename COORDINATES>
       bool evaluate_function( const EG& e
                               , const COORDINATES& xlocal
@@ -136,7 +134,7 @@ namespace Dune {
       }
 
       template<typename COORDINATES>
-      void set_PointSourceLocations( const COORDINATES& pointsource1_global, 
+      void set_PointSourceLocations( const COORDINATES& pointsource1_global,
                                      const COORDINATES& pointsource2_global )
       {
         return;
@@ -159,13 +157,13 @@ namespace Dune {
       }
 
 
-	  
+
     private:
-      
+
       Imp& asImp() {
         return static_cast<Imp &> (*this);
       }
-      
+
       const Imp& asImp() const {
         return static_cast<const Imp &> (*this);
       }

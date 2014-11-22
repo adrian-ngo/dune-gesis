@@ -10,7 +10,7 @@ namespace Dune {
     //=================================================================================
     // The template class to define the HEAT source term for forward HEAT simulations
     //=================================================================================
-	
+
     template<typename GV,
              typename RF,
              typename IDT,
@@ -19,24 +19,24 @@ namespace Dune {
       : public SourceTermInterface<
       SourceTermTraits<GV,RF>,
       HeatPumpingSource<GV,RF,IDT,SDT>
-      > 
+      >
     {
     private:
       enum{ dim = GV::dimension };
       const IDT& inputdata;
       const SDT& setupdata;
-      
+
       inline void zone_parameters(const REAL& zone_coord, REAL & porosity, REAL & rho_s, REAL & c_s) const{
-	
+
         UINT inside=0;
         // only one zone!
         if(inputdata.yfield_properties.nz<2){
           porosity=inputdata.yfield_properties.zones[0].porosity;
           rho_s=inputdata.yfield_properties.zones[0].rho;
           c_s=inputdata.yfield_properties.zones[0].c_s;
-          return; 
+          return;
         }
-	
+
         for(UINT ii=0; ii<inputdata.yfield_properties.nz-1; ii++){
           if(zone_coord<=inputdata.yfield_properties.zones[ii].bottom ){
             porosity=inputdata.yfield_properties.zones[ii].porosity;
@@ -53,11 +53,11 @@ namespace Dune {
           c_s=inputdata.yfield_properties.zones[inputdata.yfield_properties.nz-1].c_s;
         }
 
-      } 
-      
+      }
+
 
       template<typename DFV0>   // DFV0 = Dune::FieldVector of codim 0
-      inline bool isPointInsideReachOfWell( const DFV0& elementpoint, 
+      inline bool isPointInsideReachOfWell( const DFV0& elementpoint,
                                             const RF& reach,
 #ifdef DIMENSION3
                                             const RF& reach_y,
@@ -73,7 +73,7 @@ namespace Dune {
         RF well_top =  setupdata.wdlist.pointdata_vector[iWell].well_top;
         RF well_bottom =  setupdata.wdlist.pointdata_vector[iWell].well_bottom;
 
-        
+
         if(
            elementpoint[0] >= well_position_x - reach
            &&
@@ -90,27 +90,27 @@ namespace Dune {
 #else
            elementpoint[1] > well_bottom - GEO_EPSILON
            &&
-           elementpoint[1] < well_top + GEO_EPSILON           
+           elementpoint[1] < well_top + GEO_EPSILON
 #endif
            )
           return true;
         else
           return false;
       }
-      	  
+
     public:
-	  
+
       const SourceNature source_nature;
       typedef SourceTermTraits<GV,RF> Traits;
       HeatPumpingSource( const IDT& inputdata_, const SDT& setupdata_ )
-        : 
+        :
         inputdata(inputdata_),
         setupdata(setupdata_),
         source_nature( HEAT_PUMPING_SOURCES )
       {
 
       }
-      
+
 
       template< typename EG
                 , typename LFSV
@@ -124,12 +124,12 @@ namespace Dune {
                                          , const bool bAdjoint=false
                                          ) const
       {
-        
+
         UINT nSources=setupdata.pdlist.total;
-		  
+
         RF rho_w = inputdata.transport_parameters.heat_rho_w;
         RF c_w   = inputdata.transport_parameters.heat_c_w;
-        
+
         for( UINT i=0; i<nSources; i++ ) {
           RF pumping_rate, temperature,injection_time;
           RF rho_s=1.0;
@@ -145,7 +145,7 @@ namespace Dune {
 
           if(  pumping_rate > GEO_EPSILON*0.5 && fabs(temperature) > GEO_EPSILON*0.5) {
             Dune::FieldVector<RF,dim> pointsource_global;
-              
+
             pointsource_global[0] = setupdata.pdlist.pointdata_vector[i].x;
             pointsource_global[1] = setupdata.pdlist.pointdata_vector[i].y;
 #ifdef DIMENSION3
@@ -153,12 +153,12 @@ namespace Dune {
             zone_parameters(pointsource_global[2], porosity, rho_s, c_s);
 #else
             zone_parameters(pointsource_global[1], porosity, rho_s, c_s);
-#endif            
-				  
+#endif
+
             // get the local coordinate of all the source locations:
-            Dune::FieldVector<RF,dim> pointsource_local 
+            Dune::FieldVector<RF,dim> pointsource_local
               = eg.geometry().local( pointsource_global );
-              
+
             // Check if the point source lies inside the rectangular cell.
             UINT iOutside = 0;
             for( UINT ii=0; ii<dim; ii++ ){
@@ -167,19 +167,19 @@ namespace Dune {
               }
             }
 
-				
+
             if( iOutside==0 ) {
-		
+
               lfsv.finiteElement().localBasis().evaluateFunction( pointsource_local, shapefunctions );
               RF rho_m_c_m;
-                
+
               rho_m_c_m=(porosity*rho_w*c_w)+((1.0-porosity)*rho_s*c_s);
-                
+
               RF factor=eg.geometry().volume();
               RF npoints=eg.geometry().corners();
-                
+
               for( UINT ii=0; ii<lfsv.size(); ii++ ) {
-					    
+
                 residual.accumulate( lfsv, ii, (-pumping_rate/factor*npoints)*temperature*injection_time*(rho_w*c_w/rho_m_c_m)* shapefunctions[ii]);
                 //residual.accumulate( lfsv, i, (- pumping_rate)*temperature*(/*(rho_w*c_w)*/1.0/(rho_w*c_w))* shapefunctions[i] );
                 //std::cout << " --> " << residual[i] << std::endl;
@@ -192,7 +192,7 @@ namespace Dune {
       } // bool evaluate_residual_on_element()
 
     }; // class HeatPumpingSource
-    
+
   }
 }
 

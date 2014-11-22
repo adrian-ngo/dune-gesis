@@ -20,18 +20,18 @@ namespace Dune {
       : public SourceTermInterface<
       SourceTermTraits<GV,RF>,
       PumpingSource<GV,RF,SDT>
-      > 
+      >
     {
     private:
       enum{ dim = GV::dimension };
       const SDT& setupdata;
 
     public:
-	  
+
       const SourceNature source_nature;
       typedef SourceTermTraits<GV,RF> Traits;
       PumpingSource( const SDT& setupdata_ )
-        : 
+        :
         setupdata(setupdata_),
         source_nature( PUMPING_SOURCES )
       {}
@@ -47,13 +47,13 @@ namespace Dune {
                                          , R& residual
                                          , const bool bAdjoint=false
                                          ) const {
-        
+
         UINT nSources=setupdata.pdlist.total;
-        
+
         for( UINT i=0; i<nSources; i++ ) {
 
           RF source_value=setupdata.pdlist.pointdata_vector[i].value;
-			  
+
           if( std::abs( source_value ) > GEO_EPSILON*0.5 ) {
 
             Dune::FieldVector<RF,dim> pointsource_global;
@@ -65,9 +65,9 @@ namespace Dune {
 #endif
 
             // get the local coordinate of all the source locations:
-            Dune::FieldVector<RF,dim> pointsource_local 
+            Dune::FieldVector<RF,dim> pointsource_local
               = eg.geometry().local( pointsource_global );
-            
+
             // Check if the point source lies inside the rectangular cell.
             UINT iOutside = 0;
             for( UINT ii=0; ii<dim; ii++ ){
@@ -75,7 +75,7 @@ namespace Dune {
                 iOutside++;
               }
             }
-            
+
             if( iOutside==0 ) {
               //logger << pointsource_global << "FLOW"<<std::endl;
               //logger << "element center: " <<eg.geometry().center()<<std::endl;
@@ -94,13 +94,13 @@ namespace Dune {
             }
           }
         }
-		  
+
         return true;
 
       } // bool evaluate_residual_on_element()
-      
+
     }; // class PumpingSource
-    
+
 
   }
 }
