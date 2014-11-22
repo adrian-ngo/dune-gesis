@@ -1,4 +1,4 @@
-/* 
+/*
  * MeasurementList.hh
  * Author: R.L.Schwede and A. Ngo
  */
@@ -25,7 +25,7 @@ namespace Dune {
       std::vector<UINT> meas_per_setup;
       std::vector<std::vector<UINT> > meas_per_setup_per_type;
       std::vector<std::vector<UINT> > GEmeas_per_setup_per_config;
-    
+
       std::vector<std::vector<std::vector<std::vector<UINT> > > > local_to_global;
 
       std::vector<std::vector<MeasurementElement> > lnK_meas;
@@ -42,32 +42,32 @@ namespace Dune {
       std::vector<std::vector<std::vector<MeasurementElement> > > GE_meas;
 
       std::vector<MeasurementElement*> all_meas;
-    
-    
-    
+
+
+
     public:
-    
+
       //constructor
       MeasurementList<MeasurementElement>( const CInputData& inputdata_,
                                            const bool synthetic_ )
       : inputdata(inputdata_),
         synthetic(synthetic_),
         nMeas(0),
-        nSetups( inputdata.setups.size() ) 
+        nSetups( inputdata.setups.size() )
       {
         meas_per_setup.resize(nSetups,0);
         meas_per_setup_per_type.resize(nSetups);
         GEmeas_per_setup_per_config.resize(nSetups);
 
         local_to_global.resize(nSetups);
-      
+
         lnK_meas.resize(nSetups);
         head_meas.resize(nSetups);
         M0_meas.resize(nSetups);
         M1_meas.resize(nSetups);
 
         if(synthetic){
-          heatM0_meas.resize(nSetups);  
+          heatM0_meas.resize(nSetups);
           heatM1_meas.resize(nSetups);
         }
         heat_meas.resize(nSetups);
@@ -144,11 +144,11 @@ namespace Dune {
               // all_meas.push_back( &(heat_meas[iSetup][heat_meas[iSetup].size()-1]) );
             }
           }
-          
+
           //GE meas!
           GEmeas_per_setup_per_config[iSetup].resize(inputdata.setups[iSetup].geoelectrical_potential_inversion_data.nconfig,0);
           local_to_global[iSetup][5].resize(inputdata.setups[iSetup].geoelectrical_potential_inversion_data.nconfig);
-          if(inputdata.problem_types.moments_geoeletric_potential_inversion){    
+          if(inputdata.problem_types.moments_geoeletric_potential_inversion){
             GE_meas[iSetup].resize(inputdata.setups[iSetup].geoelectrical_potential_inversion_data.nconfig);
             if(synthetic){
               GEM0_meas[iSetup].resize(inputdata.setups[iSetup].geoelectrical_potential_inversion_data.nconfig);
@@ -174,16 +174,16 @@ namespace Dune {
           // set the all_meas vector!
           local_to_global[iSetup][0][0].resize(meas_per_setup_per_type[iSetup][0],0);
           for(UINT ii =0; ii< meas_per_setup_per_type[iSetup][0]; ii++){
-            local_to_global[iSetup][0][0][ii]=all_meas.size();   
+            local_to_global[iSetup][0][0][ii]=all_meas.size();
             all_meas.push_back( &(lnK_meas[iSetup][ii]) );
           }
-          
+
           local_to_global[iSetup][1][0].resize(meas_per_setup_per_type[iSetup][1],0);
           for(UINT ii =0; ii< meas_per_setup_per_type[iSetup][1]; ii++){
             local_to_global[iSetup][1][0][ii]=all_meas.size();
             all_meas.push_back( &(head_meas[iSetup][ii]) );
           }
-          
+
           local_to_global[iSetup][2][0].resize(meas_per_setup_per_type[iSetup][2],0);
           for(UINT ii =0; ii< meas_per_setup_per_type[iSetup][2]; ii++){
             local_to_global[iSetup][2][0][ii]=all_meas.size();
@@ -194,7 +194,7 @@ namespace Dune {
             local_to_global[iSetup][3][0][ii]=all_meas.size();
             all_meas.push_back( &(M1_meas[iSetup][ii]) );
           }
-          local_to_global[iSetup][4][0].resize(meas_per_setup_per_type[iSetup][4],0);    
+          local_to_global[iSetup][4][0].resize(meas_per_setup_per_type[iSetup][4],0);
           for(UINT ii =0; ii< meas_per_setup_per_type[iSetup][4]; ii++){
             local_to_global[iSetup][4][0][ii]=all_meas.size();
             all_meas.push_back( &(heat_meas[iSetup][ii]) );
@@ -211,10 +211,10 @@ namespace Dune {
         if(synthetic){
           set_value_zero();
         }
-      
+
       } // END: constructor
 
-    
+
       //copy-constructor
       MeasurementList<MeasurementElement>(const MeasurementList<MeasurementElement>& ml)
       : inputdata(ml.inputdata)
@@ -237,17 +237,17 @@ namespace Dune {
         , GE_meas(ml.GE_meas)
       {
         all_meas.resize(0);
-      
+
         for(UINT iSetup=0; iSetup<nSetups; iSetup++){
-          
+
           // set the all_meas vector!
 
-          for(UINT ii =0; ii< meas_per_setup_per_type[iSetup][0]; ii++){ 
+          for(UINT ii =0; ii< meas_per_setup_per_type[iSetup][0]; ii++){
             all_meas.push_back(&(lnK_meas[iSetup][ii]));
-          }          
+          }
           for(UINT ii =0; ii< meas_per_setup_per_type[iSetup][1]; ii++){
             all_meas.push_back( &(head_meas[iSetup][ii]) );
-          }   
+          }
           for(UINT ii =0; ii< meas_per_setup_per_type[iSetup][2]; ii++){
             all_meas.push_back( &(M0_meas[iSetup][ii]) );
           }
@@ -275,9 +275,9 @@ namespace Dune {
           }
 
         }// END: for loop of setups
-        
+
       } // END copy-constructor
-    
+
 
 
       //
@@ -288,9 +288,9 @@ namespace Dune {
           this->~MeasurementList<MeasurementElement>();//destroy
           new (this) MeasurementList<MeasurementElement>(rhs);//reconstruct self using placement new and copy ctor
         }
-        return *this;    
+        return *this;
       }
-    
+
 
 #ifdef DEBUG
       template<typename VecVecVecVec>
@@ -391,7 +391,7 @@ namespace Dune {
 #ifdef DIMENSION3
                   <<" , "<<M0_meas[iSetup][ii].z
 #endif
-                  <<" ; value : "<<M0_meas[iSetup][ii].value<<std::endl;   
+                  <<" ; value : "<<M0_meas[iSetup][ii].value<<std::endl;
           logger<<meas_per_setup_per_type[iSetup][3]<<" solute concentration M1 measurements:"<<std::endl;
           for(UINT ii=0; ii<meas_per_setup_per_type[iSetup][3]; ii ++)
             logger<<ii+1<<". : "<<M1_meas[iSetup][ii].x<<" , "<<M1_meas[iSetup][ii].y
@@ -406,7 +406,7 @@ namespace Dune {
                   <<" , "<<heat_meas[iSetup][ii].z
 #endif
                   <<" ; value : "<<heat_meas[iSetup][ii].value<<std::endl;
-          
+
           logger<<meas_per_setup_per_type[iSetup][5]<<" GEmeasurements in "<<GEmeas_per_setup_per_config[iSetup].size()<<" configurations:"<<std::endl;
           if(meas_per_setup_per_type[iSetup][5]){
             for(UINT jj=0; jj<GEmeas_per_setup_per_config[iSetup].size(); jj++){
@@ -420,19 +420,19 @@ namespace Dune {
 #ifdef DIMENSION3
                       <<" , (z2)"<<GE_meas[iSetup][jj][kk].z2
 #endif
-                      <<" ; value : "<<GE_meas[iSetup][jj][kk].value<<std::endl; 
+                      <<" ; value : "<<GE_meas[iSetup][jj][kk].value<<std::endl;
               }
             }
           }
-          
+
         }
         logger<<"Writing list >>"<<info<<"<< : DONE!"<<std::endl;
       }
-    
+
 
 
       void store_measurements( const UINT type, const UINT iSetup, const std::string filename ){
-    
+
         Dune::Timer watch;
 
         switch( type ){
@@ -515,9 +515,9 @@ namespace Dune {
       }
 
 
-  
-      bool read_measurements( const UINT type, 
-                              const UINT iSetup, 
+
+      bool read_measurements( const UINT type,
+                              const UINT iSetup,
                               const std::string filename,
                               const Dune::MPIHelper& helper ){
         Dune::Timer watch;
@@ -537,7 +537,7 @@ namespace Dune {
         logger << "read_measurements: DEBUG LOG: contents = " << std::endl;
         logger << contents << std::endl;
 
-        logger << "head_meas[iSetup].size() = " << head_meas[iSetup].size() << std::endl; 
+        logger << "head_meas[iSetup].size() = " << head_meas[iSetup].size() << std::endl;
 
 
         std::stringstream instream( contents );
@@ -561,8 +561,8 @@ namespace Dune {
             case 1:
               {
 
-                logger << "iLine = " << iLine << std::endl; 
-                logger << "head_meas[iSetup].size() = " << head_meas[iSetup].size() << std::endl; 
+                logger << "iLine = " << iLine << std::endl;
+                logger << "head_meas[iSetup].size() = " << head_meas[iSetup].size() << std::endl;
                 if( iLine >= (int)head_meas[iSetup].size() ){
                   logger << "read_measurements: WARNING: number of meas. points in input XML is less than in head data file." << std::endl;
                   bExitWhileLoop = true;
@@ -641,7 +641,7 @@ namespace Dune {
             instream >> value;
 
 
-            
+
             REAL stochasticDisturbance = inputdata.inversion_parameters.disturbance;
             if( stochasticDisturbance > 1E-12 )
               stochasticDisturbance * distr(gen);
@@ -672,7 +672,7 @@ namespace Dune {
 
             char c=instream.peek();
             if(c=='\n'){
-              instream.readsome(&c,1);  
+              instream.readsome(&c,1);
               c=instream.peek();
               while (c==' '){
                 instream.readsome(&c,1);
@@ -689,7 +689,7 @@ namespace Dune {
           iLine++;
         }
 
-    
+
         std::stringstream jobtitle;
         jobtitle << "read_measurements: reading " << filename;
         General::log_elapsed_time( watch.elapsed(),
@@ -717,12 +717,12 @@ namespace Dune {
         }
       }
 
-    
+
       template<typename DATA, typename GFS>
-      void take_measurements( UINT type, 
+      void take_measurements( UINT type,
                               const DATA& data,
-                              const GFS& gfs, 
-                              const Dune::MPIHelper& helper, 
+                              const GFS& gfs,
+                              const Dune::MPIHelper& helper,
                               UINT iSetup ){
 
         if( !synthetic )
@@ -777,21 +777,21 @@ namespace Dune {
         default:
           logger<<"ERROR in take measurements. Meas. type not known or type function not used for this type of measurement(check for special functions)!!!"<<std::endl;
         }
-           
+
       }
 
 
 
       template<typename DATA, // == VCType
                typename GFS>
-      void take_measurements_AT( UINT type, 
+      void take_measurements_AT( UINT type,
                                  const DATA& data1,
                                  const DATA& data2,
                                  const GFS& gfs,
                                  const Dune::MPIHelper& helper,
-                                 UINT Setup, 
+                                 UINT Setup,
                                  UINT config=0 ){
-    
+
         if( !synthetic )
           return;  // No need to take measurements if the data in the inputfile are to be used.
 
@@ -805,7 +805,7 @@ namespace Dune {
             take_measurements_on_dgf( gfs, data2, heatM1_meas[Setup], helper);
             logger << "Take measurements of heatM0" << std::endl;
             take_measurements_on_dgf( gfs, data1, heatM0_meas[Setup], helper);
-          
+
             for(UINT ii=0; ii<heatM1_meas[Setup].size(); ii++){
               if(heatM1_meas[Setup][ii].value<0.0)
                 heat_meas[Setup][ii].value = 0.0;
@@ -814,20 +814,20 @@ namespace Dune {
               else if(heatM0_meas[Setup][ii].value<GEO_EPSILON*0.5)
                 heat_meas[Setup][ii].value = heatM1_meas[Setup][ii].value/(GEO_EPSILON*0.5);
               else
-                heat_meas[Setup][ii].value = heatM1_meas[Setup][ii].value/heatM0_meas[Setup][ii].value;   
+                heat_meas[Setup][ii].value = heatM1_meas[Setup][ii].value/heatM0_meas[Setup][ii].value;
               /*
                 std::cout << "heat_meas = " << heat_meas[Setup][ii].value
                 << " at location " << heat_meas[Setup][ii].x << "," << heat_meas[Setup][ii].y
                 << std::endl;
               */
             }
-                    
+
             MPI_Tools::redist_measurements( heat_meas[Setup] );
             MPI_Tools::redist_measurements( heatM0_meas[Setup] );
             MPI_Tools::redist_measurements( heatM1_meas[Setup] );
           }
           break;
-        
+
         case 5:
           {
             logger << "Take measurements of GEP M1 and GEP M0" << std::endl;
@@ -840,11 +840,11 @@ namespace Dune {
             take_measurements_of_differences_on_dgf( gv, gfs, data2, GEM1_meas[Setup][config] , helper );
             take_measurements_of_differences_on_dgf( gv, gfs, data1, GEM0_meas[Setup][config] , helper );
 
-                    
+
             for(UINT ii=0; ii<GEM1_meas[Setup][config].size(); ii++){
               GE_meas[Setup][config][ii].value
                 = GEM1_meas[Setup][config][ii].value / GEM0_meas[Setup][config][ii].value;
-          
+
               logger <<"GEM0_meas[Setup][config][ii].value = "
                      <<GEM0_meas[Setup][config][ii].value
                      <<std::endl;
@@ -867,9 +867,9 @@ namespace Dune {
         default:
           logger<<"ERROR in take measurements. Meas. type not known or type function not used for this type of measurement(check for special functions)!!!"<<std::endl;
         }
-           
+
       }
-    
+
       //returns how many lnK measurements are there per setup
       UINT nMeasPerSetupPerType(UINT setup, UINT t) const {
         //if(t!=5)
@@ -877,50 +877,50 @@ namespace Dune {
         ////number of GE configurations will be returned!
         //return GEmeas_per_setup_per_config[setup].size()
       }
-    
+
       //returns how many GE configurations are there per setup
       UINT nGE_config(UINT setup) const {
-        return GEmeas_per_setup_per_config[setup].size(); 
+        return GEmeas_per_setup_per_config[setup].size();
       }
-    
+
       //returns how many GE configurations are there per setup
       UINT nGE_Meas_per_setup_per_config(UINT setup,UINT config) const {
-        return GEmeas_per_setup_per_config[setup][config]; 
+        return GEmeas_per_setup_per_config[setup][config];
       }
-    
+
       //return the total number of measurements
       UINT nMeasurements() const {
         return nMeas;
       }
 
       MeasurementElement& operator[](const UINT& id) const {
-        return *all_meas[id];    
+        return *all_meas[id];
       }
-    
+
       MeasurementElement& operator[](const UINT& id) {
-        return *all_meas[id];    
+        return *all_meas[id];
       }
 
       UINT get_global(UINT setup, UINT t, UINT i, UINT config=0) const {
-        return local_to_global[setup][t][config][i];   
+        return local_to_global[setup][t][config][i];
       }
-    
+
       REAL get_value_heatM0(UINT Setup, UINT local_ii) const {
         return heatM0_meas[Setup][local_ii].value;
       }
-    
+
       REAL get_value_heatM1(UINT Setup, UINT local_ii) const {
         return heatM1_meas[Setup][local_ii].value;
       }
-    
+
       REAL get_value_GEM0(UINT Setup, UINT GE_config, UINT local_ii) const {
         return GEM0_meas[Setup][GE_config][local_ii].value;
       }
-    
+
       REAL get_value_GEM1(UINT Setup, UINT GE_config, UINT local_ii) const {
         return GEM1_meas[Setup][GE_config][local_ii].value;
       }
-    
+
 
       REAL calibrateAbsErrorForM1( const UINT iSetup ) {
         UINT nPoints = M1_meas[iSetup].size();
@@ -935,8 +935,8 @@ namespace Dune {
         }
         return absErrorForM1;
       }
-    
-    
+
+
       void set_value_zero(){
         for(UINT iSetup=0; iSetup<nSetups; iSetup++){
           for(UINT ii =0; ii< meas_per_setup_per_type[iSetup][0]; ii++){
@@ -944,7 +944,7 @@ namespace Dune {
           }
           for(UINT ii =0; ii< meas_per_setup_per_type[iSetup][1]; ii++){
             head_meas[iSetup][ii].value=0.0;
-          }       
+          }
           for(UINT ii =0; ii< meas_per_setup_per_type[iSetup][2]; ii++){
             M0_meas[iSetup][ii].value=0.0;
           }
@@ -958,7 +958,7 @@ namespace Dune {
               heatM1_meas[iSetup][ii].value=0.0;
             }
           }
-            
+
           for(UINT ii =0; ii< inputdata.setups[iSetup].geoelectrical_potential_inversion_data.nconfig; ii++)
             for(UINT jj=0; jj< GEmeas_per_setup_per_config[iSetup][ii]; jj++  ){
               GE_meas[iSetup][ii][jj].value=0.0;
@@ -967,7 +967,7 @@ namespace Dune {
             }
         }
       }
-    
+
     };
 
   } // Gesis

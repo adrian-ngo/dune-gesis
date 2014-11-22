@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   take_measurements_on_dgf.hh
  * Author: A. Ngo
  * 2010-2014
@@ -19,18 +19,18 @@ namespace Dune {
   namespace Gesis {
 
     // Take care:
-    // 1.) 
+    // 1.)
     // This method contains a check which assumes that ALL mesh cells are cuboidal.
     // Points on the lower boundary of the domain will not be detected!
     //
-    // 2.) 
+    // 2.)
     // We take measurements only on interior elements. This is to make sure
     // that each measurement value belongs to a unique process.
     // This will become important later when we use MPI_Allreduce (... MPI_SUM ...)
     // to distribute measuring values to ALL processors.
     //
-    template<typename GFS, 
-             typename VCType, 
+    template<typename GFS,
+             typename VCType,
              typename VEC>
     void take_measurements_on_dgf( const GFS& gfs
                                    , const VCType& xSolution
@@ -38,7 +38,7 @@ namespace Dune {
                                    , const Dune::MPIHelper& helper) {
 
       Dune::Timer watch;
-  
+
       typedef typename GFS::Traits::GridViewType GV;
       const GV& gv = gfs.gridView();
 
@@ -59,7 +59,7 @@ namespace Dune {
 
       // Loop over list of measuring points
       for (UINT index = 0; index < nPoints; index++) {
-    
+
         //logger << "measuring point index " << index << std::endl;
 
         Dune::FieldVector<CTYPE, dim> currentpoint(0.0);
@@ -81,10 +81,10 @@ namespace Dune {
 
           //int id = is.index(*it);
           //logger << "grid cell " << id << std::endl;
-    
+
 
           // Get the local coordinate:
-          Dune::FieldVector<CTYPE, dim> currentpoint_local 
+          Dune::FieldVector<CTYPE, dim> currentpoint_local
             = it->geometry().local( currentpoint );
 
           //logger << "currentpoint_local " << currentpoint_local << std::endl;
@@ -96,7 +96,7 @@ namespace Dune {
 #ifdef DIMENSION3
               && currentpoint_local[2] >= -1e-12 && currentpoint_local[2] < 1.0 - 1e-12
 #endif
-              ) 
+              )
             {
 
               //logger << "measuring point local " << currentpoint_local << std::endl;
@@ -115,9 +115,9 @@ namespace Dune {
         if( General::verbosity >= VERBOSITY_DEBUG_LEVEL ){
           logger << "m" << index
                  << " on process " << helper.rank()
-                 << " at " << currentpoint[0] << "," << currentpoint[1] 
+                 << " at " << currentpoint[0] << "," << currentpoint[1]
 #ifdef DIMENSION3
-                 << "," << currentpoint[2] 
+                 << "," << currentpoint[2]
 #endif
                  << "     measured value = " << measuring_points[index].value
                  << std::endl;
@@ -132,7 +132,7 @@ namespace Dune {
                                  General::verbosity,
                                  "EVAL",
                                  jobtitle.str() );
-	
+
     } // end void take_measurements_on_dgf
 
 
@@ -153,12 +153,12 @@ namespace Dune {
 
       const UINT dim = GV::dimension;
       const UINT nPoints = measuring_points.size();
-      
+
       typedef typename GV::template Codim < 0 > ::Iterator LeafIterator;
 
       // make discrete function object
       typedef Dune::PDELab::DiscreteGridFunction<GFS, VCType> DGF;
-  
+
       DGF dgf(gfs, xSolution);
 
       // Loop over grid cells, check if the current point belongs to that cell.
@@ -176,12 +176,12 @@ namespace Dune {
 
 
       for (UINT index = 0; index < nPoints; index++){
-      
+
         Dune::FieldVector<REAL, 1 > measured_value1;
         Dune::FieldVector<REAL, 1 > measured_value2;
         measured_value1[0]=-1e300;
         measured_value2[0]=-1e300;
-      
+
         // first iteration!
         for (LeafIterator it = gv.template begin < 0 > ()
                ; it != gv.template end < 0 > ()
@@ -193,7 +193,7 @@ namespace Dune {
 #ifdef DIMENSION3
           currentpoint[2] = measuring_points[index].z;
 #endif
-			
+
           // Get the local coordinate:
           Dune::FieldVector<CTYPE, dim> currentpoint_local = it->geometry().local( currentpoint );
           // Check if the current point belongs to that cell
@@ -202,12 +202,12 @@ namespace Dune {
 #ifdef DIMENSION3
               && currentpoint_local[2] >= 0.0 && currentpoint_local[2] < 1.0
 #endif
-              ) 
+              )
             {
               dgf.evaluate( *it, currentpoint_local, measured_value1 );
             }
         } // end of loop over leaf elements
-      
+
         if( helper.size() > 1 ){
           // send measured value to all processes, important becasue measpoint 1 and 2 might lie on different processors
           MPI_Allreduce( &(measured_value1[0]),
@@ -217,8 +217,8 @@ namespace Dune {
                          MPI_MAX,
                          helper.getCommunicator() );
         }
-      
-      
+
+
         // second iteration!
         for (LeafIterator it = gv.template begin < 0 > ()
                ; it != gv.template end < 0 > ()
@@ -230,7 +230,7 @@ namespace Dune {
 #ifdef DIMENSION3
           currentpoint[2] = measuring_points[index].z2;
 #endif
-			
+
           // Get the local coordinate:
           Dune::FieldVector<CTYPE, dim> currentpoint_local = it->geometry().local( currentpoint );
           // Check if the current point belongs to that cell
@@ -239,15 +239,15 @@ namespace Dune {
 #ifdef DIMENSION3
               && currentpoint_local[2] >= 0.0 && currentpoint_local[2] < 1.0
 #endif
-              ) 
+              )
             {
               dgf.evaluate( *it, currentpoint_local, measured_value2 );
-	  
-	 
-	  
+
+
+
             }
         } // end of loop over leaf elements
-      
+
         if( helper.size() > 1 ){
           // send measured value to all processes, important becasue measpoint 1 and 2 might lie on different processors
           MPI_Allreduce( &(measured_value2[0]),
@@ -257,11 +257,11 @@ namespace Dune {
                          MPI_MAX,
                          helper.getCommunicator() );
         }
-      
+
         measuring_points[index].value = (REAL) measured_value1 - (REAL) measured_value2;
-      
+
       }
-   
+
       std::stringstream jobtitle;
       jobtitle << "take_measurements_of_differences_on_dgf: nPoints = " << nPoints;
       General::log_elapsed_time( watch.elapsed(),
