@@ -59,8 +59,8 @@ namespace Dune {
       typedef PumpingSource<GV_GW,REAL,SDT> PumpingSourceTypeGW;
       PumpingSourceTypeGW source_h( setupdata );
 
-      typedef GroundWaterEquation<GFS_GW,GWP_FWD,PumpingSourceTypeGW,IDT,SDT> GWE_H;  
-  
+      typedef GroundWaterEquation<GFS_GW,GWP_FWD,PumpingSourceTypeGW,IDT,SDT> GWE_H;
+
       GWE_H gwe_h( gfs_gw,
                    inputdata,
                    setupdata,
@@ -121,7 +121,7 @@ namespace Dune {
 #endif
 
       PressureLikeOrdering comparefunctor;
-  
+
       typedef typename GRID::LeafGridView OLD_GV_TP;
       //typedef typename GRID::LevelGridView OLD_GV_TP;
       typedef ReorderedGridView<OLD_GV_TP,RT0_PF,PressureLikeOrdering> GV_TP;
@@ -143,14 +143,14 @@ namespace Dune {
       GV_TP gv_tp( grid.leafGridView(), rt0_pressurefield, comparefunctor );
 
       //Dune::shared_ptr<GV_TP> pgv_tp
-      //  = Dune::make_shared<GV_TP>( grid.leafGridView(), 
+      //  = Dune::make_shared<GV_TP>( grid.leafGridView(),
       //                              //grid.levelView(0),
       //                              rt0_pressurefield,
       //                              comparefunctor );
 
 
 #ifdef PARALLEL
-      // This one must be used for parallel ALUGRID (Rebecca). 
+      // This one must be used for parallel ALUGRID (Rebecca).
       // Ghost cells are treated as overlap cells (overlap=1) for the linear solver.
       typedef Dune::PDELab::P0ParallelGhostConstraints CONSTRAINTS;
 #else
@@ -269,15 +269,15 @@ namespace Dune {
 
             std::stringstream vtu_h;
             vtu_h  << dir.vtudir << "/h_step" << step;
-            Dune::Gesis::VTKPlot::output2vtu( gfs_gw.gridView(), 
-            gfs_gw, 
-            vc_h, 
+            Dune::Gesis::VTKPlot::output2vtu( gfs_gw.gridView(),
+            gfs_gw,
+            vc_h,
             vtu_h.str(),
-            "h", 
+            "h",
             inputdata.verbosity,
-            true, 
+            true,
             std::max(0,pMAX-1) );
-      
+
             std::stringstream vtu_hLeaf;
             vtu_hLeaf << dir.vtudir << "/h_leaf_0" << step;
             rt0_pressurefield->plot2vtu( gv_tp, vtu_hLeaf.str() );
@@ -301,8 +301,8 @@ namespace Dune {
 #else
         typedef TransportProblemAdjoint<GV_TP,REAL,DARCY_FLUX_DGF,IDT,SDT> TPM0;
         typedef PointFunctionSource<GFS_TP,IDT> SourceTypeTP;
-        SourceTypeTP source_m0( gfs_tp, 
-                                inputdata, 
+        SourceTypeTP source_m0( gfs_tp,
+                                inputdata,
                                 -1.0, // negative pointsource
                                 setupdata.solute_concentration_inversion_data.regularization_factor,
                                 setupdata.solute_concentration_inversion_data.bfixedwidth );
@@ -316,8 +316,8 @@ namespace Dune {
         vtu_Peclet << dir.vtudir << "/peclet_step" << step;
         meshPeclet.plot2vtu( vtu_Peclet.str() );
         if( helper.rank()==0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
-          std::cout << "Maximal mesh Peclet numbers: Pe_l = " 
-                    << meshPeclet.maximum_l() << " / Pe_t = " 
+          std::cout << "Maximal mesh Peclet numbers: Pe_l = "
+                    << meshPeclet.maximum_l() << " / Pe_t = "
                     << meshPeclet.maximum_t() << std::endl;
         }
 
@@ -330,7 +330,7 @@ namespace Dune {
             , IDT
             , SDT
             > TPE_M0;
-  
+
         TPE_M0 tpe_m0( gfs_tp,
                        inputdata,
                        setupdata,
@@ -366,7 +366,7 @@ namespace Dune {
         }
 #endif
 
-  
+
 #ifndef TEST_Adjoint
         tpe_m0.solve_forward( vc_m0 );
 #else
@@ -421,13 +421,13 @@ namespace Dune {
         // *********************************
         // Plot over line for gnuplot:
         // *********************************
-    
+
         /*
           std::stringstream gnuplot_datfile;
-          gnuplot_datfile << dir.vtudir << "/p" 
+          gnuplot_datfile << dir.vtudir << "/p"
           << std::setfill('0') << std::setw(4) << helper.rank()
           << "-lineplot_m0_step" << step << ".dat";
-    
+
           LinePlot<GV_TP> lplot(gv_tp);
           lplot.setEndPoints( inputdata.domain_data.lineplot.startpoint,
           inputdata.domain_data.lineplot.endpoint );
@@ -447,11 +447,11 @@ namespace Dune {
 
 #ifdef TEST_M1
 
-        typedef FunctionSource<GWP_FWD, 
+        typedef FunctionSource<GWP_FWD,
                                GFS_TP,
                                IDT,SDT> FunctionSourceType;
 
-        FunctionSourceType source_m1_m0( gwp_fwd, 
+        FunctionSourceType source_m1_m0( gwp_fwd,
                                          gfs_tp,
                                          inputdata,
                                          setupdata );
@@ -467,7 +467,7 @@ namespace Dune {
                              darcyflux_dgf,
                              tpm1,
                              source_m1_m0 );
-              
+
 
 
         // Define sourceterm for the forward transport equation for m1:
@@ -504,29 +504,29 @@ namespace Dune {
 
         std::vector<REAL> vmat;
         vmat.resize(vc_m0.flatsize());
-  
+
         for(UINT i=0;i<vc_m0.flatsize();i++)
           {
             if( vm0[i] > 1e-3 )
               vmat[i] = vm1m0[i] / vm0[i];
           }
-  
+
         VCType_TP vc_MeanArrivalTime( gfs_tp, 0.0 );
         vc_MeanArrivalTime.std_copy_from( vmat );
 
         std::stringstream vtu_mat_file;
         vtu_mat_file  << dir.vtudir << "/mat_step" << step;
-        VTKPlot::output2vtu( gfs_tp, 
-                             vc_MeanArrivalTime, 
-                             vtu_mat_file.str(), 
-                             "MeanArrivalTime", 
-                             inputdata.verbosity, 
-                             true, 
-                             std::max(0,pMAX-1) 
+        VTKPlot::output2vtu( gfs_tp,
+                             vc_MeanArrivalTime,
+                             vtu_mat_file.str(),
+                             "MeanArrivalTime",
+                             inputdata.verbosity,
+                             true,
+                             std::max(0,pMAX-1)
                              );
 
 #endif // TEST_M1
-  
+
         if( maxsteps < 1 )
           break;
 
@@ -559,7 +559,7 @@ namespace Dune {
             , Dune::PDELab::LexicographicOrderingTag
             > P0PowerGFS;
         P0PowerGFS p0powergfs(p0gfs);
-    
+
         typedef Dune::PDELab::EmptyTransformation NoTrafo;
 
         typedef Dune::PDELab::GridOperator
@@ -571,7 +571,7 @@ namespace Dune {
             , REAL
             , REAL
             , NoTrafo
-            , NoTrafo 
+            , NoTrafo
             , true // nonoverlapping_mode!!!
             > ESTGO;
         ESTGO estgo(gfs_tp,p0powergfs,estlop,mbe1);
@@ -603,12 +603,12 @@ namespace Dune {
 
         ee.push_back(estimated_error);
 
-        std::cout << ">>> Estimated Error = " 
+        std::cout << ">>> Estimated Error = "
                   << estimated_error
                   << std::endl;
 
         if(true){
-      
+
           std::vector<REAL> eta_flat;
           General::copy_to_std( eta, eta_flat );
 
@@ -617,14 +617,14 @@ namespace Dune {
 
           VTKPlot::output_vector_to_vtu( gv_tp,
                                          eta_flat,
-                                         vtu_m0_eta_file.str(), 
+                                         vtu_m0_eta_file.str(),
                                          "eta"
                                          );
           /*
-            VTKPlot::output2vtu( p0gfs, 
-            eta, 
-            vtu_m0_eta_file.str(), 
-            "eta", 
+            VTKPlot::output2vtu( p0gfs,
+            eta,
+            vtu_m0_eta_file.str(),
+            "eta",
             inputdata.verbosity
             //, true
             //, 0
@@ -663,7 +663,7 @@ namespace Dune {
         //std::vector<Dune::shared_ptr<VCType_TP> > solution_hierarchy(maxsteps);
 
         if( step<maxsteps && allnewDOFs<maxDOFs ){
-      
+
 #ifdef USE_UG
           REAL refinementfraction = inputdata.domain_data.ug_refinementfraction;
           REAL coarseningfraction = inputdata.domain_data.ug_coarseningfraction;
@@ -727,13 +727,13 @@ namespace Dune {
           for(int ii=0;ii<step+1;++ii){
             VCType_TP tmpSolution(gfs_tp,0.0);
 
-            //std::cout << "before backup: solution_hierarchy[" << ii << "].size() = " 
+            //std::cout << "before backup: solution_hierarchy[" << ii << "].size() = "
             //          << solution_hierarchy[ii].size()
             //          << std::endl;
 
             tmpSolution.std_copy_from(solution_hierarchy[ii]);
 
-            //std::cout << "before backup: tmpSolution.flatsize() = " 
+            //std::cout << "before backup: tmpSolution.flatsize() = "
             //          << tmpSolution.flatsize()
             //          << std::endl;
 
@@ -763,15 +763,15 @@ namespace Dune {
           vc_m0 = VCType_TP(gfs_tp,0.0);
           grid_adaptor.replayData(grid,gfs_tp,projection,vc_m0,transferMap1);
 
-      
+
           for(int ii=0;ii<step+1;++ii){
             VCType_TP solution( gfs_tp, 0.0 );
             grid_adaptor.replayData(grid,gfs_tp,projection,solution,solutionMap[ii]);
             General::copy_to_std( solution, solution_hierarchy[ii] );
-            //std::cout << "after replay: solution.flatsize() = " 
+            //std::cout << "after replay: solution.flatsize() = "
             //          << solution.flatsize()
             //          << std::endl;
-            //std::cout << "after replay: solution_hierarchy[" << ii << "].size() = " 
+            //std::cout << "after replay: solution_hierarchy[" << ii << "].size() = "
             //          << solution_hierarchy[ii].size()
             //          << std::endl;
           }
@@ -782,8 +782,8 @@ namespace Dune {
 
         }
         else {
-          std::cout << "max. steps or max. DOFs reached at step " << maxsteps 
-                    << " with #dofs = " <<  gfs_tp.globalSize() << std::endl; 
+          std::cout << "max. steps or max. DOFs reached at step " << maxsteps
+                    << " with #dofs = " <<  gfs_tp.globalSize() << std::endl;
           break;
         }
 
@@ -829,10 +829,10 @@ namespace Dune {
                                std::max(0,pMAX-1)  );
         }
 
-    
+
       }
 
-      std::cout << "Set l2-error on grid level " << maxsteps 
+      std::cout << "Set l2-error on grid level " << maxsteps
                 << " to 1E-12." << std::endl;
       l2e_hierarchy.push_back( 1E-12 );
 
@@ -851,7 +851,7 @@ namespace Dune {
 
         // prepare the grid for refinement
         grid.preAdapt();
-    
+
         // save u
         typename GA::MapType transferMap1;
         grid_adaptor.backupData(grid,gfs_tp,projection,vc_m0,transferMap1);
@@ -948,17 +948,17 @@ namespace Dune {
       std::cout << "vc1 flatsize = " << vc1_m0.flatsize() << std::endl;
       std::cout << "std size     = " << pool_std_vc_m0[ maxsteps ].size() << std::endl;
 
-  
+
       // Loop over grid hierarchy:
       for( int i=0; i<maxsteps+1; ++i ){
-        
+
       GFS_TP gfs2_tp( *(pool_gv_tp[ i ]), // pool_gv_tp[ i ], //
-      fem_hyper, 
+      fem_hyper,
       con_tp );
       VCType_TP vc2_m0( gfs2_tp, 0.0 );
 
       vc2_m0.std_copy_from( pool_std_vc_m0[ i ] );
-    
+
       std::cout << "GV level = " << i << std::endl;
       std::cout << "GV size  = " << pool_gv_tp[i]->size(0) << std::endl;
       std::cout << "vc basesize = " << vc2_m0.base().size() << std::endl;
@@ -980,28 +980,28 @@ namespace Dune {
       std::cout << "Summary:" << std::endl;
       std::cout << "           N"
         /*
-          << "    IT" 
-          << "     T" 
+          << "    IT"
+          << "     T"
         */
-                << "     min" 
-                << "     max" 
+                << "     min"
+                << "     max"
 
-                << "        l2" 
-                << "    l2rate" 
+                << "        l2"
+                << "    l2rate"
                 << "   eff(l2)"
         /*
-          << "    h1semi" 
+          << "    h1semi"
           << "  h1s-rate"
           << "   eff(h1)"
 
-          << " error(dg)" 
-          << "  rate(dg)" 
+          << " error(dg)"
+          << "  rate(dg)"
           << "   eff(dg)"
         */
                 << " estimator"
                 << std::endl;
       for(std::size_t i=0; i<Ndofs.size(); i++) {
-    
+
 #ifdef STORE_SOLUTION_HIERARCHY
         REAL rate1=0.0;
         if (i>0)
@@ -1011,7 +1011,7 @@ namespace Dune {
         /*
           REAL rate2=0.0;
           if (i>0)
-          rate2 = log( h1s[i]/h1s[i-1] ) / log(0.5); 
+          rate2 = log( h1s[i]/h1s[i-1] ) / log(0.5);
 
           REAL rate3=0.0;
           if (i>0)

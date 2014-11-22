@@ -2,7 +2,7 @@
 #ifndef DUNE_GESIS_DG_RESIDUAL_ESTIMATOR_HH
 #define DUNE_GESIS_DG_RESIDUAL_ESTIMATOR_HH
 
-/* 
+/*
    Internal edges are visited only once per default.
    This gives a better for performance. (doSkeletonTwoSided = false)
 */
@@ -38,7 +38,7 @@ namespace Dune {
   namespace Gesis {
 
     /** a local operator for residual-based error estimation
-     *  
+     *
      * A call to residual() of a grid operator space will assemble
      * the quantity \eta_T^2 for each cell. Note that the squares
      * of the cell indicator \eta_T is stored. To compute the global
@@ -52,11 +52,11 @@ namespace Dune {
      * \tparam TP model of ConvectionDiffusionParameterInterface
      */
     template<typename IDT,typename SDT,typename TP>
-    class DGResidualEstimator 
+    class DGResidualEstimator
       : public Dune::PDELab::LocalOperatorDefaultFlags
     {
       enum { dim = TP::Traits::GridViewType::dimension };
- 
+
       typedef typename TP::Traits::RangeFieldType Real;
 
       typedef typename Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
@@ -75,23 +75,23 @@ namespace Dune {
       //! constructor: pass parameter object
       DGResidualEstimator( const IDT& inputdata_,
                            const SDT& setupdata_,
-                           const TP& param_, 
+                           const TP& param_,
                            const Passenger::Type passenger_=Passenger::solute,
                            const EQ::Mode equationMode_=EQ::forward,
                            ConvectionDiffusionDGMethod::Type method_
-                           = ConvectionDiffusionDGMethod::NIPG, 
+                           = ConvectionDiffusionDGMethod::NIPG,
                            ConvectionDiffusionDGWeights::Type weights_
                            = ConvectionDiffusionDGWeights::weightsOff,
                            Real gamma_=2.0
                            )
-        : inputdata(inputdata_),
-          setupdata(setupdata_),
-          param(param_), 
-          passenger(passenger_),
-          equationMode(equationMode_),
-          method(method_), 
-          weights(weights_),
-          gamma(gamma_) // interior penalty parameter, same as alpha in TransportOperatorDG
+      : inputdata(inputdata_),
+        setupdata(setupdata_),
+        param(param_),
+        passenger(passenger_),
+        equationMode(equationMode_),
+        method(method_),
+        weights(weights_),
+        gamma(gamma_) // interior penalty parameter, same as alpha in TransportOperatorDG
       {}
 
 
@@ -104,17 +104,17 @@ namespace Dune {
 
 
       template<typename EG, typename LFSV, typename FVAL>
-      void addWellTo_Alpha_Volume( const UINT iWell, 
-                                   const EG& eg, 
+      void addWellTo_Alpha_Volume( const UINT iWell,
+                                   const EG& eg,
                                    const LFSV& lfsv,
                                    FVAL& fval
                                    ) const {
 
         const int dim = EG::Geometry::dimension;
-        
+
         REAL well_top =  setupdata.wdlist.pointdata_vector[iWell].well_top;
         REAL well_bottom =  setupdata.wdlist.pointdata_vector[iWell].well_bottom;
-        REAL well_rate 
+        REAL well_rate
           = setupdata.wdlist.pointdata_vector[iWell].well_rate;
 
         if(well_rate < -1e-12)
@@ -141,8 +141,8 @@ namespace Dune {
         if(injectiontime<1e-12)
           return; // no inflow contribution
 
-        
-        if( w_outside != 
+
+        if( w_outside !=
             isElementWithinWellZone( eg, iWell, inputdata, setupdata )
             ){
 
@@ -160,7 +160,7 @@ namespace Dune {
           REAL level_diff = eg.entity().level() - baselevel;
 
           REAL refinement_factor_dim = std::pow(2.0,level_diff*(dim-1)); // dim is important here: one level =  four cells in 2D, or 8 cells in 3D
-          REAL refinement_factor = std::pow(2.0,level_diff); 
+          REAL refinement_factor = std::pow(2.0,level_diff);
           const REAL dz = inputdata.domain_data.baselevel_gridsizes[dim-1] / refinement_factor;
 
           //Dune::FieldVector<REAL,dim> cellcenter = eg.geometry().center();
@@ -188,15 +188,15 @@ namespace Dune {
 
 
       // volume integral depending on test and ansatz functions
-      template< typename EG, 
-                typename LFSU, 
-                typename X, 
-                typename LFSV, 
+      template< typename EG,
+                typename LFSU,
+                typename X,
+                typename LFSV,
                 typename R >
-      void alpha_volume( const EG& eg, 
-                         const LFSU& lfsu, 
-                         const X& x, 
-                         const LFSV& lfsv, 
+      void alpha_volume( const EG& eg,
+                         const LFSU& lfsu,
+                         const X& x,
+                         const LFSV& lfsv,
                          R& r) const
       {
         // domain and range field type
@@ -206,7 +206,7 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RangeType;
-        
+
         // dimensions
         const int dim = EG::Geometry::dimension;
 
@@ -224,7 +224,7 @@ namespace Dune {
         Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
 
         A = param.DispersionTensor(eg.entity(),localcenter,equationMode);
-        
+
 #ifdef TEST_MAX
         RF epsilon = std::max( A[0][0], A[1][1]);
         if( dim>2 ) epsilon = std::max( A[2][2], epsilon );
@@ -235,7 +235,7 @@ namespace Dune {
 
         // select quadrature rule
         const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,intorder);
-        
+
         // loop over quadrature points
         RF sum(0.0);
         for( typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin()
@@ -249,7 +249,7 @@ namespace Dune {
           typename TP::Traits::RangeFieldType c = param.c(eg.entity(),it->position());
 
 
-          
+
           // Add inflow rates for all injection wells
           typename TP::Traits::RangeFieldType fval(0);
           UINT nWells = setupdata.wdlist.total;
@@ -267,7 +267,7 @@ namespace Dune {
 
 
           // evaluate convection term
-          typename TP::Traits::RangeType beta 
+          typename TP::Traits::RangeType beta
             = param.velocity(eg.entity(),it->position(),equationMode);
 
           // compute gradient of u_h
@@ -282,8 +282,8 @@ namespace Dune {
           sum += square * factor;
 
         }
-        
-        // accumulate cell indicator 
+
+        // accumulate cell indicator
         DF h_T = diameter(eg.geometry());
 
         // Liang Zhu: First term, interior residual squared
@@ -291,13 +291,13 @@ namespace Dune {
         r.accumulate( lfsv, 0, eta_RK );
 
 #ifdef USE_SHOW_PECLET
-        typename TP::Traits::RangeType beta 
+        typename TP::Traits::RangeType beta
           = param.velocity(eg.entity(),localcenter,equationMode);
         RF mesh_peclet = 0.5 * beta.two_norm() * h_T / epsilon;
-        r.accumulate( lfsv, 1, mesh_peclet ); 
-        /* 
-           If mesh_peclet goes down to the value 2.0, 
-           the problem should become diffusive. 
+        r.accumulate( lfsv, 1, mesh_peclet );
+        /*
+           If mesh_peclet goes down to the value 2.0,
+           the problem should become diffusive.
            In that case, there should be no more oscillations and we are done!
            Otherwise, the number of iterations required for the iterative solver
            will become proportional to the problem size.
@@ -314,9 +314,9 @@ namespace Dune {
                typename X,
                typename LFSV,
                typename R>
-      void alpha_skeleton (const IG& ig, 
+      void alpha_skeleton (const IG& ig,
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
-                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n, 
+                           const LFSU& lfsu_n, const X& x_n, const LFSV& lfsv_n,
                            R& r_s, R& r_n) const
       {
         // domain and range field type
@@ -329,11 +329,11 @@ namespace Dune {
 
         // dimensions
         const int dim = IG::dimension;
-        
+
         // evaluate permeability tensors
-        const Dune::FieldVector<DF,dim>& 
+        const Dune::FieldVector<DF,dim>&
           inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
-        const Dune::FieldVector<DF,dim>& 
+        const Dune::FieldVector<DF,dim>&
           outside_local = Dune::ReferenceElements<DF,dim>::general(ig.outside()->type()).position(0,0);
 
         typename TP::Traits::DispersionTensorType A_s, A_n;
@@ -353,7 +353,7 @@ namespace Dune {
         RF epsilon_n = std::min( A_n[0][0], A_n[1][1]);
         if( dim>2 ) epsilon_n = std::min( A_n[2][2], epsilon_n );
 #endif
-        
+
         // select quadrature rule
         const int pOrder_s = lfsu_s.finiteElement().localBasis().order();
         const int pOrder_n = lfsu_n.finiteElement().localBasis().order();
@@ -374,7 +374,7 @@ namespace Dune {
         for( typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin()
                ; it!=rule.end(); ++it ){
 
-          // position of quadrature point in local coordinates of elements 
+          // position of quadrature point in local coordinates of elements
           Dune::FieldVector<DF,dim> iplocal_s = ig.geometryInInside().global(it->position());
           Dune::FieldVector<DF,dim> iplocal_n = ig.geometryInOutside().global(it->position());
 
@@ -387,7 +387,7 @@ namespace Dune {
           A_s.mv(n_F,An_F_s);
           Dune::FieldVector<RF,dim> An_F_n;
           A_n.mv(n_F,An_F_n);
-          
+
           /**********************/
           /* Evaluate Functions */
           /**********************/
@@ -395,10 +395,10 @@ namespace Dune {
           // evaluate uDG_s, uDG_n
           RF uDG_s=0.0;
           evalFunction( iplocal_s, lfsu_s, x_s, uDG_s );
-          
+
           RF uDG_n=0.0;
-          evalFunction( iplocal_n, lfsu_n, x_n, uDG_n );            
-          
+          evalFunction( iplocal_n, lfsu_n, x_n, uDG_n );
+
 
           /**********************/
           /* Evaluate Gradients */
@@ -433,11 +433,11 @@ namespace Dune {
         // Liang Zhu: third term, edge jumps
         RF eta_Jk_s = 0.5 * ( gamma / h_face + h_face / epsilon_s) * uh_jump_L2normSquare;
         RF eta_Jk_n = 0.5 * ( gamma / h_face + h_face / epsilon_n) * uh_jump_L2normSquare;
-        
+
         // add contributions from both sides of the intersection
         r_s.accumulate( lfsv_s, 0, eta_Ek_s + eta_Jk_s );
         r_n.accumulate( lfsv_n, 0, eta_Ek_n + eta_Jk_n );
-        
+
       } // void alpha_skeleton
 
 
@@ -451,7 +451,7 @@ namespace Dune {
                typename X,
                typename LFSV,
                typename R>
-      void alpha_boundary (const IG& ig, 
+      void alpha_boundary (const IG& ig,
                            const LFSU& lfsu_s, const X& x_s, const LFSV& lfsv_s,
                            R& r_s) const
       {
@@ -462,17 +462,17 @@ namespace Dune {
           Traits::LocalBasisType::Traits::RangeFieldType RF;
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeType RangeType;
-        
+
         // dimensions
         const int dim = IG::dimension;
 
         // evaluate permeability tensors
-        const Dune::FieldVector<DF,dim>& 
+        const Dune::FieldVector<DF,dim>&
           inside_local = Dune::ReferenceElements<DF,dim>::general(ig.inside()->type()).position(0,0);
 
         const Dune::FieldVector<DF,dim> n_F = ig.centerUnitOuterNormal();
 
-        typename TP::Traits::RangeType beta 
+        typename TP::Traits::RangeType beta
           = param.velocity(*(ig.inside()),inside_local,equationMode);
 
         RF normalflux = beta * n_F;
@@ -482,25 +482,25 @@ namespace Dune {
 
         typename TP::Traits::DispersionTensorType A_s;
         A_s = param.DispersionTensor(*(ig.inside()),inside_local,equationMode);
-        
+
 #ifdef TEST_MAX
         RF epsilon_s = std::max( A_s[0][0], A_s[1][1]);
         if( dim>2 ) epsilon_s = std::max( A_s[2][2], epsilon_s );
 #else
         RF epsilon_s = std::min( A_s[0][0], A_s[1][1]);
         if( dim>2 ) epsilon_s = std::min( A_s[2][2], epsilon_s );
-#endif        
+#endif
 
         // select quadrature rule
         const int pOrder_s = lfsu_s.finiteElement().localBasis().order();
         const int intorder = 2 * pOrder_s;
-        
+
         Dune::GeometryType gtface = ig.geometryInInside().type();
-        const Dune::QuadratureRule<DF,dim-1>& rule 
+        const Dune::QuadratureRule<DF,dim-1>& rule
           = Dune::QuadratureRules<DF,dim-1>::rule(gtface,intorder);
 
         // evaluate boundary condition
-        const Dune::FieldVector<DF,dim-1> 
+        const Dune::FieldVector<DF,dim-1>
           face_local = Dune::ReferenceElements<DF,dim-1>::general(gtface).position(0,0);
         BCType bctype = param.bctype(ig.intersection(),face_local);
         if (bctype != Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet)
@@ -512,14 +512,14 @@ namespace Dune {
         for( typename Dune::QuadratureRule<DF,dim-1>::const_iterator it=rule.begin()
                ; it!=rule.end(); ++it ){
 
-          // position of quadrature point in local coordinates of elements 
-          Dune::FieldVector<DF,dim> iplocal_s 
+          // position of quadrature point in local coordinates of elements
+          Dune::FieldVector<DF,dim> iplocal_s
             = ig.geometryInInside().global(it->position());
-            
+
           // evaluate Dirichlet boundary condition
           RF gDirichlet = param.g( *(ig.inside()), iplocal_s );
 
-            
+
           /**********************/
           /* Evaluate Functions */
           /**********************/
@@ -528,7 +528,7 @@ namespace Dune {
           RF uDG_s=0.0;
           evalFunction( iplocal_s, lfsu_s, x_s, uDG_s );
           RF jump_uDG = uDG_s - gDirichlet;
-                
+
           // integrate
           RF factor = it->weight() * ig.geometry().integrationElement(it->position());
 
@@ -544,7 +544,7 @@ namespace Dune {
         // TODO: This term is too big! Why??
 
         r_s.accumulate( lfsv_s, 0, eta_Jk_s );  // boundary edge
-        
+
       }
 
     private:

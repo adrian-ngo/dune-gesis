@@ -17,17 +17,17 @@ public:
   RedistributeDataHandle(const GridType &grid_,
                          std::map<Id,REAL> &elementTags_
                          ) :
-    grid(grid_), 
+    grid(grid_),
     elementTags(elementTags_)
   { };
 
   bool contains(int dim, int codim) const
   { return codim == 0; }
-      
-  bool fixedsize (int dim, int codim) const { 
-    return false; 
+
+  bool fixedsize (int dim, int codim) const {
+    return false;
   }
-      
+
   template<class Entity>
   std::size_t size (const Entity &e) const {
     DUNE_THROW(Dune::RangeError, "Nothing needs to be communicated for codim "
@@ -38,8 +38,8 @@ public:
   }
 
   std::size_t size (const typename GridType::template Codim<0>::Entity &e) const
-  { 
-    return elementTags.count(grid.localIdSet().id(e)); 
+  {
+    return elementTags.count(grid.localIdSet().id(e));
   }
 
 
@@ -83,10 +83,10 @@ public:
   {
     switch(n) {
     case 0: break;
-    case 1: 
+    case 1:
       buff.read(elementTags[grid.localIdSet().id(e)]);
       break;
-    default: 
+    default:
       std::cout << std::endl;
       std::cout << "WARNING: grid.localIdSet().id(e) = " << grid.localIdSet().id(e) << std::endl;
       std::cout << "WARNING: grid.globalIdSet().id(e) = " << grid.globalIdSet().id(e) << std::endl;
@@ -95,7 +95,7 @@ public:
                  "communicated!");
     }
   }
-      
+
   void compress() { }
 };
 

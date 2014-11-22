@@ -44,7 +44,7 @@ namespace Dune {
      */
     template<class CoeffType, class DGF, class FEM, class E>
     class CoeffsToLocalFunctionAdapter : public Dune::PDELab::FunctionInterface<typename DGF::Traits,
-                                                                  CoeffsToLocalFunctionAdapter<CoeffType,DGF,FEM,E> >
+                                                                                CoeffsToLocalFunctionAdapter<CoeffType,DGF,FEM,E> >
     {
 
     public:
@@ -538,21 +538,21 @@ namespace Dune {
 
       // prepare the grid for refinement
       grid.preAdapt();
-      
+
       // save u
       typename GridAdaptor<Grid,GFS,X,Projection>::MapType transferMap1;
       grid_adaptor.backupData(grid,gfs,projection,x1,transferMap1);
-      
+
       // adapt the grid
       grid.adapt();
-      
+
       // update the function spaces
       gfs.update();
-      
+
       // reset u
       x1 = X(gfs,0.0);
       grid_adaptor.replayData(grid,gfs,projection,x1,transferMap1);
-      
+
       // clean up
       grid.postAdapt();
     }
@@ -575,25 +575,25 @@ namespace Dune {
 
       // prepare the grid for refinement
       grid.preAdapt();
-      
+
       // save solution
       typename GridAdaptor<Grid,GFS,X,Projection>::MapType transferMap1;
       grid_adaptor.backupData(grid,gfs,projection,x1,transferMap1);
       typename GridAdaptor<Grid,GFS,X,Projection>::MapType transferMap2;
       grid_adaptor.backupData(grid,gfs,projection,x2,transferMap2);
-      
+
       // adapt the grid
       grid.adapt();
-      
+
       // update the function spaces
       gfs.update();
-      
+
       // interpolate solution
       x1 = X(gfs,0.0);
       grid_adaptor.replayData(grid,gfs,projection,x1,transferMap1);
       x2 = X(gfs,0.0);
       grid_adaptor.replayData(grid,gfs,projection,x2,transferMap2);
-      
+
       // clean up
       grid.postAdapt();
     }
@@ -624,7 +624,7 @@ namespace Dune {
              class DIR
 #ifdef BACKUP_REPLAY
              , class X
-             , class Projection=L2Projection<GFS,X> 
+             , class Projection=L2Projection<GFS,X>
 #endif
              >
     void adapt_grid_rgv( Grid& grid,
@@ -638,19 +638,19 @@ namespace Dune {
                          const UINT step
 #ifdef BACKUP_REPLAY
                          , X& x1
-                         , Projection projection=L2Projection<GFS,X>() 
+                         , Projection projection=L2Projection<GFS,X>()
 #endif
                          )
     {
       /*
-      std::cout << "before adapt: grid.maxLevel() = "
-                << grid.maxLevel() << std::endl;
+        std::cout << "before adapt: grid.maxLevel() = "
+        << grid.maxLevel() << std::endl;
 
-      std::cout << "before adapt: grid.levelView( grid.maxLevel() ).size(0) = "
-                << grid.levelView( grid.maxLevel() ).size(0) << std::endl;
+        std::cout << "before adapt: grid.levelView( grid.maxLevel() ).size(0) = "
+        << grid.levelView( grid.maxLevel() ).size(0) << std::endl;
 
-      std::cout << "before adapt: grid.leafView().size(0) = "
-                << grid.leafView().size(0) << std::endl;
+        std::cout << "before adapt: grid.leafView().size(0) = "
+        << grid.leafView().size(0) << std::endl;
       */
 
       // prepare the grid for refinement
@@ -668,7 +668,7 @@ namespace Dune {
       grid.adapt();
       std::cout << "grid.adapt() done." << std::endl;
 
-      
+
       //#ifdef USE_ALUGRID
 
       if( gv.comm().size() > 1 ) {
@@ -723,7 +723,7 @@ namespace Dune {
 
         logger << "adaptivity: loglistOfAllWellCenters: " << std::endl;
         inputdata.loglistOfAllWellCenters();
-        
+
         logger << "adaptivity: inputdata all well data: " << std::endl;
         for( int i=0; i<inputdata.setups[0].wdlist.pointdata_vector.size(); ++i ){
           logger << " x=" << inputdata.setups[0].wdlist.pointdata_vector[i].x
@@ -750,7 +750,7 @@ namespace Dune {
                ; eit != gv_gw.template end<0,Dune::All_Partition>()
                ; ++eit )
           vc_h.base()[gv_gw.indexSet().index(*eit)] = elementTagMap[lis.id(*eit)];
-      
+
         elementTagMap.clear();
 
 #ifdef DEBUG_PLOT
@@ -770,14 +770,14 @@ namespace Dune {
 
 
       /*
-      std::cout << "after adapt: grid.maxLevel() = "
-                << grid.maxLevel() << std::endl;
+        std::cout << "after adapt: grid.maxLevel() = "
+        << grid.maxLevel() << std::endl;
 
-      std::cout << "after adapt: grid.levelView( grid.maxLevel() ).size(0) = "
-                << grid.levelView( grid.maxLevel() ).size(0) << std::endl;
+        std::cout << "after adapt: grid.levelView( grid.maxLevel() ).size(0) = "
+        << grid.levelView( grid.maxLevel() ).size(0) << std::endl;
 
-      std::cout << "after adapt: grid.leafView().size(0) = "
-                << grid.leafView().size(0) << std::endl;
+        std::cout << "after adapt: grid.leafView().size(0) = "
+        << grid.leafView().size(0) << std::endl;
       */
 
       // reorder updated gridview
@@ -792,7 +792,7 @@ namespace Dune {
 
       // update the function spaces
       gfs.update();
-      
+
 #ifdef BACKUP_REPLAY
       // reset u
       //x1 = X(gfs,0.0);
@@ -812,7 +812,7 @@ namespace Dune {
                          typename T::ElementType& eta_beta,
                          int verbose=0 )
     {
-      if (verbose>=VERBOSITY_DEBUG_LEVEL) 
+      if (verbose>=VERBOSITY_DEBUG_LEVEL)
         std::cout << "+++ error fraction: alpha=" << alpha
                   << " beta=" << beta << std::endl;
       const int steps=20; // max number of bisection steps
@@ -824,10 +824,10 @@ namespace Dune {
       NumberType max_error = x.infinity_norm();
 
       if (verbose >= VERBOSITY_DEBUG_LEVEL){
-        logger << "error_fraction: total_error squared = " 
+        logger << "error_fraction: total_error squared = "
                << total_error
                << std::endl
-               << "error_fraction: max_error = " 
+               << "error_fraction: max_error = "
                << max_error
                << std::endl;
       }
@@ -836,16 +836,16 @@ namespace Dune {
       max_error = gv.comm().max( max_error );
 
       if (verbose >= VERBOSITY_DEBUG_LEVEL){
-        logger << "error_fraction: comm: total_error squared = " 
+        logger << "error_fraction: comm: total_error squared = "
                << total_error
                << std::endl
-               << "error_fraction: comm: max_error = " 
+               << "error_fraction: comm: max_error = "
                << max_error
                << std::endl;
-        std::cout << "error_fraction: comm: total_error squared = " 
+        std::cout << "error_fraction: comm: total_error squared = "
                   << total_error
                   << std::endl
-                  << "error_fraction: comm: max_error = " 
+                  << "error_fraction: comm: max_error = "
                   << max_error
                   << std::endl;
       }
@@ -874,10 +874,10 @@ namespace Dune {
           }
           if (verbose >= VERBOSITY_DEBUG_LEVEL)
             {
-              logger << j << " eta_alpha=" << eta_alpha << " alpha_fraction=" << sum_alpha/total_error 
-                        << " elements: " << alpha_count << " of " << x.N() << std::endl;
-              logger << j << " eta_beta=" << eta_beta << " beta_fraction=" << sum_beta/total_error 
-                        << " elements: " << beta_count << " of " << x.N() << std::endl;
+              logger << j << " eta_alpha=" << eta_alpha << " alpha_fraction=" << sum_alpha/total_error
+                     << " elements: " << alpha_count << " of " << x.N() << std::endl;
+              logger << j << " eta_beta=" << eta_beta << " beta_fraction=" << sum_beta/total_error
+                     << " elements: " << beta_count << " of " << x.N() << std::endl;
             }
 
 
@@ -894,15 +894,15 @@ namespace Dune {
             logger << "beta_fraction(all) = " << sum_beta/total_error << std::endl;
           }
 
-          if (std::abs(alpha-sum_alpha/total_error) <= 0.01 
+          if (std::abs(alpha-sum_alpha/total_error) <= 0.01
               && std::abs(beta-sum_beta/total_error) <= 0.01) break;
-          
+
           if (sum_alpha > alpha*total_error)
             eta_alpha_left = eta_alpha;
           else
             eta_alpha_right = eta_alpha;
-          
-          if (sum_beta > beta*total_error) 
+
+          if (sum_beta > beta*total_error)
             eta_beta_right = eta_beta;
           else
             eta_beta_left = eta_beta;
@@ -910,7 +910,7 @@ namespace Dune {
         }
 
       if (verbose >= VERBOSITY_LS_DETAILS) {
-        logger << " eta_alpha = " << eta_alpha 
+        logger << " eta_alpha = " << eta_alpha
                << " eta_beta  = " << eta_beta << std::endl;
       }
 
@@ -924,7 +924,7 @@ namespace Dune {
         eta_alpha = 0.0;
 
       if (verbose >= VERBOSITY_LS_DETAILS) {
-        logger << "comm: eta_alpha = " << eta_alpha 
+        logger << "comm: eta_alpha = " << eta_alpha
                << " eta_beta  = " << eta_beta << std::endl;
       }
     }
@@ -961,13 +961,13 @@ namespace Dune {
             }
           if (verbose>=VERBOSITY_DEBUG_LEVEL)
             {
-              logger << j 
-                     << " eta_alpha=" << eta_alpha 
-                     << " alpha_fraction=" << sum_alpha/total_error 
+              logger << j
+                     << " eta_alpha=" << eta_alpha
+                     << " alpha_fraction=" << sum_alpha/total_error
                      << " elements: " << alpha_count << " of " << x.N() << std::endl;
-              logger << j 
-                     << " eta_beta=" << eta_beta 
-                     << " beta_fraction=" << sum_beta/total_error 
+              logger << j
+                     << " eta_beta=" << eta_beta
+                     << " beta_fraction=" << sum_beta/total_error
                      << " elements: " << beta_count << " of " << x.N() << std::endl;
             }
           if (std::abs(alpha-sum_alpha/total_error) <= 0.01 && std::abs(beta-sum_beta/total_error) <= 0.01) break;
@@ -975,7 +975,7 @@ namespace Dune {
             eta_alpha_left = eta_alpha;
           else
             eta_alpha_right = eta_alpha;
-          if (sum_beta>beta*total_error) 
+          if (sum_beta>beta*total_error)
             eta_beta_right = eta_beta;
           else
             eta_beta_left = eta_beta;
@@ -989,9 +989,9 @@ namespace Dune {
 
       if (verbose >= VERBOSITY_LS_DETAILS)
         {
-          logger << "+++ refine_threshold=" << eta_alpha 
+          logger << "+++ refine_threshold=" << eta_alpha
                  << " coarsen_threshold=" << eta_beta << std::endl;
-          std::cout << "+++ refine_threshold=" << eta_alpha 
+          std::cout << "+++ refine_threshold=" << eta_alpha
                     << " coarsen_threshold=" << eta_beta << std::endl;
         }
 
@@ -1029,10 +1029,10 @@ namespace Dune {
           // std::cout << std::endl;
           // std::cout << "// step " << j << std::endl;
           // for (unsigned int k=0; k<bins; k++)
-          //    std::cout << k+1 << " " << count[k] << " " << eta[k] << " " << right[k]-left[k] 
+          //    std::cout << k+1 << " " << count[k] << " " << eta[k] << " " << right[k]-left[k]
           //          << " " << sum[k]/total_error << " " << target[k] << std::endl;
           for (unsigned int k=0; k<bins; k++)
-            if (sum[k]<=target[k]*total_error) 
+            if (sum[k]<=target[k]*total_error)
               left[k] = eta[k];
             else
               right[k] = eta[k];
@@ -1056,10 +1056,10 @@ namespace Dune {
     }
 
     template<typename Grid, typename X>
-    void mark_grid (Grid &grid, const X& x, typename X::ElementType refine_threshold, 
+    void mark_grid (Grid &grid, const X& x, typename X::ElementType refine_threshold,
                     typename X::ElementType coarsen_threshold, int verbose=0)
     {
-      typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator 
+      typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator
         Iterator;
       typedef typename Grid::LeafGridView GV;
       typedef typename GV::IndexSet IndexSet;
@@ -1087,7 +1087,7 @@ namespace Dune {
             }
         }
       if (verbose>0)
-        std::cout << "+++ mark_grid: " << refine_cnt << " marked for refinement, " 
+        std::cout << "+++ mark_grid: " << refine_cnt << " marked for refinement, "
                   << coarsen_cnt << " marked for coarsening" << std::endl;
     }
 
@@ -1100,7 +1100,7 @@ namespace Dune {
                         int verbose=0
                         )
     {
-      typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator 
+      typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator
         Iterator;
       typedef typename GV::IndexSet IndexSet;
 
@@ -1136,7 +1136,7 @@ namespace Dune {
 
     template<typename Grid>
     void mark_all_coarsen( Grid &grid ) {
-      typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator 
+      typedef typename Grid::template Codim<0>::template Partition<Dune::All_Partition>::LeafIterator
         Iterator;
       Iterator it = grid.template leafbegin<0,Dune::All_Partition>();
       Iterator eit = grid.template leafend<0,Dune::All_Partition>();
