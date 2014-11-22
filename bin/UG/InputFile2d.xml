@@ -14,7 +14,7 @@
 #define VERBOSITY_L_CONTRIB       8
 #define VERBOSITY_DEBUG_LEVEL     9
 -->
-<inputfile verbosity="6">
+<inputfile verbosity="4">
   <plot_options
       vtk_plot_yfield="yes"
       vtk_plot_wells="no"
@@ -66,12 +66,12 @@
         heapsize="2000"
         globalrefine="0"
         baselevel="0"
-        maxsteps="9"
+        maxsteps="10"
         refinementtype="nonconforming"
-        refinementfraction="0.15"
-        coarseningfraction="0.15"
+        refinementfraction="0.99"
+        coarseningfraction="0.02"
         TOL="1E-12"
-        strategy="0"/>
+        strategy="1"/>
   </domain_data>
   <!-- *********************************************** -->
   <!-- Geo-statistical properties of the random field  -->
@@ -90,7 +90,7 @@
         thermal_conductivity="2"
         kappa="0.045"
         sigma0="0.03">
-      <correlationlengths>2.0  2.0</correlationlengths>
+      <correlationlengths>1.0  1.0</correlationlengths>
     </zone>
 <!--
     <zone 
@@ -140,7 +140,7 @@
       refined_diffusion="1.0"
       l2_diffusion="1.0"
       l2_diffusion_adjoint="1"
-      tolerance="10.0"
+      tolerance="5.0"
       dg_method="SIPG" 
       dg_weights="on" 
       dg_gamma="2.0"
@@ -354,10 +354,10 @@
         <!-- temperature= temperature difference for injection (will not be used for extraction wells) -->
         <!-- One line per well: -->
         <!-- x   zTop     zBottom   k_well    flow_rate    T     t_inject   c     injection_time -->
-        12.5       25.01     25.0      10.0        2e-4     0.0   100      0.0  100
-        17.5       25.01     25.0      10.0        1e-4     1.0   100      1.0  100
-        32.5       25.01     25.0      10.0       -1e-4     0.0   100.0    0.0  100.0
-        37.5       25.01     25.0      10.0       -2e-4     0.0   100.0    0.0  100.0
+        12.5       25.01     25.0      10.0        2.4e-3     0.0   100      0.0  100
+        17.5       25.01     25.0      10.0        8e-4     1.0   100      1.0  100
+        32.5       25.01     25.0      10.0       -8e-4     0.0   100.0    0.0  100.0
+        37.5       25.01     25.0      10.0       -2.4e-3     0.0   100.0    0.0  100.0
       </well_data>
       <!-- -->   
       <!-- --> 
@@ -695,10 +695,10 @@
         <!-- temperature= temperature difference for injection (will not be used for extraction wells) -->
         <!-- One line per well: -->
         <!-- x   zTop     zBottom   k_well    flow_rate    T     t_inject   c     injection_time -->
-        25.01       12.5     12.4      10.0        2e-3     0.0   100      0.0  100
-        25.01       17.5     17.4      10.0        1e-3     1.0   100      1.0  100
-        25.01       32.5     32.4      10.0       -1e-3     0.0   100.0    0.0  100.0
-        25.01       37.5     37.4      10.0       -2e-3     0.0   100.0    0.0  100.0
+        25.01       12.5     12.4      10.0        2.4e-3     0.0   100      0.0  100
+        25.01       17.5     17.4      10.0        8e-4     1.0   100      1.0  100
+        25.01       32.5     32.4      10.0       -8e-4     0.0   100.0    0.0  100.0
+        25.01       37.5     37.4      10.0       -2.4e-3     0.0   100.0    0.0  100.0
       </well_data>
       <!-- -->   
       <!-- --> 
@@ -1036,10 +1036,10 @@
         <!-- temperature= temperature difference for injection (will not be used for extraction wells) -->
         <!-- One line per well: -->
         <!-- x   zTop     zBottom   k_well    flow_rate    T     t_inject   c     injection_time -->
-        37.5       25.01     25.0      10.0        6e-4     0.0   100.0    0.0  100.0
-        32.5       25.01     25.0      10.0        2e-4     1.0   100.0    1.0  100.0
-        17.5       25.01     25.0      10.0       -4e-4     0.0   100      0.0  100
-        12.5       25.01     25.0      10.0       -8e-4     0.0   100      0.0  100
+        37.5       25.01     25.0      10.0        2.4e-3     0.0   100.0    0.0  100.0
+        32.5       25.01     25.0      10.0        8e-4     1.0   100.0    1.0  100.0
+        17.5       25.01     25.0      10.0       -8e-4     0.0   100      0.0  100
+        12.5       25.01     25.0      10.0       -2.4e-3     0.0   100      0.0  100
       </well_data>
       <!-- -->   
       <!-- --> 
@@ -1377,10 +1377,10 @@
         <!-- temperature= temperature difference for injection (will not be used for extraction wells) -->
         <!-- One line per well: -->
         <!-- x   zTop     zBottom   k_well    flow_rate    T     t_inject   c     injection_time -->
-        25.01       37.5     37.4      10.0        2e-3     0.0   100.0    0.0  100.0
-        25.01       32.5     32.4      10.0        1e-3     1.0   100.0    1.0  100.0
-        25.01       17.5     17.4      10.0       -1e-3     0.0   100      0.0  100
-        25.01       12.5     12.4      10.0       -2e-3     0.0   100      0.0  100
+        25.01       37.5     37.4      10.0        2.4e-3     0.0   100.0    0.0  100.0
+        25.01       32.5     32.4      10.0        8e-4     1.0   100.0    1.0  100.0
+        25.01       17.5     17.4      10.0       -8e-4     0.0   100      0.0  100
+        25.01       12.5     12.4      10.0       -2.4e-3     0.0   100      0.0  100
       </well_data>
       <!-- -->   
       <!-- --> 
