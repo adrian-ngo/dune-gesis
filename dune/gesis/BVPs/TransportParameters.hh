@@ -39,7 +39,7 @@ namespace Dune {
       typedef typename Traits::RangeFieldType RF;
       enum {
         dim = Traits::dimDomain
-      };      
+      };
 
       typedef typename Traits::DiscreteGridFunction DGF;
       typedef typename Traits::InputDataType IDT;
@@ -83,11 +83,11 @@ namespace Dune {
         , dgf(dgf_)
       {};
 
-      
+
       const CTransportParameters& gettransportparams() const {
         return inputdata.transport_parameters;
       }
-      
+
 
 
       //! velocityvector
@@ -183,7 +183,7 @@ namespace Dune {
       DispersionTensor( const typename Traits::ElementType& e,
                         const typename Traits::DomainType& xlocal,
                         const EQ::Mode equationMode
-                        ) const 
+                        ) const
       {
 
         typename Traits::DispersionTensorType thetaD( 0.0 );
@@ -207,7 +207,7 @@ namespace Dune {
 #endif
 
         RF D_m = D_molecular * extra_diffusion;
-        
+
         for( UINT i=0; i<dim; i++ ) {
           thetaD[i][i] += porosity * D_m;
           thetaD[i][i] += a_t * beta.two_norm();
@@ -224,7 +224,7 @@ namespace Dune {
       //! source/reaction term on the RHS of the scalar convection diffusion equation:
       typename Traits::RangeFieldType
       q_sourceterm( const typename Traits::ElementType& e
-                   , const typename Traits::DomainType& x ) const 
+                    , const typename Traits::DomainType& x ) const
       {
         RF value = 0;
 
@@ -253,10 +253,10 @@ namespace Dune {
       //! Neumann boundary condition
       typename Traits::RangeFieldType
       j( const typename Traits::IntersectionType& is
-         , const typename Traits::IntersectionDomainType& x 
+         , const typename Traits::IntersectionDomainType& x
          ) const {
-          
-          //typename Traits::RangeType global = is.geometry().global(x);
+
+        //typename Traits::RangeType global = is.geometry().global(x);
 
         return 0.0;
       }
@@ -272,20 +272,20 @@ namespace Dune {
       //! outflow
       typename Traits::RangeFieldType
       o( const typename Traits::IntersectionType& is
-         , const typename Traits::IntersectionDomainType& x 
+         , const typename Traits::IntersectionDomainType& x
          ) const {
-          //typename Traits::RangeType global = is.geometry().global(x);
+        //typename Traits::RangeType global = is.geometry().global(x);
         return 0.0;
       }
 
-      //! source f        
+      //! source f
       typename Traits::RangeFieldType
       f(const typename Traits::ElementType& e, const typename Traits::DomainType& x) const {
-          
+
         //typename Traits::RangeType global = e.geometry().global(x);
         return 0.0;
       }
-        
+
 
       typename Traits::RangeFieldType
       setTime( double t ) const {
@@ -304,15 +304,15 @@ namespace Dune {
       // 1 means Dirichlet
       // -1 means Outflow
       BCType bctype( const typename Traits::IntersectionType& is
-                     , const typename Traits::IntersectionDomainType& x 
+                     , const typename Traits::IntersectionDomainType& x
                      ) const {
-          
+
         typename Traits::RangeType global = is.geometry().global(x);
 
         // west boundary(0):
         if (global[0] < GEO_EPSILON)
           return convertInt2BCType( setupdata.transport_equation.boundaries[ 0 ].bctype );
-          
+
         // east boundary(1):
         if (global[0] > inputdata.domain_data.extensions[0] - GEO_EPSILON)
           return convertInt2BCType( setupdata.transport_equation.boundaries[ 1 ].bctype );
@@ -320,7 +320,7 @@ namespace Dune {
         // south boundary(2):
         if (global[1] < GEO_EPSILON)
           return convertInt2BCType( setupdata.transport_equation.boundaries[ 2 ].bctype );
-            
+
         // north boundary(3):
         if (global[1] > inputdata.domain_data.extensions[1] - GEO_EPSILON)
           return convertInt2BCType( setupdata.transport_equation.boundaries[ 3 ].bctype );
@@ -332,7 +332,7 @@ namespace Dune {
 
         // top boundary(5):
         if (global[2] > inputdata.domain_data.extensions[2] - GEO_EPSILON)
-          return convertInt2BCType( setupdata.transport_equation.boundaries[ 5 ].bctype );            
+          return convertInt2BCType( setupdata.transport_equation.boundaries[ 5 ].bctype );
 #endif
 
         // default: (required to avoid control missing end of non-void function)
@@ -362,13 +362,13 @@ namespace Dune {
     // a helper class from Jö
     // see: http://www.boost.org/doc/libs/1_49_0/libs/utility/base_from_member.html
     /*
-    template<class T, std::size_t i = 0>
-    struct BaseFromMember {
+      template<class T, std::size_t i = 0>
+      struct BaseFromMember {
       T data;
       BaseFromMember() { }
       template<class T1>
       BaseFromMember(const T1 &v1) : data(v1) { }
-    };
+      };
     */
 
 
@@ -377,7 +377,7 @@ namespace Dune {
 
     /*****************************************************************************
           DERIVED CLASS no.1
-     *****************************************************************************/
+    *****************************************************************************/
 
     //! Transport parameters class for m0
     template<typename GV,
@@ -400,7 +400,7 @@ namespace Dune {
       //typedef BaseFromMember<DGFTYPE> pbase_type;
 
       typedef TransportSpatialParameterInterface<
-      TransportParameterTraits<GV,RF,DGFTYPE,IDT,SDT>,
+        TransportParameterTraits<GV,RF,DGFTYPE,IDT,SDT>,
         TransportProblemM0<GV,RF,DGFTYPE,IDT,SDT>
         > base_type;
 
@@ -425,7 +425,7 @@ namespace Dune {
 
       //! Dirichlet boundary condition value
       typename Traits::RangeFieldType
-      g_function( const typename Traits::ElementType& e, 
+      g_function( const typename Traits::ElementType& e,
                   const typename Traits::DomainType& x ) const {
 
         typename Traits::RangeType global = e.geometry().global(x);
@@ -480,36 +480,36 @@ namespace Dune {
         REAL injection_time = base_type::setupdata.transport_equation.injection_time;
 
 #ifdef LINKPOINTS_REGULARIZATION
-              
+
         if( u < 1e-12 ) // WEST
-        //if( u > 500.0 - 1e-12 ) // EAST
+          //if( u > 500.0 - 1e-12 ) // EAST
           return Dune::Gesis::Regularizer::gRegular2( v, y1, y2, delta_y, concentration * injection_time);
         else
           return RF(0.0);
 
 #else
         if( u < 1e-12 ) // WEST
-        //if( u > 500.0 - 1e-12 ) // EAST
+          //if( u > 500.0 - 1e-12 ) // EAST
           {
             RF gDeltaY = regularization_factor * delta_y;
 
 #ifdef DIMENSION3
             RF gDeltaZ = regularization_factor * delta_z;
-            return Dune::Gesis::Regularizer::gRegularYZ( v, w, 
-                                                                y1, z1,
-                                                                y2, z2,
-                                                                gDeltaY, gDeltaZ,
-                                                                concentration * injection_time,
-                                                                bfixedwidth,
-                                                                regularization_factor );
+            return Dune::Gesis::Regularizer::gRegularYZ( v, w,
+                                                         y1, z1,
+                                                         y2, z2,
+                                                         gDeltaY, gDeltaZ,
+                                                         concentration * injection_time,
+                                                         bfixedwidth,
+                                                         regularization_factor );
 #else
-            return Dune::Gesis::Regularizer::gRegularY( v, 
-                                                               y1, 
-                                                               y2, 
-                                                               gDeltaY, 
-                                                               concentration * injection_time,
-                                                               bfixedwidth,
-                                                               regularization_factor );
+            return Dune::Gesis::Regularizer::gRegularY( v,
+                                                        y1,
+                                                        y2,
+                                                        gDeltaY,
+                                                        concentration * injection_time,
+                                                        bfixedwidth,
+                                                        regularization_factor );
 #endif // DIMENSION3
           }
         else
@@ -517,7 +517,7 @@ namespace Dune {
 #endif
 
       }
-      
+
     };
 
 
@@ -525,7 +525,7 @@ namespace Dune {
 
     /*****************************************************************************
           DERIVED CLASS no.2
-     *****************************************************************************/
+    *****************************************************************************/
 
     //! Transport parameters class for m0
     template<
@@ -549,7 +549,7 @@ namespace Dune {
       //typedef BaseFromMember<DGFTYPE> pbase_type;
 
       typedef TransportSpatialParameterInterface<
-      TransportParameterTraits<GV,RF,DGFTYPE,IDT,SDT>,
+        TransportParameterTraits<GV,RF,DGFTYPE,IDT,SDT>,
         TransportProblemM1<GV,RF,DGFTYPE,IDT,SDT>
         > base_type;
 
@@ -570,7 +570,7 @@ namespace Dune {
         return g_function(e,x);
       }
 
-      //! Dirichlet boundary condition value of m1 = 
+      //! Dirichlet boundary condition value of m1 =
       // Dirichlet boundary condition value of m0 * 0.5 * injection_time * injection_time
       typename Traits::RangeFieldType
       g_function( const typename Traits::ElementType& e,
@@ -634,7 +634,7 @@ namespace Dune {
 
 
 #ifdef LINKPOINTS_REGULARIZATION
-              
+
         if( u < 1e-12 )
           return Dune::Gesis::Regularizer::gRegular2( v, y1, y2, delta_y, concentration );
         else
@@ -646,21 +646,21 @@ namespace Dune {
 
 #ifdef DIMENSION3
           RF gDeltaZ = regularization_factor * delta_z;
-          return Dune::Gesis::Regularizer::gRegularYZ( v, w, 
-                                                              y1, z1,
-                                                              y2, z2,
-                                                              gDeltaY, gDeltaZ,
-                                                              concentration,
-                                                              bfixedwidth,
-                                                              regularization_factor );
+          return Dune::Gesis::Regularizer::gRegularYZ( v, w,
+                                                       y1, z1,
+                                                       y2, z2,
+                                                       gDeltaY, gDeltaZ,
+                                                       concentration,
+                                                       bfixedwidth,
+                                                       regularization_factor );
 #else
-          return Dune::Gesis::Regularizer::gRegularY( v, 
-                                                             y1, 
-                                                             y2, 
-                                                             gDeltaY, 
-                                                             concentration,
-                                                             bfixedwidth,
-                                                             regularization_factor );
+          return Dune::Gesis::Regularizer::gRegularY( v,
+                                                      y1,
+                                                      y2,
+                                                      gDeltaY,
+                                                      concentration,
+                                                      bfixedwidth,
+                                                      regularization_factor );
 #endif // DIMENSION3
 
         }
@@ -668,13 +668,13 @@ namespace Dune {
           return RF(0.0);
 #endif
       }
-      
+
     };
 
 
     /*****************************************************************************
           DERIVED CLASS no.3
-     *****************************************************************************/
+    *****************************************************************************/
 
     //! Transport parameters class for adjoint states
     template<
@@ -690,7 +690,7 @@ namespace Dune {
       TransportParameterTraits<GV,RF,DGFTYPE,IDT,SDT>,
       TransportProblemAdjoint<GV,RF,DGFTYPE,IDT,SDT>
       > {
-    
+
     private:
       typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
       typedef TransportSpatialParameterInterface<
@@ -721,19 +721,19 @@ namespace Dune {
       // 1 means Dirichlet
       // -1 means Outflow
       BCType bctype( const typename Traits::IntersectionType& is
-                     , const typename Traits::IntersectionDomainType& x 
+                     , const typename Traits::IntersectionDomainType& x
                      ) const {
-          
+
         typename Traits::RangeType global = is.geometry().global(x);
 
         // west boundary(0) = east boundary of forward problem:
         if (global[0] < GEO_EPSILON)
           return base_type::convertInt2BCType( base_type::setupdata.transport_equation.boundaries[ 1 ].bctype );
-          
+
         // east boundary(1) = west boundary of forward problem:
         if (global[0] > base_type::inputdata.domain_data.extensions[0] - GEO_EPSILON)
           return base_type::convertInt2BCType( base_type::setupdata.transport_equation.boundaries[ 0 ].bctype );
-          
+
         // south boundary(2) = north boundary of forward problem:
         if (global[1] < GEO_EPSILON)
           return base_type::convertInt2BCType( base_type::setupdata.transport_equation.boundaries[ 3 ].bctype );
@@ -741,12 +741,12 @@ namespace Dune {
         // north boundary(3) = south boundary of forward problem:
         if (global[1] > base_type::inputdata.domain_data.extensions[1] - GEO_EPSILON)
           return base_type::convertInt2BCType( base_type::setupdata.transport_equation.boundaries[ 2 ].bctype );
-            
+
 #ifdef DIMENSION3
         // bottom boundary(4) = top boundary of forward problem:
         if (global[2] < GEO_EPSILON)
           return base_type::convertInt2BCType( base_type::setupdata.transport_equation.boundaries[ 5 ].bctype );
-            
+
         // top boundary(5) = bottom boundary of forward problem:
         if (global[2] > base_type::inputdata.domain_data.extensions[2] - GEO_EPSILON)
           return base_type::convertInt2BCType( base_type::setupdata.transport_equation.boundaries[ 4 ].bctype );
@@ -767,23 +767,23 @@ namespace Dune {
 
       //! Dirichlet boundary condition value
       typename Traits::RangeFieldType
-      g_function( const typename Traits::ElementType& e, 
+      g_function( const typename Traits::ElementType& e,
                   const typename Traits::DomainType& x) const {
 
-          //typename Traits::RangeType global = e.geometry().global(x);
+        //typename Traits::RangeType global = e.geometry().global(x);
         /*
-        REAL y = 0;
-        REAL Lx = base_type::inputdata.domain_data.extensions[0];
-        //if( global[0] > GEO_EPSILON ) // WEST only!
-        if( global[0] < Lx - GEO_EPSILON ) // EAST only!
+          REAL y = 0;
+          REAL Lx = base_type::inputdata.domain_data.extensions[0];
+          //if( global[0] > GEO_EPSILON ) // WEST only!
+          if( global[0] < Lx - GEO_EPSILON ) // EAST only!
           return y;
-        if( global[1] > 250 )
+          if( global[1] > 250 )
           y = 1.0;
         */
         REAL y = 0;
         return y;
       }
-      
+
     };
 
 
@@ -793,7 +793,7 @@ namespace Dune {
 
 
 
-    
+
   } // namespace PDELab
 
 } // namespace Dune

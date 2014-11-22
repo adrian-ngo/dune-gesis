@@ -21,7 +21,7 @@ namespace Dune{
 
       MeshPlecletNumber( const GV& gv_,
                          const TP& tp_,
-                         const int step = 0 ) 
+                         const int step = 0 )
         :
         gv(gv_),
         tp(tp_),
@@ -51,7 +51,7 @@ namespace Dune{
 
         typedef typename GV::Traits::template Codim<0>::template Partition<Dune::All_Partition>::Iterator ElementIterator;
         //const typename GV::IndexSet& is = gv.indexSet();
-  
+
         // loop over grid elements of codim 0
         for( ElementIterator eit=gv.template begin<0,Dune::All_Partition>()
                ; eit != gv.template end<0,Dune::All_Partition>(); ++eit) {
@@ -75,7 +75,7 @@ namespace Dune{
 
             if( eit->level() < gv.grid().maxLevel() )
               Pe_t = 0.0;
-            
+
             data_container[idx] = Pe_t;
 
             // get maximal Mesh Peclet Number of all elements
@@ -98,15 +98,15 @@ namespace Dune{
 
 
         if(gv.comm().size()>1){
-          
+
           // MPI communicate
           logger << "MeshPecletNumber: Start data exchange ..." << std::endl;
           typedef CoarseGridP0Datahandle<GV,ContainerType> DataHandleType;
           DataHandleType datahandle(gv,data_container);
           //logger << "datahandle created." << std::endl;
-    
-          gv.communicate( datahandle, 
-                          Dune::InteriorBorder_All_Interface, 
+
+          gv.communicate( datahandle,
+                          Dune::InteriorBorder_All_Interface,
                           Dune::ForwardCommunication );
           //logger << "gv_gw.communicate() done." << std::endl;
 
@@ -139,20 +139,20 @@ namespace Dune{
 
 
       void plot2vtu( const std::string filename ){
-        VTKPlot::output_vector_to_vtu( gv, 
+        VTKPlot::output_vector_to_vtu( gv,
                                        peclet_field,
                                        filename,
                                        "Peclet"
                                        );
 
-        
+
       };
 
 
       REAL maximum_l(){ return maxPeclet_l; };
       REAL maximum_t(){ return maxPeclet_t; };
       REAL maximum_deltaSDFEM(){ return max_deltaSDFEM; };
-      
+
     }; // class MeshPlecletNumber
   }
 }

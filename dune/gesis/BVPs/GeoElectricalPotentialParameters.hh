@@ -204,13 +204,13 @@ namespace Dune {
 
     private:
       typedef GeoElectricalPotentialParameterInterface< GroundwaterParameterTraits<GV,RF,IDT,SDT,YFG>,
-                                                        GEPotentialForwardProblem<GV,RF,IDT,SDT,YFG> 
+                                                        GEPotentialForwardProblem<GV,RF,IDT,SDT,YFG>
                                                         > base_type;
       typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
-      
+
     public:
       typedef GroundwaterParameterTraits<GV,RF,IDT,SDT,YFG> Traits;
-      
+
       //! constructor
       GEPotentialForwardProblem( const IDT& inputdata_,
                                  const SDT& setupdata_,
@@ -321,7 +321,7 @@ namespace Dune {
 
     public:
       typedef GroundwaterParameterTraits<GV,RF,IDT,SDT,YFG> Traits;
-      
+
       // constructor:
       GEPotentialAdjointProblem( const IDT& inputdata_,
                                  const SDT& setupdata_,
@@ -330,14 +330,14 @@ namespace Dune {
         base_type( inputdata_,
                    setupdata_,
                    fieldgenerator_ ){}
-      
+
       //! boundary condition type function
       // 0 means Neumann
       // 1 means Dirichlet
       BCType bctype( const typename Traits::IntersectionType& is
                      , const typename Traits::IntersectionDomainType& x
                      ) const {
-        
+
         typename Traits::RangeType global = is.geometry().global(x);
 
         // west boundary(0):

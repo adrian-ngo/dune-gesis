@@ -23,7 +23,7 @@ namespace Dune {
     public:
 
       // Loop over grd cells and compute integral of the solution.
-      
+
       template<typename GFS,typename VCType>
       static void totalMass( const GFS& gfs
                              , const VCType& xSolution
@@ -60,24 +60,24 @@ namespace Dune {
             Dune::GeometryType geometrytype = eit->geometry().type();
             const int integration_order = 2*pMAX;
             const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF, dim>::rule(geometrytype, integration_order);
-      
+
             // quadrature points
             Dune::FieldVector<REAL,1> fval(0.0);
 
-            // loop over quadrature points 
+            // loop over quadrature points
             for( typename Dune::QuadratureRule<DF,dim>::const_iterator iterQP = rule.begin()
                    ; iterQP != rule.end()
                    ; ++iterQP) {
 
               // Floating Point Exception in 3D parallel is caused here, when exception handler is activated!
-        
+
               // evaluate the darcy flux
               fval = 0.0;
               dgf.evaluate(*eit, iterQP->position(), fval);
 
               // integration factor
               REAL factor = iterQP->weight() * eit->geometry().integrationElement(iterQP->position());
-            
+
               // add to the sensitivity
               if(fval>1E-12)
                 posvalue += fval * factor;
@@ -97,13 +97,13 @@ namespace Dune {
         totMass = gv.comm().sum( value );
 
         if( General::verbosity >= VERBOSITY_DEBUG_LEVEL ){
-          std::cout << "P" << gv.comm().rank() 
-                    << ": pos./neg. mass: " 
-                    << posvalue << "/" << negvalue 
+          std::cout << "P" << gv.comm().rank()
+                    << ": pos./neg. mass: "
+                    << posvalue << "/" << negvalue
                     << std::endl;
           std::cout << "P" << gv.comm().rank() << ": tot. mass: " << value << std::endl;
         }
-        
+
         return;
 
       } // totalMass

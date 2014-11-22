@@ -35,7 +35,7 @@ namespace Dune {
     //! base class for parameter class
     template<class T, class Imp>
     class GroundwaterParameterInterface {
-      
+
     private:
       typedef T Traits;
       typedef typename Traits::RangeFieldType RF;
@@ -44,7 +44,7 @@ namespace Dune {
       typedef typename Traits::InputDataType IDT;
       typedef typename Traits::SetupDataType SDT;
       typedef typename Traits::YFieldGeneratorType YFG;
-      
+
       //typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
       typedef typename Traits::BCType BCType;
 
@@ -59,7 +59,7 @@ namespace Dune {
       const IDT& inputdata;
       const SDT& setupdata;
       const YFG& yfieldgenerator;
-      
+
       BCType convertInt2BCType( const int & i ) const {
         if( i == 1 )
           return Dune::PDELab::ConvectionDiffusionBoundaryConditions::Dirichlet;
@@ -75,9 +75,9 @@ namespace Dune {
     public:
       enum {
         dim = Traits::dimDomain
-      };      
+      };
       // constructor of base_type:
-      GroundwaterParameterInterface<T,Imp>( const IDT& inputdata_, 
+      GroundwaterParameterInterface<T,Imp>( const IDT& inputdata_,
                                             const SDT& setupdata_,
                                             const YFG& yfieldgenerator_ )
       : inputdata(inputdata_),
@@ -90,7 +90,7 @@ namespace Dune {
       //
       typename Traits::DiffusionTensorType
       DiffusionTensor( const typename Traits::ElementType& e
-                       , const typename Traits::DomainType& x ) const 
+                       , const typename Traits::DomainType& x ) const
       {
         typename Traits::DiffusionTensorType K( 0.0 );
         typename Traits::DomainType xg = e.geometry().global(x);
@@ -117,14 +117,14 @@ namespace Dune {
       //! Neumann boundary condition (boundary term)
       typename Traits::RangeFieldType
       j( const typename Traits::IntersectionType& is
-         , const typename Traits::IntersectionDomainType& x 
+         , const typename Traits::IntersectionDomainType& x
          ) const {
         //typename Traits::RangeType xg = is.geometry().global(x);
         return 0.0;
       }
 
       //! reaction term (volume term)
-      typename Traits::RangeFieldType 
+      typename Traits::RangeFieldType
       c( const typename Traits::ElementType& e
          , const typename Traits::DomainType& x) const {
         //typename Traits::RangeType xg = e.geometry().global(x);
@@ -132,8 +132,8 @@ namespace Dune {
       }
 
       //! source term f (volume term)
-      typename Traits::RangeFieldType 
-      f( const typename Traits::ElementType& e, 
+      typename Traits::RangeFieldType
+      f( const typename Traits::ElementType& e,
          const typename Traits::DomainType& x) const {
         //typename Traits::RangeType xg = e.geometry().global(x);
         return 0.0;
@@ -144,19 +144,19 @@ namespace Dune {
       // 0 means Neumann
       // 1 means Dirichlet
       BCType bctype( const typename Traits::IntersectionType& is
-                     , const typename Traits::IntersectionDomainType& x 
+                     , const typename Traits::IntersectionDomainType& x
                      ) const {
-        
+
         typename Traits::RangeType global = is.geometry().global(x);
 
         // west boundary(0):
         if (global[0] < GEO_EPSILON)
           return convertInt2BCType( setupdata.flow_equation.boundaries[ 0 ].bctype );
-          
+
         // east boundary(1):
         if (global[0] > inputdata.domain_data.extensions[0] - GEO_EPSILON)
           return convertInt2BCType( setupdata.flow_equation.boundaries[ 1 ].bctype );
-          
+
         // south boundary(2):
         if (global[1] < GEO_EPSILON)
           return convertInt2BCType( setupdata.flow_equation.boundaries[ 2 ].bctype );
@@ -164,7 +164,7 @@ namespace Dune {
         // north boundary(3):
         if (global[1] > inputdata.domain_data.extensions[1] - GEO_EPSILON)
           return convertInt2BCType( setupdata.flow_equation.boundaries[ 3 ].bctype );
-            
+
 #ifdef DIMENSION3
         // bottom boundary(4):
         if (global[2] < GEO_EPSILON)
@@ -186,17 +186,17 @@ namespace Dune {
       *********************************************************************/
 
       //! Dirichlet boundary condition on inflow
-      typename Traits::RangeFieldType g( const typename Traits::ElementType& e, 
+      typename Traits::RangeFieldType g( const typename Traits::ElementType& e,
                                          const typename Traits::DomainType& x) const {
         return asImp().g(e, x);
       }
-      
+
     };
 
 
     /*****************************************************************************
           DERIVED CLASS no.1
-     *****************************************************************************/
+    *****************************************************************************/
 
     //! Transport parameters class for m0
     template<
@@ -216,14 +216,14 @@ namespace Dune {
       typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
 
       typedef GroundwaterParameterInterface<
-      GroundwaterParameterTraits<GV,RF,IDT,SDT,YFG>,
+        GroundwaterParameterTraits<GV,RF,IDT,SDT,YFG>,
         GroundwaterForwardProblem<GV,RF,IDT,SDT,YFG> > base_type;
-    
+
     public:
       typedef GroundwaterParameterTraits<GV,RF,IDT,SDT,YFG> Traits;
 
       //! constructor
-      GroundwaterForwardProblem( 
+      GroundwaterForwardProblem(
                                 const IDT& inputdata_,
                                 const SDT& setupdata_,
                                 const YFG& yfieldgenerator_
@@ -235,7 +235,7 @@ namespace Dune {
 
       //! convectiondiffusionparameter.hh requires g()
       typename Traits::RangeFieldType
-      g( const typename Traits::ElementType& e, const typename Traits::DomainType& x) const {
+        g( const typename Traits::ElementType& e, const typename Traits::DomainType& x) const {
         return g_function(e,x);
       }
 
@@ -246,21 +246,21 @@ namespace Dune {
         typename Traits::RangeType global = e.geometry().global(x);
 
         typename Traits::RangeFieldType y = 0.0;
-        
+
         // west boundary(0):
         if (global[0] < GEO_EPSILON){
           y = base_type::setupdata.flow_equation.boundaries[0].stripes[0].value; // default value
 
-          for(UINT ii=0; ii < base_type::setupdata.flow_equation.boundaries[0].stripes.size(); ii++){          
-            if( global[1] >= base_type::setupdata.flow_equation.boundaries[0].stripes[ii].startpoint[0] - GEO_EPSILON 
-                && 
+          for(UINT ii=0; ii < base_type::setupdata.flow_equation.boundaries[0].stripes.size(); ii++){
+            if( global[1] >= base_type::setupdata.flow_equation.boundaries[0].stripes[ii].startpoint[0] - GEO_EPSILON
+                &&
                 global[1] <= base_type::setupdata.flow_equation.boundaries[0].stripes[ii].endpoint[0] + GEO_EPSILON
 #ifdef DIMENSION3
-                && 
-                global[2] >= base_type::setupdata.flow_equation.boundaries[0].stripes[ii].startpoint[1] - GEO_EPSILON 
-                && 
+                &&
+                global[2] >= base_type::setupdata.flow_equation.boundaries[0].stripes[ii].startpoint[1] - GEO_EPSILON
+                &&
                 global[2] <= base_type::setupdata.flow_equation.boundaries[0].stripes[ii].endpoint[1] + GEO_EPSILON
-#endif	    
+#endif
                 ){
               y = base_type::setupdata.flow_equation.boundaries[0].stripes[ii].value;
             }
@@ -286,7 +286,7 @@ namespace Dune {
             return y; // return before it gets overridden!
         }
 #endif
-        
+
         // south boundary(0):
         if (global[1] < GEO_EPSILON){
           y = base_type::setupdata.flow_equation.boundaries[2].stripes[0].value;
@@ -308,7 +308,7 @@ namespace Dune {
       const YFG& getYfieldgenerator() const {
         return base_type::yfieldgenerator;
       }
-      
+
     };
 
 
@@ -316,7 +316,7 @@ namespace Dune {
 
     /*****************************************************************************
           DERIVED CLASS no.2
-     *****************************************************************************/
+    *****************************************************************************/
 
 
     //! Transport parameters class for adjoint states
@@ -333,7 +333,7 @@ namespace Dune {
       GroundwaterParameterTraits<GV,RF,IDT,SDT,YFG>,
       GroundwaterAdjointProblem<GV,RF,IDT,SDT,YFG>
       > {
-    
+
     private:
       typedef Dune::PDELab::ConvectionDiffusionBoundaryConditions::Type BCType;
       typedef GroundwaterParameterInterface<
@@ -349,7 +349,7 @@ namespace Dune {
                                  const SDT& setupdata_,
                                  const YFG& yfieldgenerator_ )
         :
-        base_type( inputdata_, 
+        base_type( inputdata_,
                    setupdata_,
                    yfieldgenerator_ ){}
 
@@ -363,11 +363,11 @@ namespace Dune {
 
       //! Dirichlet boundary condition value
       typename Traits::RangeFieldType
-      g_function( const typename Traits::ElementType& e, 
+      g_function( const typename Traits::ElementType& e,
                   const typename Traits::DomainType& x) const {
         return 0.0;
       }
-      
+
     };
 
   } // namespace PDELab

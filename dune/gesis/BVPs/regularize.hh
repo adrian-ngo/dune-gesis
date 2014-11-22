@@ -14,34 +14,34 @@ namespace Dune {
       Regularizer(){};
 
     public:
-      /* 1d function using Gaussian-like exponential function to smoothen the 
+      /* 1d function using Gaussian-like exponential function to smoothen the
          transition from zero up to a certain non-zero value.
-         
+
          x : variable of the function
          y1: start position of non-zero section
          y2: end position of non-zero section
          gDelta : transition zone
          concentration : the non-zero value
-         
-         Note: 
-         This function is supposed to be used for a 2D problem 
+
+         Note:
+         This function is supposed to be used for a 2D problem
          with a 1D inflow boundary!
 
       */
       template<typename RF>
-      static RF gRegular1( RF x, 
-                           RF y1, 
-                           RF y2, 
-                           RF delta_y, 
-                           RF gDelta, 
+      static RF gRegular1( RF x,
+                           RF y1,
+                           RF y2,
+                           RF delta_y,
+                           RF gDelta,
                            RF concentration ) {
-  
+
         RF gSigma=0.5*gDelta;
         RF gP=2.8;
 
         if( x >= y1 && x <= y2 )
           return concentration;
-    
+
 #ifdef REGULARIZED_DIRICHLET
         else if( x > y2 && x < y2+gDelta ){
           x -= y2;
@@ -64,16 +64,16 @@ namespace Dune {
 
       template<typename RF>
       RF gRegular2( RF x, RF yStart, RF yEnd, RF delta_y, RF concentration ) {
-        if( 
+        if(
            x > yStart - 1e-6
-           && 
+           &&
            x < yEnd + 1e-6
             )
           {
             return concentration;
           }
 #ifdef REGULARIZED_DIRICHLET
-        else if( 
+        else if(
                 x >= yStart - 0.9 * delta_y
                 &&
                 x <= yEnd + 0.9 * delta_y
@@ -81,7 +81,7 @@ namespace Dune {
           {
             return concentration * 5.0 / 6.0;
           }
-        else if( 
+        else if(
                 x >= yStart - 1.9 * delta_y
                 &&
                 x <= yEnd + 1.9 * delta_y
@@ -89,7 +89,7 @@ namespace Dune {
           {
             return concentration * 0.50;
           }
-        else if( 
+        else if(
                 x >= yStart - 2.9 * delta_y
                 &&
                 x <= yEnd + 2.9 * delta_y
@@ -98,7 +98,7 @@ namespace Dune {
             return concentration / 6.0;
           }
 #endif // REGULARIZED_DIRICHLET
-        else 
+        else
           {
             return 0.0;
           }
@@ -108,25 +108,25 @@ namespace Dune {
 
 
       template<typename RF>
-      static RF gRegularYZ( RF y, RF z, 
-                            RF y1, RF z1, 
-                            RF y2, RF z2, 
-                            RF gDeltaY, RF gDeltaZ, 
+      static RF gRegularYZ( RF y, RF z,
+                            RF y1, RF z1,
+                            RF y2, RF z2,
+                            RF gDeltaY, RF gDeltaZ,
                             RF concentration,
                             bool bfixedwidth,
                             RF regularization_factor
                             ) {
-        
+
         if( regularization_factor < 1E-12 ){
-          if( y >= y1 && y <= y2 
+          if( y >= y1 && y <= y2
               &&
               z >= z1 && z <= z2 ){
             return concentration;
           }
-          return 0;            
+          return 0;
         }
 
-        
+
         if( bfixedwidth ){
           gDeltaY=regularization_factor;
           gDeltaZ=regularization_factor;
@@ -194,32 +194,32 @@ namespace Dune {
           }
           else
             return 0;
-        }  
+        }
         else
           return RF(0.0);
       }
-      
+
 
 
 
       /*
         Note: In the inputfile, you can specify
-        
+
         regularization_type="dynamic" or
         regularization_type="fixed".
-        
+
         With regularization_factor you can set the regularization zone
-        to a fixed value (if regularization_type="fixed") or to a 
+        to a fixed value (if regularization_type="fixed") or to a
         multiple of the gridsize in that dimension (if regularization_type="dynamic").
 
-       */
+      */
 
 
       template<typename RF>
       static RF gRegularY( RF y,
                            RF y1,
-                           RF y2, 
-                           RF gDeltaY, 
+                           RF y2,
+                           RF gDeltaY,
                            RF concentration,
                            bool bfixedwidth,
                            RF regularization_factor
@@ -229,9 +229,9 @@ namespace Dune {
           if( y >= y1 && y <= y2 ){
             return concentration;
           }
-          return 0;            
+          return 0;
         }
-        
+
         if( bfixedwidth ){
           gDeltaY=regularization_factor;
         }
@@ -253,7 +253,7 @@ namespace Dune {
         else if( y>y2 && y<y2+gDeltaY ){
           y -= y2;
           return concentration * exp(-std::pow(std::abs(y)/gSigmaY,gP));
-        }  
+        }
         else
           return RF(0.0);
       }
@@ -266,7 +266,7 @@ namespace Dune {
     }; // class Regularizer
 
   } // Gesis
-  
+
 } // Dune
 
 
@@ -275,4 +275,3 @@ namespace Dune {
 
 
 #endif // DUNE_GESIS_REGULARIZE_HH
-

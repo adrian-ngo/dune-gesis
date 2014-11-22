@@ -55,7 +55,7 @@ namespace Dune {
         if( !fluxcache.empty() )
           fluxcache.clear();
       }
-      
+
       const DarcyFluxType& exportDGF(){
         return dgf;
       }
@@ -73,7 +73,7 @@ namespace Dune {
                              const DomainType& localposition,
                              RangeType& fluxVector ) const
       {
-        DomainType globalposition = 
+        DomainType globalposition =
           e.geometry().global( localposition );
 
         // Retrieve fluxVector from cache, if available:
@@ -83,7 +83,7 @@ namespace Dune {
           //std::cout << "huhu" << std::endl;
           return;
         }
-        
+
         // Otherwise, compute the fluxVector and add it to the fluxcache:
         dgf.evaluate_on_root( e, localposition, fluxVector );
         it = fluxcache.insert( fluxcache.begin(), std::pair<DomainType,RangeType>( globalposition, fluxVector ) );
@@ -104,4 +104,3 @@ namespace Dune {
 }
 
 #endif // DUNE_GESIS_DARCYVELOCITYCACHE_HH
-

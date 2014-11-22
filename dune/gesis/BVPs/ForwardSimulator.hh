@@ -1,4 +1,4 @@
-/* 
+/*
  * File:    ForwardSimulator.hh
  * Authors: Ronnie Schwede and Adrian Ngo, 2010-2013
  */
@@ -41,7 +41,7 @@ namespace Dune {
     // It serves as a wrapper for the equation + source classes to reduce code.
     //
     // Plan for both uniform and adaptive refine:
-    // let the gridviews gv_gw and gv_tp be updated outside and be passed via the 
+    // let the gridviews gv_gw and gv_tp be updated outside and be passed via the
     // gridfunction spaces gfs_gw and gfs_tp!
     //
     template<typename GWP_FWD,  // <--- YField and BC conditions
@@ -55,7 +55,7 @@ namespace Dune {
              typename DIR
              >
     class ForwardSimulator {
-  
+
     public:
       // Retrieve types from gridfunction spaces:
       typedef typename GFS_GW::Traits::GridViewType GV_GW;
@@ -81,7 +81,7 @@ namespace Dune {
       typedef TransportEquation<GFS_TP,DARCY_FLUX_DGF,SolutePumpingSourceType,TPM0,IDT,SDT> TPE_M0;
       // Choose types for the forward TPE for m1:
       typedef TransportProblemM1<GV_TP,REAL,DARCY_FLUX_DGF,IDT,SDT> TPM1;
-      typedef FunctionSource<GWP_FWD, 
+      typedef FunctionSource<GWP_FWD,
                              GFS_CG, //GFS_TP,
                              IDT,SDT> FunctionSourceType;
       typedef TransportEquation<GFS_TP,DARCY_FLUX_DGF,FunctionSourceType,TPM1,IDT,SDT> TPE_M1_M0;
@@ -91,7 +91,7 @@ namespace Dune {
 
       typedef HeatTransportProblemM0<GV_TP,REAL,DARCY_FLUX_DGF,IDT,SDT> HEAT_TPM0;
       typedef TransportEquation<GFS_TP,DARCY_FLUX_DGF,HeatPumpingSourceType,HEAT_TPM0,IDT,SDT> HEAT_TPE_M0;
-      
+
       typedef HeatTransportProblemM1<GV_TP,REAL,DARCY_FLUX_DGF,IDT,SDT> HEAT_TPM1;
       typedef TransportEquation<GFS_TP,DARCY_FLUX_DGF,FunctionSourceType,HEAT_TPM1,IDT,SDT> HEAT_TPE_M1_M0;
 
@@ -102,14 +102,14 @@ namespace Dune {
       typedef GEP_Equation<GFS_GW,GEP_FWD,DipoleSourceType,IDT,SDT> GEP_EQ;
       // Choose type for the Darcy flux and gradient vector:
       //typedef GradientVectorField<GWP_FWD,GFS_GW> DARCY_FLUX_DGF;
-        
+
 #ifdef USE_FEM
-      typedef GEP_FunctionSource<GEP_FWD, 
+      typedef GEP_FunctionSource<GEP_FWD,
                                  GFS_CG,   //<-- eqn (66): m_k
                                  GFS_GW,   //<-- eqn (66): phi0
                                  IDT,SDT> FunctionSourceType_Kappa;
 #else
-      typedef GEP_FunctionSource<GEP_FWD, 
+      typedef GEP_FunctionSource<GEP_FWD,
                                  GFS_GW,   //<-- eqn (66): m_k
                                  GFS_GW,   //<-- eqn (66): phi0
                                  IDT,SDT> FunctionSourceType_Kappa;
@@ -123,7 +123,7 @@ namespace Dune {
       GEP_FWD& gep_fwd; // dito.
       //FIELD_GW& log_kappafield_gw;
       GEP_FWD& log_kappafield_gw;
-      
+
       const GFS_GW& gfs_gw;
       const IDT& inputdata;
       const SDT& setupdata;
@@ -133,24 +133,24 @@ namespace Dune {
 
 
     public:
-    
+
       //constructor
       ForwardSimulator< GWP_FWD,
-                           GEP_FWD,
-                           //FIELD_GW,
-                           GFS_GW,
-                           GFS_TP,
-                           GFS_CG,
-                           IDT,
-                           SDT,
-                           DIR >( GWP_FWD& gwp_fwd_,
-                                  GEP_FWD& gep_fwd_,
-                                  //FIELD_GW& log_kappafield_gw_,
-                                  GEP_FWD& log_kappafield_gw_,
-                                  const GFS_GW& gfs_gw_,
-                                  const IDT& inputdata_,
-                                  const SDT& setupdata_,
-                                  const DIR& dir_) 
+                        GEP_FWD,
+                        //FIELD_GW,
+                        GFS_GW,
+                        GFS_TP,
+                        GFS_CG,
+                        IDT,
+                        SDT,
+                        DIR >( GWP_FWD& gwp_fwd_,
+                               GEP_FWD& gep_fwd_,
+                               //FIELD_GW& log_kappafield_gw_,
+                               GEP_FWD& log_kappafield_gw_,
+                               const GFS_GW& gfs_gw_,
+                               const IDT& inputdata_,
+                               const SDT& setupdata_,
+                               const DIR& dir_)
       : gwp_fwd(gwp_fwd_),
         gep_fwd(gep_fwd_),
         log_kappafield_gw(log_kappafield_gw_),
@@ -161,14 +161,14 @@ namespace Dune {
         gv_gw(gfs_gw.gridView()),
         qorder(2) {
       }
-  
 
-  
+
+
       void head_simulation(VCType_GW& vchead) {
 
         Dune::Timer watch;
 
-        logger<<"Forward Simulation: head"<<std::endl;    
+        logger<<"Forward Simulation: head"<<std::endl;
         /*
          *  This solves the forward flow problem for the synthethic Y-Field:
          */
@@ -193,7 +193,7 @@ namespace Dune {
           std::cout << gwe_h.show_ls_result() << std::endl;
         General::logMinAndMax( vchead, gv_gw.comm() );
       }
-    
+
 
       void soluteM0_simulation( const DARCY_FLUX_DGF & darcyflux_dgf,
                                 const GFS_TP& gfs_tp,
@@ -203,9 +203,9 @@ namespace Dune {
                                 ){
         Dune::Timer watch;
 
-        logger<<"Forward Simulation: solute M0"<<std::endl; 
+        logger<<"Forward Simulation: solute M0"<<std::endl;
         GV_TP gv_tp = gfs_tp.gridView();
-    
+
         if( gv_tp.comm().rank()==0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY )
           std::cout << std::endl << "=== Foward M0" << std::endl;
         SolutePumpingSourceType source_m0( inputdata, setupdata );
@@ -218,12 +218,12 @@ namespace Dune {
 
         if( gv_gw.comm().rank()==0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
 
-          std::cout << "Maximal mesh Peclet numbers: Pe_l = " 
-                    << meshPeclet.maximum_l() << " / Pe_t = " 
+          std::cout << "Maximal mesh Peclet numbers: Pe_l = "
+                    << meshPeclet.maximum_l() << " / Pe_t = "
                     << meshPeclet.maximum_t() << std::endl;
 
 #ifdef USE_FEM
-          std::cout << "Maximal deltaSDFEM = " 
+          std::cout << "Maximal deltaSDFEM = "
                     << meshPeclet.maximum_deltaSDFEM() << std::endl;
 #endif
         }
@@ -242,7 +242,7 @@ namespace Dune {
                                    "Matrix Pattern + Assembly for M0" );
 
 
-        tpe_m0.solve_forward( vcM0 );    
+        tpe_m0.solve_forward( vcM0 );
         if( gv_tp.comm().rank()==0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY )
           std::cout << tpe_m0.show_ls_result() << std::endl;
         General::logMinAndMax( vcM0, gv_tp.comm() );
@@ -262,24 +262,24 @@ namespace Dune {
       void soluteM1_simulation( DARCY_FLUX_DGF &darcyflux_dgf,
                                 const GFS_TP& gfs_tp,
                                 const GFS_CG& gfs_cg,
-                                VCType_CG vcM0, //VCType_TP vcM0, 
+                                VCType_CG vcM0, //VCType_TP vcM0,
                                 VCType_TP &vcM1M0,
                                 VCType_CG &vcM1M0_cg
                                 ){
 
         Dune::Timer watch;
-    
+
         logger<<"Forward Simulation: solute M1"<<std::endl;
         GV_TP gv_tp = gfs_tp.gridView();
 
         if( gv_tp.comm().rank()==0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY )
           std::cout << std::endl << "=== Foward M1" << std::endl;
-        FunctionSourceType source_m1_m0( gwp_fwd, 
+        FunctionSourceType source_m1_m0( gwp_fwd,
                                          gfs_cg,
                                          inputdata,
-                                         setupdata );    
+                                         setupdata );
         TPM1 tpm1(darcyflux_dgf,inputdata,setupdata);
-    
+
         TPE_M1_M0 tpe_m1_m0( gfs_tp,
                              inputdata,
                              setupdata,
@@ -292,7 +292,7 @@ namespace Dune {
                                    inputdata.verbosity,
                                    "TPE",
                                    "Matrix Pattern + Assembly for M1" );
-              
+
         // Define sourceterm for the forward transport equation for m1:
         //VCType_TP vc_theta_m0 = vcM0; // theta_m0 := zone_porosity * m0
         VCType_CG vc_theta_m0 = vcM0; // theta_m0 := zone_porosity * m0
@@ -322,8 +322,8 @@ namespace Dune {
                             VCType_TP & vc_heatM1,
                             VCType_CG & vc_heatM0_cg,
                             VCType_CG & vc_heatM1_cg
-                            ) {        
-        logger<<"Forward Simulation: Heat M0 and M1..."<<std::endl; 
+                            ) {
+        logger<<"Forward Simulation: Heat M0 and M1..."<<std::endl;
         GV_TP gv_tp = gfs_tp.gridView();
 
         if( gv_tp.comm().rank()==0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY )
@@ -337,8 +337,8 @@ namespace Dune {
         //meshPeclet.plot2vtu( vtu_Peclet.str() );
         if( gv_tp.comm().rank()==0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
 
-          std::cout << "Maximal mesh Peclet numbers (heat): Pe_l = " 
-                    << meshPeclet.maximum_l() << " / Pe_t = " 
+          std::cout << "Maximal mesh Peclet numbers (heat): Pe_l = "
+                    << meshPeclet.maximum_l() << " / Pe_t = "
                     << meshPeclet.maximum_t() << std::endl;
 
         }
@@ -348,14 +348,14 @@ namespace Dune {
                                  , setupdata
                                  , darcyflux_dgf
                                  , heat_tpm0
-                                 , source_heat_m0 
+                                 , source_heat_m0
                                  , Passenger::heat
                                  );
         heat_tpe_m0.solve_forward( vc_heatM0 );
         if( gv_tp.comm().rank()==0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY )
           std::cout << heat_tpe_m0.show_ls_result() << std::endl;
         General::logMinAndMax( vc_heatM0, gv_tp.comm() );
-        
+
         L2SubspaceProjector<GFS_TP,GFS_CG,IDT,dim> L2sp(gfs_tp,gfs_cg,inputdata);
         if( gv_tp.comm().rank()==0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY )
           std::cout << std::endl << "=== L2 Projection of Foward heat M0" << std::endl;
@@ -367,7 +367,7 @@ namespace Dune {
 
         if( gv_tp.comm().rank()==0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY )
           std::cout << std::endl << "=== Foward Heat M1" << std::endl;
-        FunctionSourceType source_heat_m1_m0( gwp_fwd, 
+        FunctionSourceType source_heat_m1_m0( gwp_fwd,
                                               gfs_cg,
                                               inputdata,
                                               setupdata,
@@ -429,11 +429,11 @@ namespace Dune {
 #ifdef USE_FEM
 
         FunctionSourceType_Kappa source_moment( log_kappafield_gw,
-                                                gfs_cg,   // eqn (66): m_k  
-                                                gfs_gw,   // eqn (66): phi0 
+                                                gfs_cg,   // eqn (66): m_k
+                                                gfs_gw,   // eqn (66): phi0
                                                 inputdata,
                                                 setupdata
-                                                //, baselevel 
+                                                //, baselevel
                                                 );
 
         Moment_GEP_EQ moment_gpe( gfs_gw,
@@ -441,7 +441,7 @@ namespace Dune {
                                   setupdata,
                                   gep_fwd,
                                   source_moment );
-        
+
         moment_gpe.solve_forward( vcM0_cg, // eqn (66): m_k
                                   vc_phi0, // eqn (66): phi0
                                   vc_M0phi // output
@@ -450,9 +450,9 @@ namespace Dune {
           std::cout << moment_gpe.show_ls_result() << std::endl;
         General::logMinAndMax( vc_M0phi, gv_gw.comm() );
 
-        moment_gpe.solve_forward( vcM1_cg, // eqn (66): m_k 
+        moment_gpe.solve_forward( vcM1_cg, // eqn (66): m_k
                                   vc_phi0, // eqn (66): phi0
-                                  vc_M1phi // output        
+                                  vc_M1phi // output
                                   );
         if( gv_gw.comm().rank()==0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY )
           std::cout << moment_gpe.show_ls_result() << std::endl;
@@ -465,23 +465,23 @@ namespace Dune {
 
         CoarseGridP0Projector<GFS_CG,GFS_GW,IDT,dim> sp_ccfv(gfs_cg,gfs_gw,inputdata);
         VCType_GW vcM0_gw( gfs_gw, 0.0 );
-        sp_ccfv.apply( vcM0_cg, 
+        sp_ccfv.apply( vcM0_cg,
                        gv_tp.grid().maxLevel(),
-                       baselevel, 
+                       baselevel,
                        vcM0_gw );
 
         VCType_GW vcM1_gw( gfs_gw, 0.0 );
-        sp_ccfv.apply( vcM1_cg, 
+        sp_ccfv.apply( vcM1_cg,
                        gv_tp.grid().maxLevel(),
-                       baselevel, 
+                       baselevel,
                        vcM1_gw );
 
         FunctionSourceType_Kappa source_moment( log_kappafield_gw,
-                                                gfs_gw,    // eqn (66): m_k  
-                                                gfs_gw,    // eqn (66): phi0 
+                                                gfs_gw,    // eqn (66): m_k
+                                                gfs_gw,    // eqn (66): phi0
                                                 inputdata,
                                                 setupdata
-                                                //, baselevel 
+                                                //, baselevel
                                                 );
 
         Moment_GEP_EQ moment_gpe( gfs_gw,
@@ -489,18 +489,18 @@ namespace Dune {
                                   setupdata,
                                   gep_fwd,
                                   source_moment );
-        
-        moment_gpe.solve_forward( vcM0_gw, // eqn (66): m_k 
+
+        moment_gpe.solve_forward( vcM0_gw, // eqn (66): m_k
                                   vc_phi0, // eqn (66): phi0
-                                  vc_M0phi // output        
+                                  vc_M0phi // output
                                   );
         if( gv_gw.comm().rank()==0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY )
           std::cout << moment_gpe.show_ls_result() << std::endl;
         General::logMinAndMax( vc_M0phi, gv_gw.comm() );
 
-        moment_gpe.solve_forward( vcM1_gw, // eqn (66): m_k 
+        moment_gpe.solve_forward( vcM1_gw, // eqn (66): m_k
                                   vc_phi0, // eqn (66): phi0
-                                  vc_M1phi // output        
+                                  vc_M1phi // output
                                   );
         if( gv_gw.comm().rank()==0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY )
           std::cout << moment_gpe.show_ls_result() << std::endl;

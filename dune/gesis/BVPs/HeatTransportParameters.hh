@@ -77,8 +77,8 @@ namespace Dune {
     public:
       // constructor of base_type:
       HeatTransportSpatialParameterInterface<T,Imp>( const IDT& inputdata_,
-                                                 const SDT& setupdata_,
-                                                 const DGF& dgf_ )
+                                                     const SDT& setupdata_,
+                                                     const DGF& dgf_ )
       : inputdata(inputdata_)
         , setupdata(setupdata_)
         , dgf(dgf_)
@@ -125,7 +125,7 @@ namespace Dune {
         getMeshPecletNumbers( eg, xlocal, beta, L, Pe_l, Pe_t );
         return factor * L / beta.two_norm() * zeta_1( Pe_l );
       }
-      
+
 
 
 
@@ -141,8 +141,8 @@ namespace Dune {
                                  REAL & L,
                                  REAL & Pe_l,
                                  REAL & Pe_t ) const {
-        
-        // characteristic length of grid element        
+
+        // characteristic length of grid element
         REAL hMin=0;
         REAL hMax=0;
         General::element_size( eg.geometry(), hMin, hMax );
@@ -225,7 +225,7 @@ namespace Dune {
       //! source/reaction term on the RHS of the scalar convection diffusion equation:
       typename Traits::RangeFieldType
       q_sourceterm( const typename Traits::ElementType& e
-                   , const typename Traits::DomainType& x ) const
+                    , const typename Traits::DomainType& x ) const
       {
         RF value = 0;
         return value;
@@ -244,7 +244,7 @@ namespace Dune {
          , const typename Traits::IntersectionDomainType& x
          ) const {
 
-          //typename Traits::RangeType global = is.geometry().global(x);
+        //typename Traits::RangeType global = is.geometry().global(x);
 
         return 0.0;
       }
@@ -262,7 +262,7 @@ namespace Dune {
       o( const typename Traits::IntersectionType& is
          , const typename Traits::IntersectionDomainType& x
          ) const {
-          //typename Traits::RangeType global = is.geometry().global(x);
+        //typename Traits::RangeType global = is.geometry().global(x);
         return 0.0;
       }
 
@@ -350,13 +350,13 @@ namespace Dune {
     // a helper class from Jö
     // see: http://www.boost.org/doc/libs/1_49_0/libs/utility/base_from_member.html
     /*
-    template<class T, std::size_t i = 0>
-    struct BaseFromMember {
+      template<class T, std::size_t i = 0>
+      struct BaseFromMember {
       T data;
       BaseFromMember() { }
       template<class T1>
       BaseFromMember(const T1 &v1) : data(v1) { }
-    };
+      };
     */
 
 
@@ -365,7 +365,7 @@ namespace Dune {
 
     /*****************************************************************************
           DERIVED CLASS no.1
-     *****************************************************************************/
+    *****************************************************************************/
 
     //! Transport parameters class for m0
     template<typename GV,
@@ -388,7 +388,7 @@ namespace Dune {
       //typedef BaseFromMember<DGFTYPE> pbase_type;
 
       typedef HeatTransportSpatialParameterInterface<
-      TransportParameterTraits<GV,RF,DGFTYPE,IDT,SDT>,
+        TransportParameterTraits<GV,RF,DGFTYPE,IDT,SDT>,
         HeatTransportProblemM0<GV,RF,DGFTYPE,IDT,SDT>
         > base_type;
 
@@ -397,8 +397,8 @@ namespace Dune {
 
       //! constructor
       HeatTransportProblemM0( const DGFTYPE& dgf_,
-                          const IDT& inputdata_,
-                          const SDT& setupdata_ )
+                              const IDT& inputdata_,
+                              const SDT& setupdata_ )
         :
         //pbase_type(dgf_),
         //base_type( pbase_type::data ),
@@ -474,20 +474,20 @@ namespace Dune {
 #ifdef DIMENSION3
             RF gDeltaZ = regularization_factor * delta_z;
             return Dune::Gesis::Regularizer::gRegularYZ( v, w,
-                                                                y1, z1,
-                                                                y2, z2,
-                                                                gDeltaY, gDeltaZ,
-                                                                concentration * injection_time,
-                                                                bfixedwidth,
-                                                                regularization_factor );
+                                                         y1, z1,
+                                                         y2, z2,
+                                                         gDeltaY, gDeltaZ,
+                                                         concentration * injection_time,
+                                                         bfixedwidth,
+                                                         regularization_factor );
 #else
             return Dune::Gesis::Regularizer::gRegularY( v,
-                                                               y1,
-                                                               y2,
-                                                               gDeltaY,
-                                                               concentration * injection_time,
-                                                               bfixedwidth,
-                                                               regularization_factor );
+                                                        y1,
+                                                        y2,
+                                                        gDeltaY,
+                                                        concentration * injection_time,
+                                                        bfixedwidth,
+                                                        regularization_factor );
 #endif // DIMENSION3
           }
         else
@@ -502,7 +502,7 @@ namespace Dune {
 
     /*****************************************************************************
           DERIVED CLASS no.2
-     *****************************************************************************/
+    *****************************************************************************/
 
     //! Transport parameters class for m0
     template<
@@ -526,7 +526,7 @@ namespace Dune {
       //typedef BaseFromMember<DGFTYPE> pbase_type;
 
       typedef HeatTransportSpatialParameterInterface<
-      TransportParameterTraits<GV,RF,DGFTYPE,IDT,SDT>,
+        TransportParameterTraits<GV,RF,DGFTYPE,IDT,SDT>,
         HeatTransportProblemM1<GV,RF,DGFTYPE,IDT,SDT>
         > base_type;
 
@@ -534,8 +534,8 @@ namespace Dune {
       typedef TransportParameterTraits<GV,RF,DGFTYPE,IDT,SDT> Traits;
 
       HeatTransportProblemM1( const DGFTYPE& dgf_,
-                          const IDT& inputdata_,
-                          const SDT& setupdata_ )
+                              const IDT& inputdata_,
+                              const SDT& setupdata_ )
         :
         base_type( inputdata_, setupdata_, dgf_ )
       {}
@@ -616,20 +616,20 @@ namespace Dune {
 #ifdef DIMENSION3
           RF gDeltaZ = regularization_factor * delta_z;
           return Dune::Gesis::Regularizer::gRegularYZ( v, w,
-                                                              y1, z1,
-                                                              y2, z2,
-                                                              gDeltaY, gDeltaZ,
-                                                              concentration,
-                                                              bfixedwidth,
-                                                              regularization_factor );
+                                                       y1, z1,
+                                                       y2, z2,
+                                                       gDeltaY, gDeltaZ,
+                                                       concentration,
+                                                       bfixedwidth,
+                                                       regularization_factor );
 #else
           return Dune::Gesis::Regularizer::gRegularY( v,
-                                                             y1,
-                                                             y2,
-                                                             gDeltaY,
-                                                             concentration,
-                                                             bfixedwidth,
-                                                             regularization_factor );
+                                                      y1,
+                                                      y2,
+                                                      gDeltaY,
+                                                      concentration,
+                                                      bfixedwidth,
+                                                      regularization_factor );
 #endif // DIMENSION3
 
         }
@@ -643,7 +643,7 @@ namespace Dune {
 
     /*****************************************************************************
           DERIVED CLASS no.3
-     *****************************************************************************/
+    *****************************************************************************/
 
     //! Transport parameters class for adjoint states
     template<
@@ -672,8 +672,8 @@ namespace Dune {
 
       // constructor:
       HeatTransportProblemAdjoint( const DGFTYPE& dgf_,
-                               const IDT& inputdata_,
-                               const SDT& setupdata_ )
+                                   const IDT& inputdata_,
+                                   const SDT& setupdata_ )
         :
         base_type( inputdata_, setupdata_, dgf_ ){}
 
@@ -739,7 +739,7 @@ namespace Dune {
       g_function( const typename Traits::ElementType& e,
                   const typename Traits::DomainType& x) const {
 
-          //typename Traits::RangeType global = e.geometry().global(x);
+        //typename Traits::RangeType global = e.geometry().global(x);
         REAL y = 0;
         return y;
       }
