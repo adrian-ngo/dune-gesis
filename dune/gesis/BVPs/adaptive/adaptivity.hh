@@ -664,10 +664,12 @@ namespace Dune {
 #endif
 
       // adapt the grid
+      std::cout << "grid.adapt()..." << std::endl;
       grid.adapt();
+      std::cout << "grid.adapt() done." << std::endl;
 
       
-#ifdef USE_ALUGRID
+      //#ifdef USE_ALUGRID
 
       if( gv.comm().size() > 1 ) {
 
@@ -763,7 +765,7 @@ namespace Dune {
                                           0 );
 #endif // DEBUG_PLOT
       }
-#endif // USE_ALUGRID
+      //#endif // USE_ALUGRID
 
 
 
