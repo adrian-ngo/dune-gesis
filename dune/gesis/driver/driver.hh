@@ -2,7 +2,7 @@
 #define DUNE_GESIS_DRIVER_HH
 
 #ifdef LINE_PLOT_M0
-#include "lineplot.hh"
+#include <dune/gesis/common/io/lineplot.hh>
 #endif
 
 
@@ -351,8 +351,6 @@ namespace Dune {
                                   helper.getCommunicator(),
                                   inputdata );
 
-        //Vector<UINT> local_offset_1(dim,0);
-        //Vector<UINT> local_count_1(dim,0);
         local_offset.resize(dim);
         local_count.resize(dim);
 
@@ -396,9 +394,6 @@ namespace Dune {
         Vector<REAL> smoothed1_orig_YField( orig_YField.size() );
         Vector<REAL> smoothed_orig_YField( orig_YField.size() );
         C_YY.mv( Lambdas, orig_YField, smoothed_orig_YField );
-
-        //C_YY.prepare( 0, local_offset, local_count, false );
-        //C_YY.mv( Lambdas, smoothed1_orig_YField, smoothed_orig_YField );
 
         REAL a1 = orig_YField * smoothed_orig_YField;
         a1 = gv_gw.comm().sum( a1 );
@@ -456,18 +451,7 @@ namespace Dune {
         }
 
 
-      // The YFIELD object is supposed to be used only for the evaluation of the
-      // conductivity field. It shoud indicate that nothing else is used from the
-      // Groundwater forward problem!
-      // typedef Dune::PDELab::GroundwaterForwardProblem<GV_GW,REAL,IDT,SDT,YFG> YFIELD;
-      // YFIELD yfield( inputdata, setupdata, yfg_orig );
-
-
-
-
-
-
-      typedef typename IDT::SDT SDT;
+        typedef typename IDT::SDT SDT; // Setup Data Type
 
       typedef GroundwaterForwardProblem<GV_GW,REAL,IDT,SDT,YFG> GWP_FWD;
       // 1.) GFS for the Flow Equation:
@@ -476,6 +460,7 @@ namespace Dune {
       typedef typename Dune::PDELab::BackendVectorSelector<GFS_GW,REAL>::Type VCType_GW;
 
 #ifdef NEW_GV
+      // Grid elements will be sorted according to the appropriate hydraulic head.
 #ifdef USE_DGF_PressureField
       logger << "Using DGF_PressureField ... " << std::endl;
       typedef DGF_PressureField<GFS_GW,VCType_GW> RT0_PF;
@@ -489,9 +474,7 @@ namespace Dune {
         < OLD_GV_TP
         , RT0_PF
         , PressureLikeOrdering
-        //, ReversePressureLikeOrdering
         > GV_TP;
-      // Grid elements will be sorted according to the appropriate hydraulic head.
 #endif
 
 

@@ -78,7 +78,7 @@ An example of an options file is
 
   # use a special compiler (g++ version 3.4) and install to a custom
   # directory, default is /usr/local/bin
-  CONFIGURE_FLAGS="CXX=g++-3.4 --prefix='/tmp/Hu Hu'"
+  CONFIGURE_FLAGS="CXX=g++-4.8 --prefix='/tmp/Hu Hu'"
   # Set the default target of make to install. Now the call above will
   # not just build the DUNE modules but also install it
    MAKE_FLAGS=install

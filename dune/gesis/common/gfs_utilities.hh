@@ -691,7 +691,6 @@ namespace Dune {
 
 
     // 
-    // Adrian:
     // This class is inherited from DiscreteGridFunction.
     // Extra feature:
     // New method evaluate_on_leaf( maxGridLevel,...)

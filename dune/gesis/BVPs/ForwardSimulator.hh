@@ -7,7 +7,7 @@
 #define DUNE_GESIS_FORWARDSIMULATOR_HH
 
 
-#include <dune/gesis/common/my_gfs_utilities.hh>
+#include <dune/gesis/common/gfs_utilities.hh>
 
 
 // include header file for source terms
