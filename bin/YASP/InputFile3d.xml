@@ -19,12 +19,12 @@
       vtk_plot_yfield="yes"
       vtk_plot_wells="no"
       vtk_plot_head="yes"
-      vtk_plot_element_ordering="yes"
+      vtk_plot_element_ordering="no"
       vtk_plot_q="yes"
       vtk_plot_m0="yes"
       vtk_plot_m1="yes"
       vtk_plot_y_old="yes"
-      vtk_plot_trialfields="yes"
+      vtk_plot_trialfields="no"
       vtk_plot_adjoint_head="no"
       vtk_plot_adjoint_m0="no"
       vtk_plot_adjoint_m1="no"
@@ -42,15 +42,15 @@
       new_YField="no"
       new_Eigenvalues="no"
       synthetic="yes"
-      head_forward="off"
       using_existing_Yold="yes"
       refine_estimate="0"
+      head_forward="off"
       transport_forward="off"
       heat_forward="off"
       moments_geoeletric_potential_forward="off"
       lnK_inversion="off"
       head_inversion="on"
-      transport_inversion_m0="on"
+      transport_inversion_m0="off"
       transport_inversion_m1="on"
       heat_mean_arrival_time_inversion="off"
       moments_geoeletric_potential_inversion="off"
@@ -67,7 +67,7 @@
   <!-- ***************************************** -->
   <domain_data>
     <extensions>51.2   51.2   5</extensions>
-    <virtual_nCells>32  32  4</virtual_nCells>
+    <virtual_nCells>256  256  50</virtual_nCells>
     <lineplot>
       <startpoint>0.0  0.0  0.0</startpoint>
       <endpoint>10.0  10.0  10.0</endpoint>
@@ -148,7 +148,7 @@
   <!-- -->
   <inversion_parameters
       L_prior="on"
-      max_iter="2"
+      max_iter="20"
       lim_stepsize="0.75"
       weighting_lim="1E-3"
       dY_lim="0.01"
@@ -183,7 +183,7 @@
   <!-- ***************************************** -->
   <!-- Setups for the calculations:              -->
   <!-- ***************************************** -->
-  <Setups total_setups="1">
+  <Setups total_setups="4">
     <!-- -->
     <!-- -->
     <!-- ***************************************** -->
