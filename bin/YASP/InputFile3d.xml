@@ -24,7 +24,7 @@
       vtk_plot_m0="yes"
       vtk_plot_m1="yes"
       vtk_plot_y_old="yes"
-      vtk_plot_trialfields="yes"
+      vtk_plot_trialfields="no"
       vtk_plot_adjoint_head="no"
       vtk_plot_adjoint_m0="no"
       vtk_plot_adjoint_m1="no"
@@ -67,7 +67,7 @@
   <!-- ***************************************** -->
   <domain_data>
     <extensions>51.2   51.2   5</extensions>
-    <virtual_nCells>32  32  4</virtual_nCells>
+    <virtual_nCells>64  64  8</virtual_nCells>
     <lineplot>
       <startpoint>0.0  0.0  0.0</startpoint>
       <endpoint>10.0  10.0  10.0</endpoint>
