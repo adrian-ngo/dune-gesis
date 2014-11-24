@@ -71,6 +71,26 @@ Furthermore, the following external libraries are required.
   See http://www.fftw.org/download.html.
 
 
+Optional dependencies
+---------------------
+* Adaptive mesh refinement in 2-D (sequential mode) requires UG (version 3.11.0 or higher).
+  See http://www.iwr.uni-heidelberg.de/iwrwikiequipment/software/ug.
+* Adaptive mesh refinement in 3-D (parallel with dynamic load balancing) requires the DUNE module dune-alugrid (version 2.3 or higher).
+  See http://users.dune-project.org/projects/dune-alugrid
+
+
+
+Recommended software for the visualization of output data
+---------------------------------------------------------
+* Paraview (Graphical User Interface for displaying VTK files.)
+  See http://www.paraview.org/.
+* h5tovtk (Command-line tool to the convert HDF5 format into the vtk format, from the h5utils collection.)
+  See http://www.hdfgroup.org/tools5app.html.
+* The Python scripts listed inside the 'tools/' directory require Python libararies numpy, h5py and matplotlib.
+
+
+
+
 License
 -------
 
