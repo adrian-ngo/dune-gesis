@@ -1,0 +1,119 @@
+DUNE-GESIS
+==========
+
+This is version 1.0.1-rc1 of the DUNE-GESIS module.
+
+GESIS (GEoStatistical Inversion based on Stationary problems) 
+is a collection of applications for the solution of 
+(1) the steady-state groundwater flow problem,
+(2) the steady-state groundwater solute transport,
+(3) the large-scale inverse problem 
+    (estimating the hydraulic conductivity of a confined aquifer 
+    from measurements of the hydraulic head or the temporal moments 
+    of a tracer concentration) 
+    using the quasi-linear geostatistical approach (QLGA).
+
+
+The following six applications can be built:
+
+1. gesis2dDG: solves (1)+(2)+(3) on a structured 2-D mesh with rectangular elements 
+              (using the DUNE-YASP grid)
+
+2. gesis3dDG: solves (1)+(2)+(3) on a structured 3-D mesh with rectangular elements 
+              (using the DUNE-YASP grid)
+
+3. gesisUG2dDG: solves (1) on a structured 2-D mesh with rectangular elements,
+                solves (2) on a locally refined 2-D mesh with non-conforming refinement of rectangular elements
+                (using the UG grid, sequential version only)
+
+4. gesisALU3dDG: solves (1) on a structured 3-D mesh with rectangular elements,
+                 solves (2) on a locally refined 3-D mesh with non-conforming refinement of rectangular elements
+                 (using the dune-alugrid module, parallelized with dynamic load-balancind)
+
+5. gesis2dFEM: solves (1)+(2)+(3) on a structured 2-D mesh with rectangular elements 
+              (using the DUNE-YASP grid)
+
+6. gesis3dFEM: solves (1)+(2)+(3) on a structured 3-D mesh with rectangular elements 
+              (using the DUNE-YASP grid)
+
+Applications 1-4 are based on the cell-centered finite volume and the discontinuous Galerkin schemes (CCFV/DG),
+applications 5-6 are based on the standard Galerkin FEM method and the streamline diffusion method (FEM/SDFEM).
+
+If you need help, please contact the author <ngo@eclipso.de>.
+
+
+
+
+Dependencies
+------------
+
+DUNE-GESIS depends on the following software packages:
+
+* The DUNE core modules, version 2.3.1.
+* The DUNE module dune-typetree, version 2.3.1.
+* The DUNE module dune-pdelab, version 2.0.0.
+* DUNE-GESIS uses lots and lots of templates, so you need a decent C++ compiler.
+  C++11 support is required. 
+  It is tested for gcc 4.8.2, gcc 4.8.3 and clang 3.4.
+
+For a full explanation of the DUNE installation process please read
+the installation notes [2] or the build system HOWTO [3].
+
+Furthermore, the following external libraries are required.
+
+* The Boost PropertyTree (version 1.47.0 or higher) 
+  See http://www.boost.org/doc/libs/1_47_0/doc/html/property_tree.html.
+
+* The FFTW library (version 3.3.2 or higher).
+  See http://www.hdfgroup.org/HDF5/release/obtain5.html.
+
+* The HDF5 library (version 1.8.13 or higher).
+  See http://www.fftw.org/download.html.
+
+
+Optional dependencies
+---------------------
+* Adaptive mesh refinement in 2-D (sequential mode) requires UG (version 3.11.0 or higher).
+  See http://www.iwr.uni-heidelberg.de/iwrwikiequipment/software/ug.
+* Adaptive mesh refinement in 3-D (parallel with dynamic load balancing) requires the DUNE module dune-alugrid (version 2.3 or higher).
+  See http://users.dune-project.org/projects/dune-alugrid
+
+
+
+Recommended software for the visualization of output data
+---------------------------------------------------------
+* Paraview (Graphical User Interface for displaying VTK files.)
+  See http://www.paraview.org/.
+* h5tovtk (Command-line tool to the convert HDF5 format into the vtk format, from the h5utils collection.)
+  See http://www.hdfgroup.org/tools5app.html.
+* The Python scripts listed inside the 'tools/' directory require Python libararies numpy, h5py and matplotlib.
+
+
+
+
+License
+-------
+
+The PDELab library, headers and test programs are free open-source software,
+dual-licensed under version 3 or later of the GNU Lesser General Public License
+and version 2 of the GNU General Public License with a special run-time exception.
+
+See the file COPYING for full copying permissions.
+
+Installation
+------------
+
+Short installation instructions can be found in file INSTALL. For the
+full instructions please see [1].
+ 
+
+Links
+-----
+
+0. http://www.dune-project.org/pdelab/
+1. http://www.dune-project.org
+2. http://www.dune-project.org/doc/installation-notes.html
+3. http://dune-project.org/doc/buildsystem/buildsystem.pdf
+4. http://gcc.gnu.org/onlinedocs/libstdc++/faq.html#faq.license
+5. http://lists.dune-project.org/mailman/listinfo/dune-pdelab
+6. http://users.dune-project.org/projects/dune-pdelab/issues
