@@ -124,15 +124,14 @@ namespace Dune{
           } // end of loop over leaf elements
   
           // write the sensitivity to the hard disc
-          HDF5Tools::
-            write_parallel_to_HDF5(
-                                   gv
-                                   , inputdata
-                                   , Sensitivity
-                                   , "/Sensitivity"
-                                   , inputdata.domain_data.nCells
-                                   , dir.Sensitivity_h5file[global_meas_id]
-                                   );
+          HDF5Tools::h5g_pWrite(
+                                gv
+                                , Sensitivity
+                                , dir.Sensitivity_h5file[global_meas_id]
+                                , "/Sensitivity"
+                                , inputdata
+                                , inputdata.domain_data.nCells
+                                );
 
 
 
@@ -181,14 +180,13 @@ namespace Dune{
 	
               // needed for the HDF5 reading
               Vector<UINT> read_local_count,read_local_offset;
-              HDF5Tools::read_sequential_from_HDF5(
-                                                   Sensitivity
-                                                   , "/Sensitivity"
-                                                   , read_local_count
-                                                   , read_local_offset
-                                                   , dir.Sensitivity_h5file[global_meas_id]
-                                                   , inputdata
-                                                   );
+              HDF5Tools::h5g_Read( Sensitivity
+                                   , dir.Sensitivity_h5file[global_meas_id]
+                                   , "/Sensitivity"
+                                   , read_local_offset
+                                   , read_local_count
+                                   , inputdata
+                                   );
             }
        
             /*

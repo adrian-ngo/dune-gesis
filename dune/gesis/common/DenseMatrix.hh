@@ -251,13 +251,11 @@ namespace Dune {
         std::vector<UINT> dimensions(2,0);
         dimensions[0]=(UINT)rows;
         dimensions[1]=(UINT)cols;
-        HDF5Tools::
-          write_sequential_to_HDF5_without_DUNE(
-                                                dimensions
-                                                , data
-                                                , dataname
-                                                , filename
-                                                );
+        HDF5Tools::h5_Write( data,
+                             filename,
+                             dataname,
+                             dimensions
+                            );
       }
 
       template<typename IDT>
@@ -272,14 +270,13 @@ namespace Dune {
 
         Vector<UINT> local_count(2,0), local_offset(2,0);
 
-        HDF5Tools::
-          read_sequential_from_HDF5( data
-                                     , dataname
-                                     , local_count
-                                     , local_offset
-                                     , filename
-                                     , inputdata
-                                     );
+        HDF5Tools::h5g_Read( data
+                             , filename
+                             , dataname
+                             , local_offset
+                             , local_count
+                             , inputdata
+                             );
         rows=local_count[0];
         cols=local_count[1];
       }

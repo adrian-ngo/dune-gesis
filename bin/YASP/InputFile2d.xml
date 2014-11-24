@@ -14,7 +14,7 @@
 #define VERBOSITY_L_CONTRIB       8
 #define VERBOSITY_DEBUG_LEVEL     9
 -->
-<inputfile verbosity="6">
+<inputfile verbosity="2">
   <plot_options
       vtk_plot_yfield="yes"
       vtk_plot_wells="no"
@@ -23,15 +23,16 @@
       vtk_plot_q="yes"
       vtk_plot_m0="yes"
       vtk_plot_m1="yes"
-      vtk_plot_adjoint_head="yes"
-      vtk_plot_adjoint_m0="yes"
-      vtk_plot_adjoint_m1="yes"
-      vtk_plot_sensitivities="yes"
-      vtk_plot_cross_covariances="yes"
+      vtk_plot_adjoint_head="no"
+      vtk_plot_adjoint_m0="no"
+      vtk_plot_adjoint_m1="no"
+      vtk_plot_sensitivities="no"
+      vtk_plot_cross_covariances="no"
       vtk_plot_y_smooth="no"
-      vtk_plot_y_try="yes"
-      vtk_plot_h_old="yes"
-      vtk_plot_m0_old="yes"
+      vtk_plot_y_try="no"
+      vtk_plot_y_old="yes"
+      vtk_plot_h_old="no"
+      vtk_plot_m0_old="no"
       />
   <!-- ***************************************** -->
   <!-- General switches: -->
@@ -39,7 +40,7 @@
   <problem_types 
       new_YField="yes"  
       new_Eigenvalues="yes"
-      using_existing_Yold="yes"
+      using_existing_Yold="no"
       refine_estimate="0"
       synthetic="yes" 
       head_forward="off" 
@@ -48,13 +49,13 @@
       moments_geoeletric_potential_forward="off"
       lnK_inversion="off" 
       head_inversion="on"
-      transport_inversion_m0="on" 
+      transport_inversion_m0="off" 
       transport_inversion_m1="on" 
       heat_mean_arrival_time_inversion="off" 
       moments_geoeletric_potential_inversion="off"
       conditional_realization="off"
       estimation_variance_only="off"
-      generate_measurement_data="on"
+      generate_measurement_data="off"
       />
   <!-- ***************************************** -->
   <!-- Domain Data: -->
@@ -96,7 +97,7 @@
         thermal_conductivity="2"
         kappa="0.045"
         sigma0="0.03">
-      <correlationlengths>1.0  1.0</correlationlengths>
+      <correlationlengths>4.0  4.0</correlationlengths>
     </zone>
 <!--
     <zone 
@@ -176,7 +177,7 @@
   <!-- -->
   <inversion_parameters
       L_prior="on"
-      max_iter="1"
+      max_iter="10"
       lim_stepsize="0.75" 
       weighting_lim="1E-3"
       dY_lim="0.05" 
@@ -213,7 +214,7 @@
   <!-- ***************************************** -->
   <!-- Setups for the calculations:              -->
   <!-- ***************************************** -->
-  <Setups total_setups="4">
+  <Setups total_setups="1">
     <!-- -->
     <!-- -->
     <!-- ***************************************** -->

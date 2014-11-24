@@ -1,8 +1,21 @@
-/* 
+/*
  * File:   HDF5Tools.hh
- * Author: Adrian Ngo / Ronnie Schwede, 2010-2013
- * 
- * Last modified: 05.04.2013
+ * Author: Adrian Ngo / Ronnie Schwede, 2010-2014
+ *
+ *  This requires the MPI version of HDF5.
+ *
+ *  Overview of HDF5 methods:
+ *  h5_Write   : sequential write of multi-dim array to HDF5 file
+ *  h5_Read    : sequential read of multi-dim array from HDF5 file
+ *  h5_pWrite  : parallel write of multi-dim array to HDF5 file
+ *  h5_pRead   : parallel read of multi-dim array from HDF5 file
+ *  h5g_Write  : sequential write of grid data to HDF5 file
+ *  h5g_Read   : sequential read of grid data from HDF5 file
+ *  h5g_pWrite : parallel write of grid data to HDF5 file
+ *  h5g_pRead  : parallel read of grid data from HDF5 file
+ *  h5_pAppend : parallel append of multi-dim array to exisiting HDF5 file
+ *  h5_pWrite1d: parallel write of local 1d arrays to a global 1d array on one continuous disjointly hyperslabbed HDF5 file
+ *  h5_pRead1d : parallel read of local 1d arrays from a global 1d array on one continuous disjointly hyperslabbed HDF5 file
  *
  */
 
@@ -23,14 +36,11 @@ namespace Dune {
 
 
     class HDF5Tools{
-      
+
     private:
       HDF5Tools(){};
 
     public:
-
-      inline static void blob(){
-      };
 
       /*
        * Note that in hdf5, all array indices are ordered the other way round!
@@ -59,16 +69,14 @@ namespace Dune {
 
 
 
-      /** Function to create hdf5 file. It stores the data of the virtual Y-field vector in spatial format such that hyperslabs of data can be cut out later ( see function read_parallel_from_HDF5() )
+      /** Function to create hdf5 file. It stores the data of the virtual Y-field vector in spatial format such that hyperslabs of data can be cut out later ( see function h5g_pRead() )
        *
        \tparam data = vector that is been stored. (one processor only!!!)
        \tparam data_name = name/location where the data a stored in the hdf5-file
        \tparam nCells = numbers of virtual cells in each dimension
        \tparam nChunks = numbers of chunks (needed for hdf5) in each dimension
        \tparam gridsizes = virtual grid-sizes, needed only for extra data
-       \tparam data_filename = name of the hdf5 file where all the data will be stored
-       \tparam meta_title = display title for meta-file
-       \tparam meta_filename = name of the meta file
+       \tparam filename = name of the hdf5 file where all the data will be stored
        *
        *
        *
@@ -77,36 +85,32 @@ namespace Dune {
        for a documentation of the HDF5 API.
        *
        */
-      // counterparts:
-      // void read_sequential_from_HDF5( )
-      // void read_parallel_from_HDF5( )
       template<typename IDT>
-      static void write_sequential_to_HDF5( 
-                                           const Vector<REAL> &data
-                                           , const std::string& data_name
-                                           , const IDT& inputdata
-                                           , const std::string& data_filename
-                                           , const std::string& meta_title="default"
-                                            )
+      static void h5g_Write(
+                            const Vector<REAL> & data
+                            , const std::string & filename
+                            , const std::string & groupname
+                            , const IDT & inputdata
+                            )
       {
         Dune::Timer watch;
-        logger << "write_sequential_to_HDF5: " << data_filename << std::endl;
+        logger << "h5g_Write: " << filename << std::endl;
 
         UINT dim = inputdata.domain_data.nCells.size();
 
-        //std::cout << std::endl << "write_sequential_to_HDF5: dim = " << dim << std::endl;
-        logger << "write_sequential_to_HDF5: data_name = " << data_name << std::endl;
+        //std::cout << std::endl << "h5g_Write: dim = " << dim << std::endl;
+        logger << "h5g_Write: groupname = " << groupname << std::endl;
 
         /* Create a new file using default properties. */
-        hid_t file_id = H5Fcreate( 
-                                  data_filename.c_str()    // name of the file to be created
+        hid_t file_id = H5Fcreate(
+                                  filename.c_str()    // name of the file to be created
                                   , H5F_ACC_TRUNC          // if you are trying to create a file that exists already, the existing file will be truncated, i.e., all data stored on the original file will be erased
                                   , H5P_DEFAULT            // default file creation property list
                                   , H5P_DEFAULT            // default file access property list
-                                   );
+                                  );
 
         assert( file_id > -1 );
-        //logger << "write_sequential_to_HDF5: h5-file created: " << data_filename.c_str() << std::endl;
+        //logger << "h5g_Write: h5-file created: " << filename.c_str() << std::endl;
 
 
         hsize_t mdims[1];
@@ -114,11 +118,11 @@ namespace Dune {
         hid_t memspace_id = H5Screate_simple(           // H5Screate_simple creates a new simple dataspace and opens it for access, returning a dataset identifier.
                                              1          // rank=1 is the number of dimensions used in the dataspace
                                              , mdims    // mdims is a one-dimensional array of size rank specifying the size of each dimension of the dataset.
-                                             , NULL     // maxdims is an array of the same size specifying the upper limit on the size of each dimension. maxdims may be NULL, in which case the maxdims == mdims. 
+                                             , NULL     // maxdims is an array of the same size specifying the upper limit on the size of each dimension. maxdims may be NULL, in which case the maxdims == mdims.
                                                         ); // must be released with H5Sclose or resource leaks will occur
 
         assert( memspace_id > -1 );
-        //logger << "write_sequential_to_HDF5: memspace_id created." << std::endl;
+        //logger << "h5g_Write: memspace_id created." << std::endl;
 
 
         /* Create the dataspace for the dataset.
@@ -127,7 +131,7 @@ namespace Dune {
         hsize_t mindims = 50000;
 
         hsize_t dims[ dim ];
-        
+
         for(UINT i=0;i<dim;i++){
           dims[dim-i-1] = (hsize_t) ( inputdata.domain_data.nCells[i] );
           mindims = std::min( mindims, dims[dim-i-1] );
@@ -136,13 +140,13 @@ namespace Dune {
 
         //logger << "dims [0] = "<< dims[0]<<std::endl;
         //logger << "dims [1] = "<< dims[1]<<std::endl;
-        hid_t dataspace_id = H5Screate_simple( 
+        hid_t dataspace_id = H5Screate_simple(
                                               dim     // number of dimensions = rank
                                               , dims  // vector containing sizes per dimension
                                               , NULL  // maxdims == dims
-                                               );
+                                              );
         assert( dataspace_id > -1 );
-        //logger << "write_sequential_to_HDF5: dataspace_id created." << std::endl;
+        //logger << "h5g_Write: dataspace_id created." << std::endl;
 
 
 
@@ -150,11 +154,11 @@ namespace Dune {
                                    H5P_DATASET_CREATE  // Properties for dataset creation
                                                        );
         assert( plist_id > -1 );
-        //logger << "write_sequential_to_HDF5: plist_id created." << std::endl;
+        //logger << "h5g_Write: plist_id created." << std::endl;
 
 
         herr_t status;
-        
+
         hsize_t maxnchunks = 1;
         for(UINT i=0;i<dim;i++){
           maxnchunks = std::max( maxnchunks, (hsize_t) inputdata.domain_data.nChunks[i] );
@@ -175,37 +179,37 @@ namespace Dune {
 
 
         status = H5Pset_chunk( plist_id
-                              , dim             // must be == rank of the dataset
-                              , chunk_dims      // The values of the check_dims array define the size of the chunks to store the dataset's raw data. The unit of measure for check_dims values is dataset elements. 
+                               , dim             // must be == rank of the dataset
+                               , chunk_dims      // The values of the check_dims array define the size of the chunks to store the dataset's raw data. The unit of measure for check_dims values is dataset elements.
                                );
 
         if( status < 0 )
           logger << "Warning : H5Pset_chunk() failed." << std::endl;
 
         assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: H5Pset_chunk() o.k." << std::endl;
+        //logger << "h5g_Write: H5Pset_chunk() o.k." << std::endl;
 
 
         status = H5Pset_shuffle( plist_id ); // Sets the shuffle filter, H5Z_FILTER_SHUFFLE, in the dataset creation property list. This re-orders data to simplify compression.
         assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: H5Pset_shuffle() o.k." << std::endl;
-  
+        //logger << "h5g_Write: H5Pset_shuffle() o.k." << std::endl;
+
 
         status = H5Pset_deflate( plist_id, 1 ); // Sets deflate (GNU gzip) compression method and compression level. ( 0 < level < 9, lower = faster, but less compression )
         assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: H5Pset_deflate() o.k." << std::endl;
+        //logger << "h5g_Write: H5Pset_deflate() o.k." << std::endl;
 
 
 
         /* Create the dataset. */
         hid_t dataset_id = H5Dcreate( file_id,            // Location identifier: id of the file or the group within which to create the dataset
-                                      data_name.c_str(),  // Dataset name: may be either an absolute path in the file or a relative path from file_id naming the dataset. 
+                                      groupname.c_str(),  // Dataset name: may be either an absolute path in the file or a relative path from file_id naming the dataset.
                                       HDF5_DATA_TYPE,     // Datatype identifier, here: IEEE floating point 32-bit or 64-bit, see my_macros.hh
-                                      dataspace_id ,      // Dataspace identifier 
+                                      dataspace_id ,      // Dataspace identifier
                                       plist_id            // Dataset creation property list identifier
                                       );
         assert( dataset_id > -1 );
-        //logger << "write_sequential_to_HDF5: dataset_id created." << std::endl;
+        //logger << "h5g_Write: dataset_id created." << std::endl;
 
 
         /* Write the dataset. */
@@ -218,44 +222,33 @@ namespace Dune {
                           , &(data[0])    // application memory buffer
                                                    );
         assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: H5Dwrite( " <<data_name.c_str()<<" ) o.k." << std::endl;
+        //logger << "h5g_Write: H5Dwrite( " <<groupname.c_str()<<" ) o.k." << std::endl;
 
         status = H5Sclose( dataspace_id );
         assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: dataspace_id closed." << std::endl;
+        //logger << "h5g_Write: dataspace_id closed." << std::endl;
 
         status = H5Sclose( memspace_id );
         assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: memspace_id closed." << std::endl;
+        //logger << "h5g_Write: memspace_id closed." << std::endl;
 
         status = H5Dclose( dataset_id );
         assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: dataset_id closed." << std::endl;
+        //logger << "h5g_Write: dataset_id closed." << std::endl;
 
 
         /* Close the property list. */
         status = H5Pclose( plist_id );
         assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: H5Pclose(plist_id) done." << std::endl;
+        //logger << "h5g_Write: H5Pclose(plist_id) done." << std::endl;
 
         /* Close the file. */
         status = H5Fclose( file_id );
         assert( status > -1 );
-        //logger << "write_sequential_to_HDF5: H5Fclose( file_id ) done." << std::endl;
-
-        /* Write meta file for display in paraview */
-        /*
-        std::string meta_filename;
-        meta_filename = data_filename + ".xmf";
-        writeMetaFileForHDF5( meta_filename,
-                              data_filename,
-                              data_name,
-                              &(dims[0]),
-                              meta_title  );
-        */
+        //logger << "h5g_Write: H5Fclose( file_id ) done." << std::endl;
 
         std::stringstream jobtitle;
-        jobtitle << "write_sequential_to_HDF5: writing " << data_filename;
+        jobtitle << "h5g_Write: writing " << filename;
         General::log_elapsed_time( watch.elapsed(),
                                    inputdata.verbosity,
                                    "IO",
@@ -274,50 +267,42 @@ namespace Dune {
        * \tparam gv is the gridview
        * \tparam inputdata is the inputdata object
        * \tparam data are the data which are written into the file (current hyperslab)
-       * \tparam data_name is the name/path where the data are stored in the HDF5 file
+       * \tparam groupname is the name/path where the data are stored in the HDF5 file
        * \tparam nCells  the number of virtual(global) cells for each dimension
        * \tparam nChunks = numbers of chunks (needed for hdf5) in each dimension
        * \tparam gridsizes = virtual grid-sizes, needed only for extra data (not used so far)
-       * \tparam data_filename = name of the hdf5 file where all the data will be stored
-       * \tparam writemetafile = flag indicating if a meta file should be written
-       * \tparam meta_title = display title for meta-file
-       * \tparam meta_filename = name of the meta file
+       * \tparam filename = name of the hdf5 file where all the data will be stored
        *
        See
        http://www.hdfgroup.org/HDF5/doc/RM/RM_H5F.html
        for a documentation of the HDF5 API.
        *
        */
-
-      // counterparts:
-      // void read_parallel_from_HDF5( )
-      // void read_sequential_from_HDF5( )
       template<typename GV>
-      static void write_parallel_to_HDF5( const GV& gv,
-                                          const CInputData& inputdata,
-                                          const Vector<REAL> &datavector,
-                                          const std::string& data_name,
-                                          const Vector<UINT> &nCells,
-                                          const std::string& data_filename,
-                                          const int blocksizePerDimension = 1,
-                                          const FEMType::Type femtype=FEMType::DG,
-                                          const int current_grid_level=0,
-                                          const bool preserve_structure=true,
-                                          const std::string& meta_title="default"
-                                          )
+      static void h5g_pWrite( const GV& gv,
+                              const Vector<REAL>& datavector,
+                              const std::string& filename,
+                              const std::string& groupname,
+                              const CInputData& inputdata,
+                              const Vector<UINT>& nCells,
+                              const int blocksizePerDimension = 1,
+                              const FEMType::Type femtype=FEMType::DG,
+                              const int current_grid_level=0,
+                              const bool preserve_structure=true
+                              )
       {
 
         Dune::Timer watch;
 
-        logger << "write_parallel_to_HDF5: ... " 
-               << data_filename << std::endl;
-        
+        logger << "h5g_pWrite: ... "
+               << filename << std::endl;
+
         //get the communicator of the dune grid
         //const Dune::MPIHelper::MPICommunicator &comm = gv.comm();
-  
+
         //Info variable need for the HDF5
         MPI_Info mpiInfo = MPI_INFO_NULL;
-  
+
         //some needed variables and typdefs
         const UINT dim = GV::dimension;  // dimensionality of the problem (2-d or 3-d)
 
@@ -325,14 +310,14 @@ namespace Dune {
         // Since datavector contains ALL elements of the vector backend,
         // we must consider over ALL cells. Neglecting overlap cells would
         // shift the solution on the HDF file, leading to wrong inversion results!
-        const Dune::PartitionIteratorType partitiontype 
+        const Dune::PartitionIteratorType partitiontype
           = Dune::All_Partition;
 
 
         typedef typename GV::template Codim<0>::template Partition<partitiontype>::Iterator LeafIterator;
 
         //typedef typename GV::Grid GRIDTYPE;
-  
+
         //variables for defining the offset and the count in the different dimensions
         Vector<UINT> max_index( dim, 0 );
         Vector<UINT> min_index( dim, 100000 );
@@ -342,7 +327,7 @@ namespace Dune {
           Remark: From now on, we are working solemnly with the virtual Y-field grid, using virtual indices. Later, in the evaluate2d() and evaluate3d() member functions of the class kfieldgenerator, we are doing the very same conversion from a global coordinate to the virtual global index. That's why it can work independently of the grid type!
           2.) Translate this global coordinate 'x' into its corresponding Yfield-tensor-index 'global_index'. This requires only the virtual gridsize of the virtual Yfield grid. So 'global_index' is just a virtual index.
           3.) 'min_index' corresponds to the virtual cell with the lowest coordinate values in the current hyperslab. It is the offset (= translational displacement) from the very first virtual cell (0,0).
-          4.) 'local_count[i]' is the number of virutal cells in the dimension 'i' of the current hyperslab. 
+          4.) 'local_count[i]' is the number of virutal cells in the dimension 'i' of the current hyperslab.
           Remark: The volume of the current hyperslab is 'nAllLocalCells'. 'mappersize' == 'nAllLocalCells' only if the resolution of the yaspgrid == resolution of the virtual grid !
 
         */
@@ -357,7 +342,7 @@ namespace Dune {
         if( current_grid_level > 0 )
           gridsizes /= REAL( gridLevelFactor );
 
-        logger << "write_parallel_to_HDF5: gridsizes = "
+        logger << "h5g_pWrite: gridsizes = "
                << gridsizes << std::endl;
 
         for (LeafIterator it = gv.template begin<0,partitiontype> ()
@@ -381,67 +366,67 @@ namespace Dune {
               max_index[i] = std::max( global_index[i], max_index[i] );
               min_index[i] = std::min( global_index[i], min_index[i] );
             }
-            
+
             //logger << "DEBUG: global-index = ("  << global_index[0] << "," << global_index[1]
             //<< ")" << std::endl;
 
-            // Idee für UG später: 
+            // Idee für UG später:
             // lese direkt punktweise aus der h5-Datei, über den offset[] = global_index[], mit count = (1 1 1) ?
           } // end of loop over leaf elements
 
 
 #ifdef DEBUG_LOG
-        logger << "DEBUG: write_parallel_to_HDF5: nCells = "
+        logger << "DEBUG: h5g_pWrite: nCells = "
                << nCells
                << std::endl;
 
-        logger << "DEBUG: write_parallel_to_HDF5: min_index = "
+        logger << "DEBUG: h5g_pWrite: min_index = "
                << min_index
                << std::endl;
 
-        logger << "DEBUG: write_parallel_to_HDF5: max_index = "
+        logger << "DEBUG: h5g_pWrite: max_index = "
                << max_index
                << std::endl;
 
-        logger << "DEBUG: write_parallel_to_HDF5: hdf5 functions ... "
+        logger << "DEBUG: h5g_pWrite: hdf5 functions ... "
                << std::endl;
 #endif
 
         MPI_Barrier( gv.comm() );
-      
+
         //int mpi_rank = gv.comm().rank();
 
 
         // Set up file access property list with parallel I/O access
         hid_t plist_id = H5Pcreate( H5P_FILE_ACCESS );
-        //logger << "write_parallel_to_HDF5: H5Pcreate() done. plist_id = " 
+        //logger << "h5g_pWrite: H5Pcreate() done. plist_id = "
         //       << plist_id << std::endl;
         assert( plist_id > -1 );
 
 
         herr_t status = H5Pset_fapl_mpio( plist_id, gv.comm(), mpiInfo );
-        //logger << "write_parallel_to_HDF5: H5Pset_fapl_mpio: status = " 
+        //logger << "h5g_pWrite: H5Pset_fapl_mpio: status = "
         // << status << std::endl;
         if( status < 0 )
           logger << "Warning : H5Pset_fapl_mpio() failed." << std::endl;
         assert( status > -1 );
-  
+
         //  Create a new file collectively and release property list identifier.
-        //logger << "write_parallel_to_HDF5: "
+        //logger << "h5g_pWrite: "
         //       << " create file "
-        //       << data_filename.c_str()
+        //       << filename.c_str()
         //       << std::endl;
 
-        hid_t file_id = H5Fcreate( data_filename.c_str(),
+        hid_t file_id = H5Fcreate( filename.c_str(),
                                    H5F_ACC_TRUNC,
                                    H5P_DEFAULT,
                                    plist_id );
         H5Pclose( plist_id );
-        //logger << "write_parallel_to_HDF5: "
-        //       << data_filename.c_str()
+        //logger << "h5g_pWrite: "
+        //       << filename.c_str()
         //       << " file created!" << std::endl;
         assert( file_id > -1 );
-  
+
         //==========================================================
         // "dims_global" defines the filespace of the HDF5 file:
         // It is process-independent and contains all DOFs.
@@ -456,31 +441,31 @@ namespace Dune {
         }
 
         /*
-        std::cout << "DEBUG:  p=" << mpi_rank
-                  << "  dims_global = " << dims_global[0] << "," << dims_global[1]
-#ifdef DIMENSION3
-                  << "," << dims_global[2]
-#endif
-                  << std::endl;
+          std::cout << "DEBUG:  p=" << mpi_rank
+          << "  dims_global = " << dims_global[0] << "," << dims_global[1]
+          #ifdef DIMENSION3
+          << "," << dims_global[2]
+          #endif
+          << std::endl;
         */
-    
+
         //  Create the dataspace for the dataset.
         hid_t filespace = H5Screate_simple( dim, dims_global, NULL );
         assert(filespace>-1);
-        //logger << "write_parallel_to_HDF5:  fileSPACE created!" << std::endl;
-  
-  
+        //logger << "h5g_pWrite:  fileSPACE created!" << std::endl;
+
+
         // Create the dataset with default properties and close filespace.
         hid_t dset_id = H5Dcreate( file_id,
-                                   data_name.c_str(),
+                                   groupname.c_str(),
                                    HDF5_DATA_TYPE,    // Datatype identifier, here: IEEE floating point 32-bit or 64-bit, see my_macros.hh
                                    filespace,
                                    H5P_DEFAULT );
         H5Sclose(filespace);
         assert(dset_id>-1);
-        //logger<< "write_parallel_to_HDF5:  dataset created!" << std::endl;
-  
-  
+        //logger<< "h5g_pWrite:  dataset created!" << std::endl;
+
+
         // set the count in the different dimensions (determine the size of the hyperslab)
         hsize_t count[ dim ];
 
@@ -491,23 +476,23 @@ namespace Dune {
             // be careful!!! needed when vertex-based data instead of cell based data
             count[dim-i-1] = max_index[i] - min_index[i] + 2; // Q1-FEM: in each dimension, #nodes = #elements+1
           }
-          else{ 
+          else{
             count[dim-i-1] = max_index[i] - min_index[i] + 1;
             count[dim-i-1] *= blocksizePerDimension;
           }
 #ifdef DEBUG_LOG
-          logger << "DEBUG: write_parallel_to_HDF5: count[" << dim-i-1 << "] = " << count[dim-i-1] << std::endl;
+          logger << "DEBUG: h5g_pWrite: count[" << dim-i-1 << "] = " << count[dim-i-1] << std::endl;
 #endif
         }
 
 
         //define the total size of the local data
-  
+
         hsize_t nAllLocalCells = count[0] * count[1];
 #ifdef DIMENSION3
         nAllLocalCells *= count[2];
 #endif
-  
+
         //set the offset of the data!
         hsize_t offset[ dim ];
         for(UINT i=0; i<dim; i++ ) {
@@ -520,14 +505,14 @@ namespace Dune {
         }
 
         /*
-        std::cout << "DEBUG:  p=" << mpi_rank
-                  << "  count =" << count[0] << "," << count[1]
-#ifdef DIMENSION3
-                  << "," << count[2]
-#endif
-                  << std::endl;
+          std::cout << "DEBUG:  p=" << mpi_rank
+          << "  count =" << count[0] << "," << count[1]
+          #ifdef DIMENSION3
+          << "," << count[2]
+          #endif
+          << std::endl;
         */
-  
+
         // Each process defines dataset in memory and writes it to the hyperslab in the file.
 
         hid_t memspace_id = -1;
@@ -537,31 +522,31 @@ namespace Dune {
         }
 
 
-        //logger<< "write_parallel_to_HDF5:  memspace created!" << std::endl;
-  
+        //logger<< "h5g_pWrite:  memspace created!" << std::endl;
+
         // Select hyperslab in the file.
         filespace = H5Dget_space( dset_id );
 
         /*
-        REAL d = datavector.one_norm();
-        std::cout << "DEBUG:  p= " << mpi_rank
-                  << "  |datavector| = " << d 
-                  << "  min_index = " << min_index[0] << "," << min_index[1]
-#ifdef DIMENSION3
-                  << "," << min_index[2]
-#endif
-                  << "  max_index= " << max_index[0] << "," << max_index[1]
-#ifdef DIMENSION3
-                  << "," << max_index[2]
-#endif
-                  << std::endl;
+          REAL d = datavector.one_norm();
+          std::cout << "DEBUG:  p= " << mpi_rank
+          << "  |datavector| = " << d
+          << "  min_index = " << min_index[0] << "," << min_index[1]
+          #ifdef DIMENSION3
+          << "," << min_index[2]
+          #endif
+          << "  max_index= " << max_index[0] << "," << max_index[1]
+          #ifdef DIMENSION3
+          << "," << max_index[2]
+          #endif
+          << std::endl;
 
-        std::cout << "DEBUG:  p=" << mpi_rank
-                  << "  offset = "  << offset[0] << "," << offset[1]
-#ifdef DIMENSION3
-                  << "," << offset[2]
-#endif
-                  << std::endl;
+          std::cout << "DEBUG:  p=" << mpi_rank
+          << "  offset = "  << offset[0] << "," << offset[1]
+          #ifdef DIMENSION3
+          << "," << offset[2]
+          #endif
+          << std::endl;
         */
 
         H5Sselect_hyperslab( filespace,
@@ -571,17 +556,17 @@ namespace Dune {
                              count,
                              NULL    // <==> block={1,1,1}
                              );
-        //logger<< "write_parallel_to_HDF5:  hyperslab selected!" << std::endl;
-  
+        //logger<< "h5g_pWrite:  hyperslab selected!" << std::endl;
+
         // Create property list for collective dataset write.
         plist_id = H5Pcreate( H5P_DATASET_XFER );
         H5Pset_dxpl_mpio( plist_id, H5FD_MPIO_COLLECTIVE );
         //H5Pset_dxpl_mpio( plist_id, H5FD_MPIO_INDEPENDENT );
 
-        //logger<< "write_parallel_to_HDF5:  properties set!" << std::endl;
-  
+        //logger<< "h5g_pWrite:  properties set!" << std::endl;
+
         // finally write the data to the disk
-        //logger<< "write_parallel_to_HDF5:  writing ... " << std::endl;
+        //logger<< "h5g_pWrite:  writing ... " << std::endl;
 
         if( nAllLocalCells != 0 ){
           status = H5Dwrite( dset_id,
@@ -594,18 +579,18 @@ namespace Dune {
           assert(status>-1);
         }
         else{ // avoid hdf5 blocking
-          status = H5Dwrite( dset_id, 
-                             H5T_NATIVE_DOUBLE, 
-                             H5S_ALL, 
+          status = H5Dwrite( dset_id,
+                             H5T_NATIVE_DOUBLE,
+                             H5S_ALL,
                              filespace,
-                             plist_id, 
+                             plist_id,
                              &( datavector[0] )
                              );
           assert(status>-1);
         }
 
-        logger << "write_parallel_to_HDF5:  .... done (writing) " 
-               << data_filename
+        logger << "h5g_pWrite:  .... done (writing) "
+               << filename
                << std::endl;
 
         // close the used identifyers
@@ -614,9 +599,9 @@ namespace Dune {
         H5Sclose(memspace_id);
         H5Pclose(plist_id);
         H5Fclose(file_id);
-  
+
         std::stringstream jobtitle;
-        jobtitle << "write_parallel_to_HDF5: writing " << data_filename;
+        jobtitle << "h5g_pWrite: writing " << filename;
         General::log_elapsed_time( watch.elapsed(),
                                    gv.comm(),
                                    inputdata.verbosity,
@@ -629,10 +614,10 @@ namespace Dune {
       /** function to retrieve data (sequential) from the hdf5 file
        *
        * \tparam local_data is a 'return value' which gets the data that belongs to the current processor (current hyperslab)
-       * \tparam data_name is the name/path where the data are stored in the HDF5 file
+       * \tparam groupname is the name/path where the data are stored in the HDF5 file
        * \tparam local_count is a 'return value' which gets the number of virtual cells for each dimension
        * \tparam local_offset is a 'return value' which gets the distance of the current hyperslab from the origin.
-       * \tparam data_filename is the filename of the data file
+       * \tparam filename is the filename of the data file
        *
        *
        See
@@ -643,54 +628,47 @@ namespace Dune {
 
 
 
-
-      // counterparts:
-      // void write_sequential_to_HDF5( )
-      // void write_parallel_to_HDF5( )
       template<typename IDT>
-      static void read_sequential_from_HDF5(
-                                            Vector<REAL>& local_data
-                                            , const std::string& data_name
-                                            , Vector<UINT>& local_count
-                                            , Vector<UINT>& local_offset
-                                            , const std::string& data_filename
-                                            , const IDT& inputdata
-                                            , const int iPart=1
-                                            , const int nParts=1
-                                            , const bool bTimerOn=true
-                                            )
+      static void h5g_Read( Vector<REAL>& local_data
+                            , const std::string& filename
+                            , const std::string& groupname
+                            , Vector<UINT>& local_offset
+                            , Vector<UINT>& local_count
+                            , const IDT& inputdata
+                            , const int iPart=1
+                            , const int nParts=1
+                            , const bool bTimerOn=true
+                            )
       {
         Dune::Timer watch;
-   
-        logger << General::getDateAndTime() << "read_sequential_from_HDF5: ... " 
-               << data_filename << std::endl;
+
+        //logger << General::getDateAndTime() << "h5g_Read: ... " << filename << std::endl;
 
         // open the file for reading
-        hid_t file_id=  H5Fopen (data_filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);  
+        hid_t file_id=  H5Fopen (filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
         assert( file_id > -1 );
-        //logger << "read_sequential_from_HDF5(): h5-file open: " << data_filename.c_str() << std::endl;
-  
-        // open the dataset
-        hid_t dataset_id = H5Dopen(file_id, data_name.c_str());
-        assert( dataset_id > -1 );
-        //logger << "read_sequential_from_HDF5(): H5Dopen dataset done." << std::endl;
-    
-        // gwt the dataspace
-        hid_t dataspace_id=H5Dget_space (dataset_id); 
-        assert(dataspace_id>-1);
-        //logger << "read_sequential_from_HDF5(): H5Dget_space  done." << std::endl;
+        //logger << "h5g_Read(): h5-file open: " << filename.c_str() << std::endl;
 
-        // some needed variables 
+        // open the dataset
+        hid_t dataset_id = H5Dopen(file_id, groupname.c_str());
+        assert( dataset_id > -1 );
+        //logger << "h5g_Read(): H5Dopen dataset done." << std::endl;
+
+        // gwt the dataspace
+        hid_t dataspace_id=H5Dget_space (dataset_id);
+        assert(dataspace_id>-1);
+        //logger << "h5g_Read(): H5Dget_space  done." << std::endl;
+
+        // some needed variables
         herr_t status;
         hsize_t dim,*dims;
-  
+
         // get the dimension (2-d or 3-d)
-        //logger << "Getting parameters for reading from data (read all)"<<std::endl; 
+        //logger << "Getting parameters for reading from data (read all)"<<std::endl;
         dim = H5Sget_simple_extent_ndims( dataspace_id );
         //logger << "Got dim = " << dim << std::endl;
-  
-        //logger << "read_sequential_from_HDF5()! ( dim = "<<dim<< " )" << std::endl;
-   
+        //logger << "h5g_Read()! ( dim = "<<dim<< " )" << std::endl;
+
         // get the size of the problem
         dims=(hsize_t*)malloc(dim * sizeof (hsize_t));
 
@@ -699,17 +677,17 @@ namespace Dune {
           logger << "Warning : H5Sget_simple_extent_dims() failed." << std::endl;
 
         assert( status > -1 );
- 
+
         // file the return value. the local_count
         local_count.resize(dim);
         //logger << "Got local_count from dataspace:" << std::endl;
         for( UINT i=0; i<dim; i++ ) {
-            local_count[dim-1-i] = dims[i];
-            //logger << "local_count[" << dim-i-1 << "] = " << local_count[dim-1-i] << std::endl; 
+          local_count[dim-1-i] = dims[i];
+          //logger << "local_count[" << dim-i-1 << "] = " << local_count[dim-1-i] << std::endl;
         }
-    
+
         // set offset(for reading) and offset_local(as return value) to 0 (read all the data, maybe later also used to read only parts, maybe we can kick it out first)
-        // like this it is not nice but works, maybe we change it later!!! 
+        // like this it is not nice but works, maybe we change it later!!!
         // local_size is the size of the data
         hsize_t offset[dim];
         local_offset.resize(dim);
@@ -730,15 +708,15 @@ namespace Dune {
             dims[i]=local_count[dim-1-i];
           }
         }
-        
-        //logger << "local_count[" << 1 << "] = " << local_count[1] << std::endl; 
+
+        //logger << "local_count[" << 1 << "] = " << local_count[1] << std::endl;
         for( UINT i=0; i<dim; i++ ){
           local_size *= local_count[i];
         }
         // create the memory space
         hid_t memspace_id = H5Screate_simple (dim, dims, NULL);
         //hid_t memspace_id = H5Screate_simple (1, &local_size, NULL);
-    
+
         //select the hyperslab-
         status = H5Sselect_hyperslab( dataspace_id,
                                       H5S_SELECT_SET,
@@ -748,12 +726,12 @@ namespace Dune {
                                       NULL  // <==> block={1,1,1}
                                       );
         assert(status>-1);
-        logger << General::getDateAndTime() << "read_sequential_from_HDF5(): hyperslab selected." << std::endl;
+        logger << General::getDateAndTime() << "h5g_Read(): hyperslab selected." << std::endl;
 
         //resize the return data
         if( local_data.size() != local_size )
           local_data.resize( local_size /*mappersize*/ );
-  
+
         /* set up the collective transfer properties list */
         hid_t xferPropList = H5Pcreate (H5P_DATASET_XFER);
         assert( xferPropList > -1 );
@@ -763,12 +741,12 @@ namespace Dune {
         status = H5Dread( dataset_id
                           , H5T_NATIVE_DOUBLE
                           , memspace_id
-                          , dataspace_id // H5S_ALL // 
-                          , xferPropList //H5P_DEFAULT // 
+                          , dataspace_id // H5S_ALL //
+                          , xferPropList //H5P_DEFAULT //
                           , &( local_data[0] )
                           );
         assert(status>-1);
-        logger << General::getDateAndTime() << "read_sequential_from_HDF5(): reading data done." << std::endl;
+        logger << General::getDateAndTime() << "h5g_Read(): reading data done." << std::endl;
 
         // close the identifyers
         H5Dclose (dataset_id);
@@ -777,11 +755,11 @@ namespace Dune {
         free(dims);
         status = H5Fclose( file_id );
         assert( status > -1 );
-        logger << General::getDateAndTime() << "read_sequential_from_HDF5: H5Fclose( file_id ) done." << std::endl;
+        logger << General::getDateAndTime() << "h5g_Read: H5Fclose( file_id ) done." << std::endl;
 
 
         std::stringstream jobtitle;
-        jobtitle << "read_sequential_from_HDF5: reading " << data_filename;
+        jobtitle << "h5g_Read: reading " << filename;
         if( bTimerOn ){
           // log and add to elapsed_IO
           General::log_elapsed_time( watch.elapsed(),
@@ -792,12 +770,12 @@ namespace Dune {
         else {
           // log only to logger
           if( inputdata.verbosity >= VERBOSITY_TIMER_DETAILS ){
-            logger << "Duration:[" 
+            logger << "Duration:["
                    << std::setw(6)
                    << "IO" << "]"
                    << std::setw(15)
                    << std::setprecision(4)
-                   << watch.elapsed() << " sec." 
+                   << watch.elapsed() << " sec."
                    << " for "
                    << jobtitle
                    << std::endl;
@@ -822,10 +800,10 @@ namespace Dune {
        * \tparam gv is the gridview
        * \tparam inputdata is the inputdata object
        * \tparam local_data is a 'return value' which gets the data that belongs to the current processor (current hyperslab)
-       * \tparam data_name is the name/path where the data are stored in the HDF5 file
+       * \tparam groupname is the name/path where the data are stored in the HDF5 file
        * \tparam local_count is a 'return value' which gets the number of virtual cells for each dimension
        * \tparam local_offset is a 'return value' which gets the distance of the current hyperslab from the origin.
-       * \tparam data_filename is the filename of the data file
+       * \tparam filename is the filename of the data file
        *
        *
        See
@@ -833,25 +811,21 @@ namespace Dune {
        for a documentation of the HDF5 API.
        *
        */
-      
-      // counterparts:
-      // void write_parallel_to_HDF5( )
-      // void write_sequential_to_HDF5( )
-      //
+
       template<typename GV,
                Dune::PartitionIteratorType partitiontype = Dune::All_Partition>
-      static void read_parallel_from_HDF5( const GV& gv,
-                                           const CInputData& inputdata,
-                                           Vector<REAL>& local_data,
-                                           const std::string& data_name,
-                                           Vector<UINT>& local_count,
-                                           Vector<UINT>& local_offset,
-                                           const std::string& data_filename,
-                                           const int blocksizePerDimension=1,
-                                           const FEMType::Type femtype=FEMType::DG,
-                                           const int current_grid_level=0
-                                           //, const bool bAllPartition=true
-                                           ) 
+      static void h5g_pRead( const GV& gv,
+                             Vector<REAL>& local_data,
+                             const std::string& filename,
+                             const std::string& groupname,
+                             Vector<UINT>& local_offset,
+                             Vector<UINT>& local_count,
+                             const CInputData& inputdata,
+                             const int blocksizePerDimension=1,
+                             const FEMType::Type femtype=FEMType::DG,
+                             const int current_grid_level=0
+                             //, const bool bAllPartition=true
+                             )
       {
 
         // Dune::PartitionIteratorType partitiontype = Dune::All_Partition;
@@ -860,16 +834,16 @@ namespace Dune {
 
         Dune::Timer watch;
 
-        logger << General::getDateAndTime() << "read_parallel_from_HDF5: " << data_filename << std::endl;
+        logger << General::getDateAndTime() << "h5g_pRead: " << filename << std::endl;
 
         const Dune::MPIHelper::MPICommunicator &comm = gv.comm();
 
         MPI_Info mpiInfo = MPI_INFO_NULL;
-        
+
         const UINT dim = GV::dimension;
         typedef typename GV::template Codim<0>::template Partition<partitiontype>::Iterator LeafIterator;
         //typedef typename GV::Grid GRIDTYPE;
-  
+
         std::vector<UINT> max_index( dim, 0 );
         std::vector<UINT> min_index( dim, 100000 );
 
@@ -878,7 +852,7 @@ namespace Dune {
           Remark: Form now on, we are working solemnly with the virtual Y-field grid, using virtual indices. Later, in the evaluate2d() and evaluate3d() member functions of the class kfieldgenerator, we are doing the very same conversion from a global coordinate to the virtual global index. That's why it can work independently of the grid type!
           2.) Translate this global coordinate 'x' into its corresponding Yfield-tensor-index 'global_index'. This requires only the virtual gridsize of the virtual Yfield grid. So 'global_index' is just a virtual index.
           3.) 'min_index' corresponds to the virtual cell with the lowest coordinate values in the current hyperslab. It is the offset (= translational displacement) from the very first virtual cell (0,0).
-          4.) 'local_count[i]' is the number of virutal cells in the dimension 'i' of the current hyperslab. 
+          4.) 'local_count[i]' is the number of virutal cells in the dimension 'i' of the current hyperslab.
           Remark: The volume of the current hyperslab is 'nAllLocalCells'. 'mappersize' == 'nAllLocalCells' only if the resolution of the yaspgrid == resolution of the virtual grid !
 
         */
@@ -904,10 +878,10 @@ namespace Dune {
         } // end of loop over leaf elements
 
         logger << General::getDateAndTime() << "min/max_index loop done" << std::endl;
-  
 
 
-        /* Do some preparations for accessing the hdf5 file... 
+
+        /* Do some preparations for accessing the hdf5 file...
          * This hyperslab selection works only for a structured grid, I guess!
          * For an unstructured grid, a pointwise hyperslab selection should still be possible.
          */
@@ -920,7 +894,7 @@ namespace Dune {
           {
             local_count[i] = max_index[i] - min_index[i] + 1;  // So far, this is the number of elements per dimension.
 #ifdef DEBUG_LOG
-            logger << "DEBUG: read_parallel_from_HDF5: local_count[" << i << "] = " << local_count[i] << std::endl;
+            logger << "DEBUG: h5g_pRead: local_count[" << i << "] = " << local_count[i] << std::endl;
 #endif
           }
 
@@ -928,7 +902,7 @@ namespace Dune {
           {
             count[i] = (hsize_t) local_count[ dim - i - 1 ];
 #ifdef DEBUG_LOG
-            logger << "DEBUG: read_parallel_from_HDF5: count[" << i <<"] = " << count[i] << std::endl;
+            logger << "DEBUG: h5g_pRead: count[" << i <<"] = " << count[i] << std::endl;
 #endif
           }
 
@@ -939,7 +913,7 @@ namespace Dune {
           else
             local_offset[i] = min_index[i] * blocksizePerDimension;
 #ifdef DEBUG_LOG
-          logger << "DEBUG: read_parallel_from_HDF5: local_offset[" << i << "] = " << local_offset[i] << std::endl;
+          logger << "DEBUG: h5g_pRead: local_offset[" << i << "] = " << local_offset[i] << std::endl;
 #endif
         }
 
@@ -947,7 +921,7 @@ namespace Dune {
           {
             offset[i] = (hsize_t) local_offset[ dim - i - 1 ];
 #ifdef DEBUG_LOG
-            logger << "DEBUG: read_parallel_from_HDF5: offset[" << i <<"] = " << offset[i] << std::endl;
+            logger << "DEBUG: h5g_pRead: offset[" << i <<"] = " << offset[i] << std::endl;
 #endif
           }
 
@@ -966,22 +940,22 @@ namespace Dune {
 
 
 
-        logger << General::getDateAndTime() << "H5Fopen ..." << data_filename << std::endl;
+        logger << General::getDateAndTime() << "H5Fopen ..." << filename << std::endl;
         /* open the file collectively */
-        hid_t infileId = H5Fopen( data_filename.c_str(), H5F_ACC_RDONLY, access_pList );
+        hid_t infileId = H5Fopen( filename.c_str(), H5F_ACC_RDONLY, access_pList );
         assert( infileId > -1 );
         //logger << "infileId opened." << std::endl;
-  
- 
-  
-  
+
+
+
+
 
         /* Release file-access template */
         status = H5Pclose( access_pList );
         assert( status > -1 );
         //logger << "access_pList closed." << std::endl;
 
-        hid_t indatasetId = H5Dopen( infileId, data_name.c_str() );
+        hid_t indatasetId = H5Dopen( infileId, groupname.c_str() );
         assert( indatasetId > -1 );
         //logger << "indatasetId opened." << std::endl;
 
@@ -996,7 +970,7 @@ namespace Dune {
         status = H5Sget_simple_extent_dims( indataspaceId, dims, 0);
         assert( status > -1 );
         // logger << "Got dims from dataspace:" << std::endl;
-  
+
         /*
          * Be careful!!!
          * correction if vertex based data a read!
@@ -1007,10 +981,10 @@ namespace Dune {
             //logger << "dims["<<dim-1-ii<<"] = " << dims[dim-1-ii] << std::endl;
             //logger << "local_count["<<ii<<"] = " << local_count[ii] << std::endl;
             //logger << "count["<<dim-1-ii<<"] = " << count[dim-1-ii] << std::endl;
-            
+
             if(dims[dim-1-ii]-inputdata.domain_data.nCells[ii]){
               local_count[ii]+=1;    // Q1-FEM: #nodes = #elements + 1 per dimension
-              count[dim-1-ii]+=1; 
+              count[dim-1-ii]+=1;
             }
 
             //logger << "local_count["<<ii<<"] = " << local_count[ii] << std::endl;
@@ -1027,9 +1001,9 @@ namespace Dune {
             //}
 
 #ifdef DEBUG_LOG
-            logger << "DEBUG: read_parallel_from_HDF5: dims["<<dim-1-ii<<"] = " << dims[dim-1-ii] << std::endl;
-            logger << "DEBUG: read_parallel_from_HDF5: local_count["<<ii<<"] = " << local_count[ii] << std::endl;
-            logger << "DEBUG: read_parallel_from_HDF5: count["<<dim-1-ii<<"] = " << count[dim-1-ii] << std::endl;
+            logger << "DEBUG: h5g_pRead: dims["<<dim-1-ii<<"] = " << dims[dim-1-ii] << std::endl;
+            logger << "DEBUG: h5g_pRead: local_count["<<ii<<"] = " << local_count[ii] << std::endl;
+            logger << "DEBUG: h5g_pRead: count["<<dim-1-ii<<"] = " << count[dim-1-ii] << std::endl;
 #endif
           }
         }
@@ -1068,10 +1042,10 @@ namespace Dune {
 
         status = H5Dread( indatasetId
                           , H5T_NATIVE_DOUBLE //image.DataType
-                          , memspaceId 
-                          , indataspaceId // H5S_ALL // 
+                          , memspaceId
+                          , indataspaceId // H5S_ALL //
                           , xferPropList // H5P_DEFAULT
-                          , &( local_data[0] ) 
+                          , &( local_data[0] )
                           );
         assert( status > -1 );
         logger << General::getDateAndTime() << "H5Dread() done." << std::endl;
@@ -1084,7 +1058,7 @@ namespace Dune {
         status = H5Sclose(memspaceId);
         assert( status > -1 );
         //logger << "memspaceId closed." << std::endl;
-  
+
         status = H5Pclose( xferPropList );
         assert( status > -1 );
         //logger << "xferPropList closed." << std::endl;
@@ -1099,20 +1073,20 @@ namespace Dune {
         assert( status > -1 );
         logger << General::getDateAndTime() << "infileId closed." << std::endl;
 
-  
+
         /*
-	
+
           The following code is just for debugging purposes!
-	
+
         */
 
 
 
         std::stringstream jobtitle;
         if( partitiontype != Dune::Interior_Partition )
-          jobtitle << "read_parallel_from_HDF5: overlapped reading " << data_filename;
+          jobtitle << "h5g_pRead: overlapped reading " << filename;
         else
-          jobtitle << "read_parallel_from_HDF5: nonoverlapped reading " << data_filename;
+          jobtitle << "h5g_pRead: nonoverlapped reading " << filename;
         General::log_elapsed_time( watch.elapsed(),
                                    comm,
                                    inputdata.verbosity,
@@ -1124,12 +1098,12 @@ namespace Dune {
       }
 #endif // ifdef PARALLEL
 
-      /** function to write a vector (sequential) to a hdf5 file 
-       * 
+      /** function to write a vector (sequential) to a hdf5 file
+       *
        * \tparam dimensions the dimensions of the written data vector
        * \tparam data this data will be written to the file
-       * \tparam data_name is the name/path where the data are stored in the HDF5 file
-       * \tparam data_filename is the filename of the data file
+       * \tparam groupname is the name/path where the data are stored in the HDF5 file
+       * \tparam filename is the filename of the data file
        *
        *
        See
@@ -1137,32 +1111,30 @@ namespace Dune {
        for a documentation of the HDF5 API.
        *
        */
-
-      static void write_sequential_to_HDF5_without_DUNE(
-                                                 const Vector<UINT> dimensions
-                                                 , const Vector<REAL> &data
-                                                 , const std::string& data_name
-                                                 , const std::string& data_filename
-                                                 )
+      static void h5_Write( const Vector<REAL> & data
+                            , const std::string & filename
+                            , const std::string & groupname
+                            , const Vector<UINT> dimensions
+                            )
       {
         // ge the dimensionality of the data
         UINT dim=dimensions.size();
-  
+
         //number of elements the data vector should have
         UINT n=1;
         for(UINT i=0;i<dim;i++)
           n*=dimensions[i];
-  
+
         //the data make no sense!
         assert(n==data.size());
 
         /* Create a new file using default properties. */
-        hid_t file_id = H5Fcreate( 
-                                  data_filename.c_str()    // name of the file to be created
+        hid_t file_id = H5Fcreate(
+                                  filename.c_str()    // name of the file to be created
                                   , H5F_ACC_TRUNC          // if you are trying to create a file that exists already, the existing file will be truncated, i.e., all data stored on the original file will be erased
                                   , H5P_DEFAULT            // default file creation property list
                                   , H5P_DEFAULT            // default file access property list
-                                   );
+                                  );
 
         assert( file_id > -1 );
 
@@ -1172,23 +1144,23 @@ namespace Dune {
         hid_t memspace_id = H5Screate_simple(           // H5Screate_simple creates a new simple dataspace and opens it for access, returning a dataset identifier.
                                              1          // rank=1 is the number of dimensions used in the dataspace
                                              , mdims    // mdims is a one-dimensional array of size rank specifying the size of each dimension of the dataset.
-                                             , NULL     // maxdims is an array of the same size specifying the upper limit on the size of each dimension. maxdims may be NULL, in which case the maxdims == mdims. 
+                                             , NULL     // maxdims is an array of the same size specifying the upper limit on the size of each dimension. maxdims may be NULL, in which case the maxdims == mdims.
                                                         ); // must be released with H5Sclose or resource leaks will occur
 
         assert( memspace_id > -1 );
 
         /* Create the dataspace for the dataset.
-         * The dataspace describes the dimensions of the dataset array. 
+         * The dataspace describes the dimensions of the dataset array.
          */
         hsize_t dims[ dim ];
         for(UINT i=0;i<dim;i++)
           dims[i]=dimensions[i];
-  
-        hid_t dataspace_id = H5Screate_simple( 
+
+        hid_t dataspace_id = H5Screate_simple(
                                               dim     // number of dimensions = rank
                                               , dims  // vector containing sizes per dimension
                                               , NULL  // maxdims == dims
-                                               );
+                                              );
         assert( dataspace_id > -1 );
 
 
@@ -1203,18 +1175,18 @@ namespace Dune {
 
         /*
          * chunks
-         * !!! not optimized. Might be better if larger! -> use the inputdata 
+         * !!! not optimized. Might be better if larger! -> use the inputdata
          */
         hsize_t chunk_dims[ dim ];
         for(UINT i=0;i<dim;i++)
           chunk_dims[i]=1;  //maybe to small for fast saving!
 
         // set the chunk size!
-        status = H5Pset_chunk( 
+        status = H5Pset_chunk(
                               plist_id
                               , dim             // must be == rank of the dataset
-                              , chunk_dims      // The values of the check_dims array define the size of the chunks to store the dataset's raw data. The unit of measure for check_dims values is dataset elements. 
-                               );
+                              , chunk_dims      // The values of the check_dims array define the size of the chunks to store the dataset's raw data. The unit of measure for check_dims values is dataset elements.
+                              );
         assert( status > -1 );
 
         status = H5Pset_shuffle( plist_id ); // Sets the shuffle filter, H5Z_FILTER_SHUFFLE, in the dataset creation property list. This re-orders data to simplify compression.
@@ -1225,9 +1197,9 @@ namespace Dune {
 
         /* Create the dataset. */
         hid_t dataset_id = H5Dcreate(  file_id,            // Location identifier: id of the file or the group within which to create the dataset
-                                       data_name.c_str(),  // Dataset name: may be either an absolute path in the file or a relative path from file_id naming the dataset. 
+                                       groupname.c_str(),  // Dataset name: may be either an absolute path in the file or a relative path from file_id naming the dataset.
                                        HDF5_DATA_TYPE,    // Datatype identifier, here: IEEE floating point 32-bit or 64-bit, see my_macros.hh
-                                       dataspace_id,      // Dataspace identifier 
+                                       dataspace_id,      // Dataspace identifier
                                        plist_id           // Dataset creation property list identifier
                                        );
         assert( dataset_id > -1 );
@@ -1277,8 +1249,8 @@ namespace Dune {
       /** function to retrieve a vector (sequential) from the hdf5 file
        *
        * \tparam local_data is a 'return value' which gets the data that belongs to the current processor (current hyperslab)
-       * \tparam data_name is the name/path where the data are stored in the HDF5 file
-       * \tparam data_filename is the filename of the data file
+       * \tparam groupname is the name/path where the data are stored in the HDF5 file
+       * \tparam filename is the filename of the data file
        *
        *
        See
@@ -1287,40 +1259,40 @@ namespace Dune {
        *
        */
 
-      static void read_sequential_from_HDF5_without_DUNE(
-                                                         Vector<REAL>& local_data
-                                                         , const std::string& data_name
-                                                         , const std::string& data_filename
-                                                         )
+      static void h5_ReadDirect(
+                                Vector<REAL>& local_data
+                                , const std::string & filename
+                                , const std::string & groupname
+                                )
       {
- 
-  
+
+
         // open the file for reading
-        hid_t file_id=  H5Fopen (data_filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);  
+        hid_t file_id=  H5Fopen (filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
         assert( file_id > -1 );
-  
+
         // open the dataset
-        hid_t dataset_id = H5Dopen(file_id, data_name.c_str());
+        hid_t dataset_id = H5Dopen(file_id, groupname.c_str());
         assert( dataset_id > -1 );
-    
+
         // get the dataspace
-        hid_t dataspace_id=H5Dget_space (dataset_id); 
+        hid_t dataspace_id = H5Dget_space (dataset_id);
         assert(dataspace_id>-1);
 
-        // some needed variables 
+        // some needed variables
         herr_t status;
         hsize_t dim,*dims;
-  
+
         // get the dimension (2-d or 3-d)
         dim = H5Sget_simple_extent_ndims( dataspace_id );
-   
+
         // get the size of the problem
         dims=(hsize_t*)malloc(dim * sizeof (hsize_t));
         status = H5Sget_simple_extent_dims( dataspace_id , dims, 0);
         if( status < 0 )
           logger << "Warning : H5Sget_simple_extent_dims() failed." << std::endl;
         assert( status > -1 );
- 
+
         UINT local_size=1;
         hsize_t offset[dim];
         for( UINT i=0; i<dim; i++ )
@@ -1328,10 +1300,10 @@ namespace Dune {
             local_size*=dims[i];
             offset[i]=0;
           }
-  
+
         // create the memory space
         hid_t memspace_id = H5Screate_simple (dim, dims, NULL);
-    
+
         //select the hyperslab-
         status = H5Sselect_hyperslab (memspace_id, H5S_SELECT_SET, offset, NULL,
                                       dims, NULL);
@@ -1340,21 +1312,21 @@ namespace Dune {
         //resize the return data
         if( local_data.size() != local_size )
           local_data.resize( local_size );
-  
+
         /* set up the collective transfer properties list */
         hid_t xferPropList = H5Pcreate (H5P_DATASET_XFER);
         assert( xferPropList > -1 );
- 
+
         // finally the reading from the file
         status = H5Dread(                     dataset_id
                                               , H5T_NATIVE_DOUBLE //image.DataType
                                               , memspace_id
-                                              , dataspace_id // H5S_ALL // 
-                                              , xferPropList //H5P_DEFAULT // 
+                                              , dataspace_id // H5S_ALL //
+                                              , xferPropList //H5P_DEFAULT //
                                               , &( local_data[0] )
                                               );
         assert(status>-1);
-  
+
         // close the identifyers
         H5Dclose (dataset_id);
         H5Sclose (dataspace_id);
@@ -1371,8 +1343,8 @@ namespace Dune {
        * \tparam local_count give the size of the local data
        * \tparam local_offset the offset of the data (in each direction)
        * \tparam helper the DUNE MPIHelper for the MPI communication
-       * \tparam data_name is the name/path where the data are stored in the HDF5 file
-       * \tparam data_filename is the filename of the data file
+       * \tparam groupname is the name/path where the data are stored in the HDF5 file
+       * \tparam filename is the filename of the data file
        *
        *
        See
@@ -1380,54 +1352,45 @@ namespace Dune {
        for a documentation of the HDF5 API.
        *
        */
-
       template<typename IDT>
-      static void write_parallel_to_HDF5_without_DUNE(
-                                                      const IDT& inputdata,
-                                                      const Vector<UINT>& global_dim
-                                                      , const Vector<REAL> &data
-                                                      , const Vector<UINT>& local_count
-                                                      , const Vector<UINT>& local_offset
-                                                      , MPI_Comm communicator
-                                                      , const std::string& data_name
-                                                      , const std::string& data_filename
-                                                      , const bool writemetafile = false
-                                                      , const std::string& meta_title="default"
-#ifdef DIMENSION3
-                                                      , const std::string& meta_filename="DATA/3D/default.xmf"
-#else
-                                                      , const std::string& meta_filename="DATA/2D/default.xmf"				   
-#endif
-                                                       )
+      static void h5_pWrite( const Vector<REAL> &data
+                             , const std::string& filename
+                             , const std::string& groupname
+                             , const IDT& inputdata
+                             , const Vector<UINT>& global_dim
+                             , const Vector<UINT>& local_offset
+                             , const Vector<UINT>& local_count
+                             , MPI_Comm communicator
+                             )
       {
         Dune::Timer watch;
 
-        logger << "write_parallel_to_HDF5_without_DUNE: " << data_filename << std::endl;
+        logger << "h5_pWrite: " << filename << std::endl;
 
         //Info varibale need for the HDF5
         MPI_Info mpiInfo = MPI_INFO_NULL;
         herr_t status;             /* Generic return value */
-  
+
         //get the dimension of the problem -> no cross checking ig the given data make any sense!
         UINT dim = local_count.size();
 
         // Set up file access property list with parallel I/O access
         hid_t plist_id= H5Pcreate( H5P_FILE_ACCESS );
 
-  
+
         // Set up file access property list with parallel I/O access
         status=H5Pset_fapl_mpio(plist_id, communicator, mpiInfo);  //collcetive MPI!!! needs to be called on each processor of the communicator
         if( status < 0 )
           logger << "Warning : H5Pset_fapl_mpio() failed." << std::endl;
         assert(plist_id>-1);
-   
+
         // Create a new file using default properties.
-        hid_t file_id= H5Fcreate( 
-                                 data_filename.c_str()    // name of the file to be created
+        hid_t file_id= H5Fcreate(
+                                 filename.c_str()    // name of the file to be created
                                  , H5F_ACC_TRUNC          // if you are trying to create a file that exists already, the existing file will be truncated, i.e., all data stored on the original file will be erased
                                  , H5P_DEFAULT            // default file creation property list
                                  , plist_id
-                                  );
+                                 );
         assert( file_id > -1 );
         H5Pclose(plist_id);
 
@@ -1435,49 +1398,49 @@ namespace Dune {
         hsize_t global_dim_HDF5[ dim];
         for(UINT i=0; i<dim;i++)
           global_dim_HDF5[dim -i-1]=global_dim[i];
-    
+
         // set the count and offset in the different dimensions (determine the size of the hyperslab) (in hsize_t format, needed for HDF5 routines)
         hsize_t count[ dim ],offset[ dim ];
         for(UINT i=0;i<dim;i++){
           count[dim-i-1]=local_count[i];
-          offset[dim-i-1]=local_offset[i];   
+          offset[dim-i-1]=local_offset[i];
         }
-  
+
         //define the total size of the local data
         hsize_t nAllLocalCells = count[0] * count[1];
 #ifdef DIMENSION3
         nAllLocalCells *= count[2];
 #endif
-  
+
         //  Create the dataspace for the dataset.
         hid_t filespace = H5Screate_simple(dim, global_dim_HDF5, NULL);
         assert(filespace>-1);
-  
+
         // Create the dataset with default properties and close filespace.
         hid_t dset_id = H5Dcreate( file_id,
-                                   data_name.c_str(),
+                                   groupname.c_str(),
                                    HDF5_DATA_TYPE,    // Datatype identifier, here: IEEE floating point 32-bit or 64-bit, see my_macros.hh
                                    filespace,
                                    H5P_DEFAULT );
         H5Sclose(filespace);
         assert(dset_id>-1);
- 
+
         //get the memoryspace (but only if something needs to be written on this processor!)
         hid_t memspace_id;
         if(nAllLocalCells!=0){  // -> otherwise HDF5 warning, because of writing nothing!
           memspace_id = H5Screate_simple(dim, count, NULL);
           assert(memspace_id>-1);
         }
-  
+
         // Select hyperslab in the file.
         filespace = H5Dget_space(dset_id);
         H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offset, NULL, count, NULL);
-        //logger<< "write_parallel_to_HDF5_without_DUNE:  hyperslab selected!" << std::endl;
-    
+        //logger<< "h5_pWrite:  hyperslab selected!" << std::endl;
+
         // Create property list for collective dataset write.
         plist_id = H5Pcreate(H5P_DATASET_XFER);
         H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE); // all MPI processors of this communicator need to call this (if they write or not)
-    
+
         // fineally write the data to the disk
         // even if nothing should be written H5Dwrite needs to be called!!
         if(nAllLocalCells!=0){ // -> otherwise HDF5 warning, because of writing nothing!
@@ -1485,11 +1448,11 @@ namespace Dune {
                             plist_id, &( data[0] )  );
           assert(status>-1);
         }else{ // IMPORTANT. otherwise the H5Dwrite() blocks!!!
-          status = H5Dwrite(dset_id, 
-                            H5T_NATIVE_DOUBLE, 
-                            H5S_ALL, 
+          status = H5Dwrite(dset_id,
+                            H5T_NATIVE_DOUBLE,
+                            H5S_ALL,
                             filespace,
-                            plist_id, 
+                            plist_id,
                             &( data[0] )  );
           assert(status>-1);
         }
@@ -1503,7 +1466,7 @@ namespace Dune {
         assert( status > -1 );
 
         //if something writen close the memspace
-        if(nAllLocalCells!=0){   
+        if(nAllLocalCells!=0){
           // Close the mem space;
           status=H5Sclose(memspace_id);
           assert( status > -1 );
@@ -1512,18 +1475,18 @@ namespace Dune {
         // Close the dataset;
         status=H5Dclose(dset_id);
         assert( status > -1 );
-  
+
         // Close the file.
         status = H5Fclose( file_id );
         assert( status > -1 );
- 
+
         //propably not needed. because the H5Dwrite blocks anyway!!
         MPI_Barrier( communicator );
 
-        
+
         std::stringstream jobtitle;
-        jobtitle << "write_parallel_to_HDF5_without_DUNE: writing "
-                 << data_filename;
+        jobtitle << "h5_pWrite: writing "
+                 << filename;
         General::log_elapsed_time( watch.elapsed(),
                                    communicator,
                                    inputdata.verbosity,
@@ -1540,8 +1503,8 @@ namespace Dune {
        * \tparam local_count give the size of the local data
        * \tparam local_offset the offset of the data (in each direction)
        *  \tparam helper the DUNE MPIHelper for the MPI communication
-       * \tparam data_name is the name/path where the data are stored in the HDF5 file
-       * \tparam data_filename is the filename of the data file
+       * \tparam groupname is the name/path where the data are stored in the HDF5 file
+       * \tparam filename is the filename of the data file
        *
        *
        See
@@ -1550,19 +1513,18 @@ namespace Dune {
        *
        */
       template<typename IDT>
-      static void read_parallel_from_HDF5_without_DUNE( 
-                                                       const IDT& inputdata,
-                                                       Vector<REAL>& local_data
-                                                       , const Vector<UINT>& local_count
-                                                       , const Vector<UINT>& local_offset
-                                                       , MPI_Comm communicator
-                                                       , const std::string& data_name
-                                                       , const std::string& data_filename
-                                                        )
+      static void h5_pRead( Vector<REAL>& local_data
+                            , const std::string& filename
+                            , const std::string& groupname
+                            , const IDT& inputdata
+                            , const Vector<UINT>& local_offset
+                            , const Vector<UINT>& local_count
+                            , MPI_Comm communicator
+                            )
       {
         Dune::Timer watch;
 
-        logger << "read_parallel_from_HDF5_without_DUNE: " << data_filename << std::endl;
+        logger << "h5_pRead: " << filename << std::endl;
 
         /* setup file access template with parallel IO access. */
         hid_t access_pList = H5Pcreate( H5P_FILE_ACCESS );
@@ -1574,35 +1536,35 @@ namespace Dune {
         if( status < 0 )
           logger << "Warning : H5Pset_fapl_mpio() failed." << std::endl;
         assert( status > -1 );
-  
+
         // open the file for reading
-        hid_t file_id=  H5Fopen (data_filename.c_str(), H5F_ACC_RDONLY, access_pList);  
+        hid_t file_id=  H5Fopen (filename.c_str(), H5F_ACC_RDONLY, access_pList);
         assert( file_id > -1 );
-  
+
         /* Release file-access template */
         status = H5Pclose( access_pList );
         assert( status > -1 );
-  
+
         // open the dataset
-        hid_t dataset_id = H5Dopen(file_id, data_name.c_str());
+        hid_t dataset_id = H5Dopen(file_id, groupname.c_str());
         assert( dataset_id > -1 );
-    
+
         // get the dataspace
-        hid_t dataspace_id=H5Dget_space (dataset_id); 
+        hid_t dataspace_id=H5Dget_space (dataset_id);
         assert(dataspace_id>-1);
 
-        // some needed variables 
+        // some needed variables
         hsize_t dim,*dims;
-  
+
         // get the dimension (2-d or 3-d)
         dim = H5Sget_simple_extent_ndims( dataspace_id );
-   
+
         // get the size of the data structure
         dims=(hsize_t*)malloc(dim * sizeof (hsize_t));
         status = H5Sget_simple_extent_dims( dataspace_id , dims, 0);
         assert( status > -1 );
-  
-        //set the local, offset, and count as hsize_t, which is needed by the HDF5 routines 
+
+        //set the local, offset, and count as hsize_t, which is needed by the HDF5 routines
         hsize_t local_size=1;
         hsize_t offset[dim],count[dim];
         for( UINT i=0; i<dim; i++ )
@@ -1611,12 +1573,12 @@ namespace Dune {
             offset[dim-i-1]=local_offset[i];
             count[dim-i-1]=local_count[i];
           }
-  
+
         // create the memory space, if something needes to be read on this processor
         hid_t memspace_id = -1; // just an initialization
         if(local_size!=0)
           memspace_id = H5Screate_simple (1, &local_size, NULL);
-    
+
         //select the hyperslab
         status = H5Sselect_hyperslab (dataspace_id, H5S_SELECT_SET, offset, NULL,
                                       count, NULL);
@@ -1625,8 +1587,8 @@ namespace Dune {
         //resize the return data
         if( local_data.size() != local_size )
           local_data.resize( local_size );
-  
-        // set up the collective transfer properties list 
+
+        // set up the collective transfer properties list
         hid_t xferPropList = H5Pcreate (H5P_DATASET_XFER);
         assert( xferPropList > -1 );
         //logger << "xferPropList created." << std::endl;
@@ -1637,8 +1599,8 @@ namespace Dune {
                            dataset_id
                            , H5T_NATIVE_DOUBLE //image.DataType
                            , memspace_id
-                           , dataspace_id // H5S_ALL // 
-                           , xferPropList //H5P_DEFAULT // 
+                           , dataspace_id // H5S_ALL //
+                           , xferPropList //H5P_DEFAULT //
                            , &( local_data[0] )
                            );
           assert(status>-1);
@@ -1655,8 +1617,8 @@ namespace Dune {
 
 
         std::stringstream jobtitle;
-        jobtitle << "read_parallel_from_HDF5_without_DUNE(): reading " 
-                 << data_filename;
+        jobtitle << "h5_pRead(): reading "
+                 << filename;
         General::log_elapsed_time( watch.elapsed(),
                                    communicator,
                                    inputdata.verbosity,
@@ -1672,8 +1634,8 @@ namespace Dune {
        * \tparam local_count give the size of the local data
        * \tparam local_offset the offset of the data (in each direction)
        * \tparam helper the DUNE MPIHelper for the MPI communication
-       * \tparam data_name is the name/path where the data are stored in the HDF5 file
-       * \tparam data_filename is the filename of the data file
+       * \tparam groupname is the name/path where the data are stored in the HDF5 file
+       * \tparam filename is the filename of the data file
        *
        *
        See
@@ -1682,79 +1644,79 @@ namespace Dune {
        *
        */
 
-      static void write_parallel_to_existing_HDF5_without_DUNE( 
-                                                        const Vector<REAL> &data
-                                                        , const Vector<UINT>& local_count
-                                                        , const Vector<UINT>& local_offset
-                                                        , MPI_Comm communicator
-                                                        , const std::string& data_name
-                                                        , const std::string& data_filename
-                                                         )
+      static void h5_pAppend(
+                             const Vector<REAL> &data
+                             , const std::string& filename
+                             , const std::string& groupname
+                             , const Vector<UINT>& local_offset
+                             , const Vector<UINT>& local_count
+                             , MPI_Comm communicator
+                             )
       {
-  
-        // setup file access template with parallel IO access. 
+
+        // setup file access template with parallel IO access.
         hid_t access_pList = H5Pcreate( H5P_FILE_ACCESS );
         assert( access_pList > -1 );
 
-        herr_t status;             // Generic return value 
+        herr_t status;             // Generic return value
         MPI_Info mpiInfo = MPI_INFO_NULL;
         status = H5Pset_fapl_mpio( access_pList, communicator, mpiInfo ); // Take care, this requires the MPI version of hdf5!
         if( status < 0 )
           logger << "Warning : H5Pset_fapl_mpio() failed." << std::endl;
         assert( status > -1 );
-  
+
         // open the file for reading
-        hid_t file_id=  H5Fopen (data_filename.c_str(), H5F_ACC_RDWR, access_pList);  
+        hid_t file_id=  H5Fopen (filename.c_str(), H5F_ACC_RDWR, access_pList);
         assert( file_id > -1 );
         H5Pclose(access_pList);
-  
-        // open the dataset
-        hid_t dataset_id = H5Dopen(file_id, data_name.c_str());
-        assert( dataset_id > -1 );
-    
-        // get the dataspace
-        hid_t dataspace_id=H5Dget_space (dataset_id); 
-        assert(dataspace_id>-1);
- 
 
-        // some needed variables 
+        // open the dataset
+        hid_t dataset_id = H5Dopen(file_id, groupname.c_str());
+        assert( dataset_id > -1 );
+
+        // get the dataspace
+        hid_t dataspace_id=H5Dget_space (dataset_id);
+        assert(dataspace_id>-1);
+
+
+        // some needed variables
         hsize_t dim,*dims;
- 
+
         // get the dimension (2-d or 3-d)
         dim = H5Sget_simple_extent_ndims( dataspace_id );
-   
+
         // get the size of the data structure
         dims=(hsize_t*)malloc(dim * sizeof (hsize_t));
         status = H5Sget_simple_extent_dims( dataspace_id , dims, 0);
         assert( status > -1 );
-  
-  
+
+
         // set the count and offset in the different dimensions (determine the size of the hyperslab) (in hsize_t format, needed for HDF5 routines)
         hsize_t count[ dim ],offset[ dim ];
         for(UINT i=0;i<dim;i++){
           count[dim-i-1]=local_count[i];
-          offset[dim-i-1]=local_offset[i];   
+          offset[dim-i-1]=local_offset[i];
         }
-  
-  
+
+
         //define the total size of the local data
         hsize_t nAllLocalCells = count[0] * count[1];
 #ifdef DIMENSION3
         nAllLocalCells *= count[2];
 #endif
-  
+
         //get the memoryspace (but only if something needs to be written on this processor!)
         hid_t memspace_id;
         if(nAllLocalCells!=0){  // -> otherwise HDF5 warning, because of writing nothing!
           memspace_id = H5Screate_simple(dim, count, NULL);
           assert(memspace_id>-1);
         }
-  
+
         H5Sselect_hyperslab(dataspace_id, H5S_SELECT_SET, offset, NULL, count, NULL);
-  
+
         access_pList = H5Pcreate(H5P_DATASET_XFER);
         H5Pset_dxpl_mpio(access_pList, H5FD_MPIO_COLLECTIVE); // all MPI processors of this communicator need to call this (if they write or not)
-  
+
         // fineally write the data to the disk
         // even if nothing should be written H5Dwrite needs to be called!!
         if(nAllLocalCells!=0){ // -> otherwise HDF5 warning, because of writing nothing!
@@ -1762,19 +1724,19 @@ namespace Dune {
                              access_pList, &( data[0] )  );
           assert(status>-1);
         }else{ // IMPORTANT. otherwise the H5Dwrite() blocks!!!
-          status = H5Dwrite( dataset_id, 
-                             H5T_NATIVE_DOUBLE, 
-                             H5S_ALL, 
+          status = H5Dwrite( dataset_id,
+                             H5T_NATIVE_DOUBLE,
+                             H5S_ALL,
                              dataspace_id,
-                             access_pList, 
+                             access_pList,
                              &( data[0] )  );
           assert(status>-1);
         }
-  
+
         // close the identifyers
         H5Dclose (dataset_id);
         H5Sclose (dataspace_id);
-        // Release file-access template 
+        // Release file-access template
         status = H5Pclose( access_pList );
         assert( status > -1 );
         if(nAllLocalCells!=0) //this identifier only exists if somethings needs to be read
@@ -1782,7 +1744,7 @@ namespace Dune {
         free(dims);
         status = H5Fclose( file_id );
         assert( status > -1 );
-  
+
         return;
       };
 
@@ -1797,8 +1759,8 @@ namespace Dune {
       // For each process, it reserves a section which has the size of the local number of degrees of freedom.
       // This implementation has the advantage that it works indepently of the used FEM basis.
       // Disadvantage:
-      // Since a one-dimensional HDF5 file structure contains no information about the 3D structure of the 
-      // solution vector, you need to make sure, that the same number of processes and the same grid partitioning 
+      // Since a one-dimensional HDF5 file structure contains no information about the 3D structure of the
+      // solution vector, you need to make sure, that the same number of processes and the same grid partitioning
       // will be available when you retrieve the DOF vector later using read_vector_from_HDF5( ).
       //
       // counterpart:
@@ -1807,7 +1769,7 @@ namespace Dune {
       template<typename NUM,typename GFS>
       static void write_vector_to_HDF5( std::vector<NUM>& vData,
                                         const GFS &gfs,
-                                        const std::string & filename, 
+                                        const std::string & filename,
                                         const std::string & datasetname
                                         ){
 
@@ -1833,7 +1795,7 @@ namespace Dune {
         v1[ mpi_rank ] = local_dofs;          // This means: v1[i] = 0 for i!=mpi_rank.
 
         std::vector<int> v2(mpi_size,0);
-        
+
         MPI_Allreduce( &(v1[0]),  // v1 contains local_dofs only of the current process.
                        &(v2[0]),  // v2 will contain info about local_dofs of ALL processes.
                        mpi_size,
@@ -1841,7 +1803,7 @@ namespace Dune {
                        MPI_SUM,
                        gv.comm() );
 
-        
+
         // The whole DOF vector vData will be stored as a one-dimensional HDF5 file.
         // Each process will occupy a section of the hdf5 file.
         // Each section starts at the position "my_offset" and has the length "local_dofs".
@@ -1866,14 +1828,14 @@ namespace Dune {
         //double *data;            /* pointer to data buffer to write */
         herr_t status;
 
-  
+
         //Info varibale need for the HDF5
         MPI_Info mpiInfo = MPI_INFO_NULL;
-  
+
         //some needed variables and typdefs
         //const UINT dim = GV::dimension;  // dimensionality of the problem (2-d or 3-d)
 
-        /* 
+        /*
          * Set up file access property list with parallel I/O access
          */
         plist_id = H5Pcreate(H5P_FILE_ACCESS);
@@ -1903,7 +1865,7 @@ namespace Dune {
                             filespace_id,
                             H5P_DEFAULT);
         H5Sclose(filespace_id);
-        /* 
+        /*
          * Each process defines dataset in memory and writes it to the hyperslab
          * in the file.
          */
@@ -1922,7 +1884,7 @@ namespace Dune {
          */
         plist_id = H5Pcreate(H5P_DATASET_XFER);
         H5Pset_dxpl_mpio(plist_id,H5FD_MPIO_COLLECTIVE);
-  
+
         status = H5Dwrite( dset_id,
                            H5T_NATIVE_DOUBLE,
                            memspace_id,
@@ -1930,7 +1892,7 @@ namespace Dune {
                            plist_id,
                            &(vData[0]) );
         assert(status>-1);
-        
+
         /*
          * Close/release resources.
          */
@@ -1941,7 +1903,7 @@ namespace Dune {
         H5Fclose(file_id);
 
         std::stringstream jobtitle;
-        jobtitle << "write_vector_to_HDF5: writing " 
+        jobtitle << "write_vector_to_HDF5: writing "
                  << filename;
         General::log_elapsed_time( watch.elapsed(),
                                    gv.comm(),
@@ -1962,7 +1924,7 @@ namespace Dune {
       static void write_BackendVector_to_HDF5( const GFS& gfs,
                                                const CInputData& inputdata,
                                                const std::string & filename,
-                                               const std::string & data_name,
+                                               const std::string & groupname,
                                                const typename Dune::PDELab::BackendVectorSelector<GFS,REAL>::Type& backend_vector,
                                                bool preserve_structure=true,
                                                int current_grid_level=0
@@ -1986,14 +1948,14 @@ namespace Dune {
                                    jobtitle.str() );
 
         if( !preserve_structure ) {
-          write_vector_to_HDF5( standard_vector, 
+          write_vector_to_HDF5( standard_vector,
                                 gfs,
-                                filename, 
-                                data_name 
+                                filename,
+                                groupname
                                 );
         }
         else {
-          
+
           typedef typename GFS::Traits::GridViewType GV;
           enum{ dim = GV::dimension };
           //typedef typename GFS::Traits::BackendType VBE;
@@ -2004,7 +1966,7 @@ namespace Dune {
           // P0: blocksize=1 for dim=2 or dim=3
           // Q1: blocksize=4 for dim=2
           // Q1: blocksize=8 for dim=3
-          
+
           int blocksizePerDimension = 1;       // P0 or CG
           FEMType::Type femtype=FEMType::CG;
 
@@ -2039,17 +2001,17 @@ namespace Dune {
           if( current_grid_level > 0 )
             gridsizes /= REAL( std::pow(2,current_grid_level) );
 
-          write_parallel_to_HDF5( gfs.gridView(),
-                                  inputdata,
-                                  standard_vector,
-                                  data_name,
-                                  inputdata.domain_data.nCells,
-                                  filename,
-                                  blocksizePerDimension,
-                                  femtype,
-                                  current_grid_level,
-                                  preserve_structure
-                                  );
+          h5g_pWrite( gfs.gridView(),
+                      standard_vector,
+                      filename,
+                      groupname,
+                      inputdata,
+                      inputdata.domain_data.nCells,
+                      blocksizePerDimension,
+                      femtype,
+                      current_grid_level,
+                      preserve_structure
+                      );
         }
 
       }
@@ -2066,14 +2028,14 @@ namespace Dune {
       // Take care:
       // ==========
       // read_vector_from_HDF5( ) is used to read a DOF vector from a one-dimensional HDF5 file that was previously stored using the function
-      // write_vector_to_HDF5( ). If the number of processes or the grid partioning has changed since then, you will 
+      // write_vector_to_HDF5( ). If the number of processes or the grid partioning has changed since then, you will
       // get a mess!
       //
       // void write_vector_to_HDF5( )
       template<typename NUM,typename GFS>
       static void read_vector_from_HDF5( std::vector<NUM>& vData,
                                          const GFS& gfs,
-                                         const std::string & filename, 
+                                         const std::string & filename,
                                          const std::string & datasetname
                                          ){
 
@@ -2100,7 +2062,7 @@ namespace Dune {
         v1[ mpi_rank ] = local_dofs;
 
         std::vector<int> v2(mpi_size,0);
-        
+
         MPI_Allreduce( &(v1[0]),
                        &(v2[0]),
                        mpi_size,
@@ -2133,11 +2095,11 @@ namespace Dune {
         //double *data;            /* pointer to data buffer to write */
         herr_t status;
 
-  
+
         //Info varibale need for the HDF5
         MPI_Info mpiInfo = MPI_INFO_NULL;
 
-        /* 
+        /*
          * Set up file access property list with parallel I/O access
          */
         plist_id = H5Pcreate(H5P_FILE_ACCESS);
@@ -2151,14 +2113,14 @@ namespace Dune {
         H5Pclose(plist_id);
 
         dset_id = H5Dopen( file_id, datasetname.c_str() );
-    
+
         hid_t dspace_id = H5Dget_space( dset_id );
-    
+
         hsize_t dims[ h5rank ];
         status = H5Sget_simple_extent_dims( dspace_id, dims, 0 );
 
 
-        /* 
+        /*
          * Each process defines dataset in memory and reads it from the hyperslab
          */
         count[0] = local_dofs;
@@ -2175,7 +2137,7 @@ namespace Dune {
                                       , count
                                       , NULL
                                       );
-        
+
         if( vData.size() != local_dofs )
           vData.resize( local_dofs );
         status = H5Dread( dset_id
@@ -2199,7 +2161,7 @@ namespace Dune {
 
         //vData.resize( gfs.size() ); // cut vector back to original size
         std::stringstream jobtitle;
-        jobtitle << "read_vector_from_HDF5: reading " 
+        jobtitle << "read_vector_from_HDF5: reading "
                  << filename;
         General::log_elapsed_time( watch.elapsed(),
                                    gv.comm(),
@@ -2219,7 +2181,7 @@ namespace Dune {
       static void read_BackendVector_from_HDF5( const GFS& gfs,
                                                 const CInputData& inputdata,
                                                 const std::string & filename,
-                                                const std::string & data_name,
+                                                const std::string & groupname,
                                                 typename Dune::PDELab::BackendVectorSelector<GFS,REAL>::Type& backend_vector,
                                                 bool preserve_structure=true,
                                                 int current_grid_level=0
@@ -2229,9 +2191,9 @@ namespace Dune {
         logger << "read_BackendVector_from_HDF5: " << filename << std::endl;
 
         Vector<REAL> read_local_data;
-        
+
         if( !preserve_structure ) {
-          read_vector_from_HDF5( read_local_data, gfs, filename, data_name );
+          read_vector_from_HDF5( read_local_data, gfs, filename, groupname );
         }
         else {
 
@@ -2244,10 +2206,10 @@ namespace Dune {
           // P0: blocksize=1 for dim=2 or dim=3
           // Q1: blocksize=4 for dim=2
           // Q1: blocksize=8 for dim=3
-          
+
           int blocksizePerDimension = 1;       // P0 or CG
           FEMType::Type femtype=FEMType::CG;
-          
+
           if( gfs.size() == (UINT)gfs.gridView().size(0) ){
             femtype=FEMType::DG;
           }
@@ -2274,17 +2236,17 @@ namespace Dune {
           Vector<UINT> local_count;
           Vector<UINT> local_offset;
 
-          read_parallel_from_HDF5( gfs.gridView(),
-                                   inputdata,
-                                   read_local_data,
-                                   data_name,
-                                   local_count,
-                                   local_offset,
-                                   filename,
-                                   blocksizePerDimension,
-                                   femtype,
-                                   current_grid_level
-                                   );
+          h5g_pRead( gfs.gridView(),
+                     read_local_data,
+                     filename,
+                     groupname,
+                     local_count,
+                     local_offset,
+                     inputdata,
+                     blocksizePerDimension,
+                     femtype,
+                     current_grid_level
+                     );
         }
 
         watch.reset();
@@ -2298,7 +2260,7 @@ namespace Dune {
 
         //logger << "Read backend-vector from " << filename.c_str() << std::endl;
         //logger << "standard vector size = " << read_local_data.size() << std::endl;
-        
+
         //for(int i=0;i<read_local_data.size();i++){
         //  logger << "DEBUG: read_local_data["<<i<<"] = " << read_local_data[i] << std::endl;
         //}
@@ -2314,164 +2276,164 @@ namespace Dune {
       } // end of void read_BackendVector_from_HDF5
 
 
-    template< typename GV,
-              typename PGV,
-              typename IDT,
-              typename V1,
-              typename V2
-              >
-    static void write_to_HDF5_on_root( const GV& gv,
-                                       const PGV pRootGridView,
-                                       const IDT& inputdata,
-                                       const V1& iData, // datavector on current process
-                                       const V2& iGIdx, // global grid index on current process
-                                       const std::string& filename,
-                                       const std::string& groupname
-                                       ){
+      template< typename GV,
+                typename PGV,
+                typename IDT,
+                typename V1,
+                typename V2
+                >
+      static void write_to_HDF5_on_root( const GV& gv,
+                                         const PGV pRootGridView,
+                                         const IDT& inputdata,
+                                         const V1& iData, // datavector on current process
+                                         const V2& iGIdx, // global grid index on current process
+                                         const std::string& filename,
+                                         const std::string& groupname
+                                         ){
 
-      Dune::Timer watch;
-      logger << "write_to_HDF5_on_root: " << filename << std::endl;
+        Dune::Timer watch;
+        logger << "write_to_HDF5_on_root: " << filename << std::endl;
 
-      int mpi_size = gv.comm().size();
-      int mpi_rank = gv.comm().rank();
-      UINT local_dofs = iData.size();
-      UINT global_dofs = gv.comm().sum( local_dofs );
-
-      /*
-      std::cout << "QQ" << mpi_rank
-                << " local_dofs = " << local_dofs
-                << " global_dofs = " << global_dofs
-                << std::endl;
-      */
-
-      V1 gData( global_dofs, 0 ); // datavector on all processors
-      V2 gGIdx( global_dofs, 0 ); // global grid index on all processors
-
-      V1 gData2( global_dofs, 0 ); // datavector on all processors
-      V2 gGIdx2( global_dofs, 0 ); // global grid index on all processors
-
-      std::vector<int> v1(mpi_size,0);
-      v1[ mpi_rank ] = local_dofs;          // This means: v1[i] = 0 for i!=mpi_rank.
-
-      std::vector<int> v2(mpi_size,0);
-
-      MPI_Allreduce( &(v1[0]),  // v1 contains local_dofs only of the current process.
-                     &(v2[0]),  // v2 will contain info about local_dofs of ALL processes.
-                     mpi_size,
-                     MPI_INT,
-                     MPI_SUM,
-                     gv.comm() );
-
-        
-      // The whole DOF vector vData will be stored as a one-dimensional HDF5 file.
-      // Each process will occupy a section of the hdf5 file.
-      // Each section starts at the position "my_offset" and has the length "local_dofs".
-
-      int my_offset = 0;
-      for(int i=0;i<mpi_rank;i++){
-        my_offset += v2[i];
-      }
-
-      /*
-      std::cout << "QQ" << mpi_rank
-                << " my_offset: " << my_offset
-                << std::endl;
-      */
-
-      for(int j=0;j<local_dofs;j++){
-        gData[my_offset+j] = iData[j];
-        /*
-        std::cout << "QQ" << mpi_rank
-                  << " j: " << j
-                  << " iData[j]: " << iData[j]
-                  << std::endl;
-        */
-        gGIdx[my_offset+j] = iGIdx[j];
+        int mpi_size = gv.comm().size();
+        int mpi_rank = gv.comm().rank();
+        UINT local_dofs = iData.size();
+        UINT global_dofs = gv.comm().sum( local_dofs );
 
         /*
-        std::cout << "QQ" << mpi_rank
-                  << " >> iGIdx[" << j << "]: " << iGIdx[j]
-                  << std::endl;
-        */
-      }
-  
-      MPI_Reduce( &(gData[0]),
-                  &(gData2[0]),
-                  global_dofs,
-                  MPI_DOUBLE,
-                  MPI_SUM,
-                  0, // root is the target
-                  gv.comm() );
-
-      const int dim = GV::dimension;
-      MPI_Reduce( &(gGIdx[0]),
-                  &(gGIdx2[0]),
-                  dim*global_dofs,
-                  MPI_INT,
-                  MPI_SUM,
-                  0, // root is the target
-                  gv.comm() );
-  
-      if( mpi_rank == 0 ){
-
-        V1 s0;
-
-        typedef typename GV::Grid::GlobalIdSet::IdType GlobalIdType;
-        typedef std::map<GlobalIdType,REAL> ContainerType;
-        ContainerType data_container;
-        for( int i=0; i<global_dofs; ++i ){
-          /*
           std::cout << "QQ" << mpi_rank
-                    << " >> gGIdx2[" << i << "]: " << gGIdx2[i]
-                    << std::endl;
-          */
-          data_container[ gGIdx2[i] ] = gData2[i];
+          << " local_dofs = " << local_dofs
+          << " global_dofs = " << global_dofs
+          << std::endl;
+        */
+
+        V1 gData( global_dofs, 0 ); // datavector on all processors
+        V2 gGIdx( global_dofs, 0 ); // global grid index on all processors
+
+        V1 gData2( global_dofs, 0 ); // datavector on all processors
+        V2 gGIdx2( global_dofs, 0 ); // global grid index on all processors
+
+        std::vector<int> v1(mpi_size,0);
+        v1[ mpi_rank ] = local_dofs;          // This means: v1[i] = 0 for i!=mpi_rank.
+
+        std::vector<int> v2(mpi_size,0);
+
+        MPI_Allreduce( &(v1[0]),  // v1 contains local_dofs only of the current process.
+                       &(v2[0]),  // v2 will contain info about local_dofs of ALL processes.
+                       mpi_size,
+                       MPI_INT,
+                       MPI_SUM,
+                       gv.comm() );
+
+
+        // The whole DOF vector vData will be stored as a one-dimensional HDF5 file.
+        // Each process will occupy a section of the hdf5 file.
+        // Each section starts at the position "my_offset" and has the length "local_dofs".
+
+        int my_offset = 0;
+        for(int i=0;i<mpi_rank;i++){
+          my_offset += v2[i];
         }
-        for( auto eit=pRootGridView->template begin<0>()
-               ; eit!=pRootGridView->template end<0>()
-               ; ++eit) {
 
-          auto idx = pRootGridView->grid().globalIdSet().id(*eit);
-
-          typename ContainerType::const_iterator data_it =
-            data_container.find( idx );
-          if(data_it != data_container.end())
-            s0.push_back( data_it->second );
-          else
-            logger << "WARNING: data_it not found for element idx = " 
-                   << idx << std::endl;
-
-          Dune::FieldVector<REAL,dim> center = eit->geometry().center();
-          /*
+        /*
           std::cout << "QQ" << mpi_rank
-                    << " idx: " << idx
-                    << " center: " << center
-                    << std::endl;
+          << " my_offset: " << my_offset
+          << std::endl;
+        */
+
+        for(int j=0;j<local_dofs;j++){
+          gData[my_offset+j] = iData[j];
+          /*
+            std::cout << "QQ" << mpi_rank
+            << " j: " << j
+            << " iData[j]: " << iData[j]
+            << std::endl;
+          */
+          gGIdx[my_offset+j] = iGIdx[j];
+
+          /*
+            std::cout << "QQ" << mpi_rank
+            << " >> iGIdx[" << j << "]: " << iGIdx[j]
+            << std::endl;
           */
         }
-        /*
-        std::cout << "QQ" << mpi_rank
-                  << " s0.size(): " << s0.size()
-                  << std::endl;
-        */
 
-        HDF5Tools::write_sequential_to_HDF5( s0
-                                             , groupname
-                                             , inputdata
-                                             , filename
-                                             );
-      }
+        MPI_Reduce( &(gData[0]),
+                    &(gData2[0]),
+                    global_dofs,
+                    MPI_DOUBLE,
+                    MPI_SUM,
+                    0, // root is the target
+                    gv.comm() );
 
-      std::stringstream jobtitle;
-      jobtitle << "write_to_HDF5_on_root(): writing " 
-               << filename;
-      General::log_elapsed_time( watch.elapsed(),
-                                 gv.comm(),
-                                 inputdata.verbosity,
-                                 "IO",
-                                 jobtitle.str() );
+        const int dim = GV::dimension;
+        MPI_Reduce( &(gGIdx[0]),
+                    &(gGIdx2[0]),
+                    dim*global_dofs,
+                    MPI_INT,
+                    MPI_SUM,
+                    0, // root is the target
+                    gv.comm() );
 
-    } // end of void write_to_HDF5_on_root()
+        if( mpi_rank == 0 ){
+
+          V1 s0;
+
+          typedef typename GV::Grid::GlobalIdSet::IdType GlobalIdType;
+          typedef std::map<GlobalIdType,REAL> ContainerType;
+          ContainerType data_container;
+          for( int i=0; i<global_dofs; ++i ){
+            /*
+              std::cout << "QQ" << mpi_rank
+              << " >> gGIdx2[" << i << "]: " << gGIdx2[i]
+              << std::endl;
+            */
+            data_container[ gGIdx2[i] ] = gData2[i];
+          }
+          for( auto eit=pRootGridView->template begin<0>()
+                 ; eit!=pRootGridView->template end<0>()
+                 ; ++eit) {
+
+            auto idx = pRootGridView->grid().globalIdSet().id(*eit);
+
+            typename ContainerType::const_iterator data_it =
+              data_container.find( idx );
+            if(data_it != data_container.end())
+              s0.push_back( data_it->second );
+            else
+              logger << "WARNING: data_it not found for element idx = "
+                     << idx << std::endl;
+
+            Dune::FieldVector<REAL,dim> center = eit->geometry().center();
+            /*
+              std::cout << "QQ" << mpi_rank
+              << " idx: " << idx
+              << " center: " << center
+              << std::endl;
+            */
+          }
+          /*
+            std::cout << "QQ" << mpi_rank
+            << " s0.size(): " << s0.size()
+            << std::endl;
+          */
+
+          HDF5Tools::h5g_Write( s0
+                                , groupname
+                                , inputdata
+                                , filename
+                                );
+        }
+
+        std::stringstream jobtitle;
+        jobtitle << "write_to_HDF5_on_root(): writing "
+                 << filename;
+        General::log_elapsed_time( watch.elapsed(),
+                                   gv.comm(),
+                                   inputdata.verbosity,
+                                   "IO",
+                                   jobtitle.str() );
+
+      } // end of void write_to_HDF5_on_root()
 
 
     }; // class HDF5Tools
@@ -2488,4 +2450,3 @@ namespace Dune {
 
 
 #endif	/* DUNE_GESIS_HDF5_TOOLS_HH */
-

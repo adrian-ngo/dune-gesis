@@ -669,7 +669,7 @@ namespace Dune {
       std::cout << "grid.adapt() done." << std::endl;
 
 
-      //#ifdef USE_ALUGRID
+#ifdef USE_ALUGRID
 
       if( gv.comm().size() > 1 ) {
 
@@ -707,19 +707,18 @@ namespace Dune {
         Vector<UINT> local_count;
         Vector<UINT> local_offset;
 
-        Dune::Gesis
-          ::HDF5Tools::read_parallel_from_HDF5( gv_gw
-                                                , inputdata
-                                                , local_Yfield_vector
-                                                , "/YField"
-                                                , local_count
-                                                , local_offset
-                                                , yfg.getFilename()
-                                                , 1
-                                                , FEMType::DG // P0
-                                                , 0 //baselevel
-                                                );
-        yfg.parallel_import_from_local_vector( local_Yfield_vector, local_count, local_offset );
+        HDF5Tools::h5g_pRead( gv_gw
+                              , local_Yfield_vector
+                              , yfg.getFilename()
+                              , "/YField"
+                              , local_offset
+                              , local_count
+                              , inputdata
+                              , 1
+                              , FEMType::DG // P0
+                              , 0 //baselevel
+                              );
+        yfg.parallel_import_from_local_vector( local_Yfield_vector, local_offset, local_count );
 
         logger << "adaptivity: loglistOfAllWellCenters: " << std::endl;
         inputdata.loglistOfAllWellCenters();
@@ -765,7 +764,7 @@ namespace Dune {
                                           0 );
 #endif // DEBUG_PLOT
       }
-      //#endif // USE_ALUGRID
+#endif // USE_ALUGRID
 
 
 

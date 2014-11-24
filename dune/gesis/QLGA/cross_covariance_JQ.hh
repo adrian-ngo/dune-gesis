@@ -93,14 +93,14 @@ namespace Dune{
         //logger << "DEBUG: cross_covariance_JQ: local_count " << local_count;
 
         // read the sensitivities
-        HDF5Tools::
-          read_parallel_from_HDF5_without_DUNE( inputdata, 
-                                                SensitivityFieldJ,
-                                                local_count,
-                                                local_offset,
-                                                communicator,
-                                                "/Sensitivity",
-                                                sensitivity_filename );
+        HDF5Tools::h5_pRead( SensitivityFieldJ,
+                             sensitivity_filename,
+                             "/Sensitivity",
+                             inputdata, 
+                             local_offset,
+                             local_count,
+                             communicator
+                            );
         
         // Important note: 
         // SensitivityFieldJ cannot be plottet on the grid view
@@ -118,14 +118,13 @@ namespace Dune{
           Vector<UINT> local_offset;
 
           logger << "cross_covariance_JQ: Append JQ of new zone." << std::endl;
-          HDF5Tools::
-            write_parallel_to_existing_HDF5_without_DUNE( 
-                                                         JQ_needed,
-                                                         local_count,
-                                                         local_offset,
-                                                         communicator,
-                                                         "/JQ",
-                                                         JQ_filename );
+          HDF5Tools::h5_pAppend( JQ_needed,
+                                 JQ_filename,
+                                 "/JQ",
+                                 local_count,
+                                 local_offset,
+                                 communicator
+                                 );
         }
         else {
 
@@ -134,21 +133,21 @@ namespace Dune{
             FFT parallelization happens on the extended field:
             The gridview must not be used here. It has a different
             parallel decomposition.
-            I.e. write_parallel_to_HDF5( gv ,...) must not be used here.
+            I.e. h5g_pWrite( gv ,...) must not be used here.
            */
-          logger << "cross_covariance_JQ: write_parallel_to_HDF5_without_DUNE for JQ ..." << std::endl;
+          logger << "cross_covariance_JQ: h5_pWrite for JQ ..." << std::endl;
 
-          HDF5Tools::
-            write_parallel_to_HDF5_without_DUNE( inputdata,
-                                                 inputdata.domain_data.nCells,
-                                                 JQ_needed,
-                                                 local_count,
-                                                 local_offset,
-                                                 communicator,
-                                                 "/JQ",
-                                                 JQ_filename );
+          HDF5Tools::h5_pWrite( JQ_needed,
+                                JQ_filename,
+                                "/JQ",
+                                inputdata,
+                                inputdata.domain_data.nCells,
+                                local_offset,
+                                local_count,
+                                communicator
+                                );
 
-          logger << "cross_covariance_JQ: write_parallel_to_HDF5_without_DUNE for JQ done." << std::endl;
+          logger << "cross_covariance_JQ: h5_pWrite for JQ done." << std::endl;
 
         }
 

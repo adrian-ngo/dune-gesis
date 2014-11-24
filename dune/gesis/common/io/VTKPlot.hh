@@ -337,21 +337,20 @@ namespace Dune {
         Vector<REAL> local_Y_old;
         Vector<UINT> local_count,local_offset;
 
-        HDF5Tools::blob();
-
-        HDF5Tools::read_parallel_from_HDF5( gv_0
-                                            , inputdata
-                                            , local_Y_old
-                                            , hd5_data_name
-                                            , local_count
-                                            , local_offset
-                                            , Y_old_filename
-                                            );
+        HDF5Tools::h5g_pRead( gv_0
+                              , local_Y_old
+                              , Y_old_filename
+                              , hd5_data_name
+                              , local_offset
+                              , local_count
+                              , inputdata
+                              );
 
         if( gv_0.comm().size() > 1 ){
           yfg_Y_old.parallel_import_from_local_vector( local_Y_old,
-                                                       local_count,
-                                                       local_offset );
+                                                       local_offset,
+                                                       local_count
+                                                       );
         }
         else {
           yfg_Y_old.import_from_vector( local_Y_old );
@@ -410,24 +409,24 @@ namespace Dune {
         Vector<UINT> local_count,local_offset;
         Vector<REAL> Y_est_parallel;
 
-        HDF5Tools::
-          read_parallel_from_HDF5( gv_0
-                                   , inputdata
-                                   , Y_est_parallel
-                                   , groupname
-                                   , local_count
-                                   , local_offset
-                                   , filename1
-                                   , 1 // P0 blocksize
-                                   , FEMType::DG // P0
-                                   , 0 // structure is on grid level 0
-                                   );
+        HDF5Tools::h5g_pRead( gv_0
+                              , Y_est_parallel
+                              , filename1
+                              , groupname
+                              , local_offset
+                              , local_count
+                              , inputdata
+                              , 1 // P0 blocksize
+                              , FEMType::DG // P0
+                              , 0 // structure is on grid level 0
+                              );
         YFG yfg_Y_est( inputdata, dir, gv_0.comm() );
 
         if( gv_0.comm().size() > 1 )
           yfg_Y_est.parallel_import_from_local_vector( Y_est_parallel,
-                                                       local_count,
-                                                       local_offset );
+                                                       local_offset,
+                                                       local_count
+                                                       );
         else
           yfg_Y_est.import_from_vector( Y_est_parallel );
 
@@ -453,19 +452,18 @@ namespace Dune {
                                        );
 
 
-        HDF5Tools::
-          write_parallel_to_HDF5(
-                                 gv_1
-                                 , inputdata
-                                 , Y_est2
-                                 , groupname
-                                 , inputdata.domain_data.nCells
-                                 , filename2
-                                 , 1
-                                 , FEMType::DG
-                                 , 1
-                                 , true
-                                 );
+        HDF5Tools::h5g_pWrite(
+                              gv_1
+                              , Y_est2
+                              , filename2
+                              , groupname
+                              , inputdata
+                              , inputdata.domain_data.nCells
+                              , 1
+                              , FEMType::DG
+                              , 1
+                              , true
+                              );
         theGrid.globalRefine(-1);
 
       } // end of void plotDataToRefinedGrid

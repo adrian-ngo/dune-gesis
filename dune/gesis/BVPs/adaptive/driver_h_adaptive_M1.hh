@@ -322,8 +322,7 @@ namespace Dune {
 
 
             if( inputdata.plot_options.vtk_plot_element_ordering ){
-              std::stringstream vtu_gv_tp;
-              vtu_gv_tp << dir.vtudir << "/gv_tp_orig_" << step;
+              std::stringstream vtu_gv_tp;              vtu_gv_tp << dir.vtudir << "/gv_tp_orig_" << step;
               VTKPlot::outputGridviewIndexToDGF( gv_tp, vtu_gv_tp.str() );
             }
           }

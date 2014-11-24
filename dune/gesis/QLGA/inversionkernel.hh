@@ -19,7 +19,7 @@
 
 namespace Dune {
   namespace Gesis {
-    
+
     // grid view on the Dune grid with all processors (global grid)
     // helper: for the global MPI communication
     template<typename GRID,
@@ -44,11 +44,11 @@ namespace Dune {
                             const Dune::MPIHelper& helper,
                             const INT& CR=-1
                             ){
-  
+
       typedef typename GFS_GW::Traits::GridViewType GV_GW;
-  
+
       const UINT nAllCells = inputdata.domain_data.nCells.componentsproduct();
-  
+
       /*
        * NO GLOBALREFINE and only yasp grid!!
        */
@@ -73,21 +73,21 @@ namespace Dune {
       std::cout << "Inversion currently works only with YASP !!!" << std::endl;
       return -1.0;
 #endif
-   
+
       /*
        * END: NO GLOBALREFINE and only yasp grid
        */
-  
-  
+
+
       Dune::Timer watch;
       watch.reset();
-  
+
       std::ofstream likelihood_ostream;
       std::ofstream measurement_ostream;
       if(helper.rank()==0){
         if(CR>-1){
           likelihood_ostream.open (dir.likelihood_cond_file[CR].c_str());
-          measurement_ostream.open (dir.measurement_cond_file[CR].c_str()); 
+          measurement_ostream.open (dir.measurement_cond_file[CR].c_str());
         }else{
           likelihood_ostream.open (dir.likelihood_file.c_str());
           measurement_ostream.open (dir.measurement_file.c_str());
@@ -95,23 +95,23 @@ namespace Dune {
         if (likelihood_ostream.is_open()){
           likelihood_ostream<<"Values of the objective function!"<<std::endl<<"FORMAT: Iteration number:value"<<std::endl;
         }else{
-          std::cerr<<std::endl<<"UNABLE TO OPEN: "<<dir.likelihood_file<<", --> QUIT"<<std::endl<<std::endl; 
+          std::cerr<<std::endl<<"UNABLE TO OPEN: "<<dir.likelihood_file<<", --> QUIT"<<std::endl<<std::endl;
           return -1.0;
         }
         if (measurement_ostream.is_open()){
           measurement_ostream<<"Measurement output!"<<std::endl<<"FORMAT: measurement #:original value:estimated value: abs error: rel error"<<std::endl;
         }else{
-          std::cerr<<std::endl<<"UNABLE TO OPEN: "<<dir.likelihood_file<<", --> QUIT"<<std::endl<<std::endl; 
+          std::cerr<<std::endl<<"UNABLE TO OPEN: "<<dir.likelihood_file<<", --> QUIT"<<std::endl<<std::endl;
           return -1.0;
         }
-      
+
       }
-  
-  
+
+
       if(helper.rank()==0 && inputdata.verbosity>2)
         std::cout << std::endl << "inversionkernel()" << std::endl;
       logger << std::endl << "inversionkernel()" << std::endl;
-  
+
       /*
        * variables and definitions
        */
@@ -121,34 +121,33 @@ namespace Dune {
       if(CR>-1){
         logger<<"Calculate conditional realization #"<<CR<<std::endl;
         if(helper.rank()==0){
-          HDF5Tools::
-            read_sequential_from_HDF5( Y_u
-                                       , "/YField"
-                                       , local_count
-                                       , local_offset
-                                       , dir.unconditionalField_h5file
-                                       , inputdata
-                                       ); // TODO: Ask Ronnie: Why not parallel read?
-                                          // Answer: Becasue this field is only needed on P0. The inversion kernel is only done on P0. 
-                                          //         Solving the kriging system and then updating the YField!
+          HDF5Tools::h5g_Read( Y_u
+                               , dir.unconditionalField_h5file
+                               , "/YField"
+                               , local_offset
+                               , local_count
+                               , inputdata
+                               ); // TODO: Ask Ronnie: Why not parallel read?
+          // Answer: Becasue this field is only needed on P0. The inversion kernel is only done on P0.
+          //         Solving the kriging system and then updating the YField!
         }
       }
-    
+
       UINT nMeas=orig_measurements.nMeasurements();
       UINT nzones=inputdata.yfield_properties.nz;
       Vector<REAL> beta_star(nzones); // mean of the trend coefficients
       Vector<REAL> R_bb(nzones);     // uncertainty about the mean
-    
+
       // set the values from the inputdata
       for(UINT ii=0; ii<nzones; ii++){
         beta_star[ii] = inputdata.yfield_properties.zones[ii].beta;
-        R_bb[ii] = inputdata.yfield_properties.zones[ii].qbb_y; 
+        R_bb[ii] = inputdata.yfield_properties.zones[ii].qbb_y;
       }
-  
+
       //initialize the measurement list for the inversion
       // it is always a synthetic measurement -> true
       MEASLIST sim_measurements(inputdata,true);
-    
+
       typedef SensitivityClass
         <GRID,
          PGV,
@@ -160,7 +159,7 @@ namespace Dune {
          DIR,
          IDT
          > SensCl;
-      
+
       //initalize the sensitivity class
       SensCl sensitivity( theGrid,
                           pRootGridView,
@@ -176,66 +175,66 @@ namespace Dune {
       //const GV_GW& gv_gw = gfs_gw.gridView();
 
 
-      // Frag Ronnie: 
+      // Frag Ronnie:
       // Ist es nicht genug, "log_electricalConductivity"
       // und "log_kappafield"
       // einmal in "initialize_DuneGrid.hh" zu lesen?
-      
+
       /*
       // define the sigma0_wrapper and kappa_wrapper! works on all processors!
       YFG log_electricalConductivity_world(inputdata,dir,helper.getCommunicator());
       YFG log_kappafield_world(inputdata,dir,helper.getCommunicator());
 
       if(inputdata.problem_types.moments_geoeletric_potential_inversion){
-        Vector<REAL> logsigma0;
-        HDF5Tools::read_parallel_from_HDF5( gv_gw
-                                            , inputdata
-                                            , logsigma0
-                                            , "/logsigma0"
-                                            , local_count
-                                            , local_offset
-                                            , dir.logsigma0_h5file
-                                            );
-        // export the data to the sigma0 Generator
-        if(helper.size()>1)
-          log_electricalConductivity_world.parallel_import_from_local_vector(logsigma0, local_count, local_offset );
-        else
-          log_electricalConductivity_world.import_from_vector( logsigma0 );
+      Vector<REAL> logsigma0;
+      HDF5Tools::h5g_pRead( gv_gw
+      , inputdata
+      , logsigma0
+      , "/logsigma0"
+      , local_count
+      , local_offset
+      , dir.logsigma0_h5file
+      );
+      // export the data to the sigma0 Generator
+      if(helper.size()>1)
+      log_electricalConductivity_world.parallel_import_from_local_vector(logsigma0, local_count, local_offset );
+      else
+      log_electricalConductivity_world.import_from_vector( logsigma0 );
 
-    
-        Vector<REAL> logkappa;
-        HDF5Tools::
-          read_parallel_from_HDF5( gv_gw
-                                   , inputdata
-                                   , logkappa
-                                   , "/logkappa"
-                                   , local_count
-                                   , local_offset
-                                   , dir.logkappa_h5file
-                                   );
-        // export the data to the sigma0 Generator
-        if(helper.size()>1)
-          log_kappafield_world.parallel_import_from_local_vector(logkappa, local_count, local_offset );
-        else
-          log_kappafield_world.import_from_vector( logkappa );
-       }
+
+      Vector<REAL> logkappa;
+      HDF5Tools::
+      h5g_pRead( gv_gw
+      , inputdata
+      , logkappa
+      , "/logkappa"
+      , local_count
+      , local_offset
+      , dir.logkappa_h5file
+      );
+      // export the data to the sigma0 Generator
+      if(helper.size()>1)
+      log_kappafield_world.parallel_import_from_local_vector(logkappa, local_count, local_offset );
+      else
+      log_kappafield_world.import_from_vector( logkappa );
+      }
       */
 
-    
-      //const FieldWrapperType log_sigma0_wrapper_world( inputdata, setupdata, log_electricalConductivity_world );    
+
+      //const FieldWrapperType log_sigma0_wrapper_world( inputdata, setupdata, log_electricalConductivity_world );
       //const FieldWrapperType log_kappa_wrapper_world( inputdata, setupdata, log_kappafield_world );
-  
+
       // chi 2 test for acceptance
       REAL L_accept_value = 2.0 * boost::math::gamma_p_inv( 0.5*nMeas, inputdata.inversion_parameters.L_accept_confidence_interval );
 
       // set the filenames for the needed files (now when the number of measurements is known!)
       dir.set_inversion(nMeas);
-    
+
       //vector for the measurement error
       std::vector< REAL > MeasurementErrorsV;
 
       // only on P0 (global rank)
-      if(helper.rank()==0){   
+      if(helper.rank()==0){
         //set the vector of the measurement error
         MeasurementErrorsV.resize( nMeas, 0.0 );
         for(UINT ii=0;ii<nMeas;ii++){
@@ -243,7 +242,7 @@ namespace Dune {
           MeasurementErrorsV[ ii ] = epsilon*epsilon;
         }
       }
-    
+
       Vector<REAL> Y_old(0);
       Vector<REAL> ksi_old( nMeas , 0.0 );
       REAL L_prior_ini = 1e+12;  // Let the initial value for L_prior better be very large!
@@ -252,20 +251,19 @@ namespace Dune {
         beta_old[ii] = inputdata.yfield_properties.zones[ii].beta;
       std::vector< Vector<REAL> >  Xzones; // zonation matrix
       std::vector<REAL> L_objective;
-    
+
       /*
        * INITIAL GUESS
        * load an existing initial guess or generate a homogeneous guess
-       */ 
-      // and do something on the P0 
+       */
+      // and do something on the P0
       if(helper.rank()==0){ // PO do some work
         //read the zonation matrix on P0
         Xzones.resize(nzones);
         for(UINT jj=0; jj<nzones; jj++)
-          HDF5Tools::
-            read_sequential_from_HDF5_without_DUNE( Xzones[jj],
-                                                    "/X",
-                                                    dir.zonation_matrix[jj] );
+          HDF5Tools::h5_ReadDirect( Xzones[jj],
+                                    dir.zonation_matrix[jj],
+                                    "/X" );
 
         /*
          * get the initial log K field
@@ -279,40 +277,38 @@ namespace Dune {
              && ( General::bFileExists( dir.Y_estimated_h5file )
                   || General::bFileExists( dir.Y_old_h5file )
                   ) ) {  // read an existing Y field!
-               
+
           if( General::bFileExists( dir.Y_estimated_h5file ) ){
-            
+
             if( helper.rank()==0 && inputdata.verbosity >= VERBOSITY_INVERSION )
-              std::cout << "For the initial guess: Read /Y_est from " 
+              std::cout << "For the initial guess: Read /Y_est from "
                         << dir.Y_estimated_h5file << std::endl;
-            logger << "For the initial guess: Read /Y_est from " 
+            logger << "For the initial guess: Read /Y_est from "
                    << dir.Y_estimated_h5file << std::endl;
-            
-            HDF5Tools::read_sequential_from_HDF5 (
-                                                  Y_old
-                                                  , "/Y_est"
-                                                  , local_count
-                                                  , local_offset
-                                                  , dir.Y_estimated_h5file
-                                                  , inputdata
-                                                  );
+
+            HDF5Tools::h5g_Read( Y_old
+                                 , dir.Y_estimated_h5file
+                                 , "/Y_est"
+                                 , local_offset
+                                 , local_count
+                                 , inputdata
+                                 );
           }
           else {
 
             if( helper.rank()==0 && inputdata.verbosity >= VERBOSITY_INVERSION )
-              std::cout << "For the initial guess: Read /Y_old from " 
+              std::cout << "For the initial guess: Read /Y_old from "
                         << dir.Y_old_h5file << std::endl;
-            logger << "For the initial guess: Read /Y_old from " 
+            logger << "For the initial guess: Read /Y_old from "
                    << dir.Y_old_h5file << std::endl;
-            
-            HDF5Tools::read_sequential_from_HDF5 (
-                                                  Y_old
-                                                  , "/Y_old"
-                                                  , local_count
-                                                  , local_offset
-                                                  , dir.Y_old_h5file
-                                                  , inputdata
-                                                  );
+
+            HDF5Tools::h5g_Read( Y_old
+                                 , dir.Y_old_h5file
+                                 , "/Y_old"
+                                 , local_offset
+                                 , local_count
+                                 , inputdata
+                                 );
           }
 
 
@@ -324,9 +320,9 @@ namespace Dune {
 
 
           if( General::bFileExists( dir.ksi_old_h5file ) ){
-            HDF5Tools::read_sequential_from_HDF5_without_DUNE( ksi_old,
-                                                               "/ksi_old",
-                                                               dir.ksi_old_h5file );
+            HDF5Tools::h5_ReadDirect( ksi_old,
+                                      dir.ksi_old_h5file,
+                                      "/ksi_old" );
             std::cout << "ksi_old read from file " << dir.ksi_old_h5file
                       << std::endl;
           }
@@ -337,99 +333,93 @@ namespace Dune {
 
           Vector<REAL> tmp;
           if( General::bFileExists( dir.L_prior_h5file ) ){
-            HDF5Tools::read_sequential_from_HDF5_without_DUNE( tmp,
-                                                               "/L_prior",
-                                                               dir.L_prior_h5file );
+            HDF5Tools::h5_ReadDirect( tmp,
+                                      dir.L_prior_h5file,
+                                      "/L_prior" );
             L_prior_ini = tmp[0];
           }
           else {
             L_prior_ini = 1e+32; // Let the initial value for L_prior better be very large!
-          }            
+          }
 
           //std::cout << "DEBUG: L_prior_ini read from file = " << std::endl;
           //std::cout << L_prior_ini << std::endl;
 
-          HDF5Tools::read_sequential_from_HDF5_without_DUNE( tmp,
-                                                             "/beta_old",
-                                                             dir.beta_old_h5file );
+          HDF5Tools::h5_ReadDirect( tmp,
+                                    dir.beta_old_h5file,
+                                    "/beta_old" );
           for(UINT ii=0; ii<nzones; ii++)
             beta_old[ii]=tmp[ii];
           //std::cout << "DEBUG: beta_old read from file = " << std::endl;
           //std::cout << beta_old << std::endl;
-                
+
           if(CR>-1){
             for(UINT ii=0; ii<Y_u.size(); ii++)
               Y_old[ii]+=Y_u[ii];
           }
 
-          // write the inital guess to hdf5 (as Y_old) 
-          HDF5Tools::
-            write_sequential_to_HDF5(
-                                     Y_old
-                                     , "/Y_old"
-                                     , inputdata
-                                     , dir.Y_old_h5file
-                                     , "Y_old"
-                                     //, dir.Y_old_xmffile
-                                     );
+          // write the inital guess to hdf5 (as Y_old)
+          HDF5Tools::h5g_Write(
+                               Y_old
+                               , dir.Y_old_h5file
+                               , "/Y_old"
+                               , inputdata
+                               );
 
           /*
-          Vector<REAL> Y_old_Well( Y_old );
-          General::add_wells_to_field( inputdata, Y_old_Well );
-          
-          HDF5Tools::
-            write_sequential_to_HDF5(
-                                     Y_old_Well
-                                     , "/Y_old_Well"
-                                     , inputdata
-                                     , dir.Y_old_Well_h5file
-                                     , "Y_old_Well"
-                                     , dir.Y_old_xmffile
-                                     );
+            Vector<REAL> Y_old_Well( Y_old );
+            General::add_wells_to_field( inputdata, Y_old_Well );
+
+            HDF5Tools::
+            h5g_Write(
+            Y_old_Well
+            , "/Y_old_Well"
+            , inputdata
+            , dir.Y_old_Well_h5file
+            , "Y_old_Well"
+            , dir.Y_old_xmffile
+            );
           */
-          
+
         } else { // generate a homogeneous intial guess!
-          
+
           if(inputdata.problem_types.using_existing_Yold){
             logger<<"MISSING FILE for using existing Y_old as initial guess!"<<std::endl<<"FALL BACK to homogeneous initial guess!"<<std::endl;
             std::cout<<"MISSING FILE for using existing Y_old as initial guess!"<<std::endl<<"FALL BACK to homogeneous initial guess!"<<std::endl;
           }
-                
-       
+
+
           // Initial guess for K:
           Y_old.resize(0);
           Y_old.resize( nAllCells, 0.0 );
-         
+
           for(UINT jj=0; jj<nzones; jj++)
             for(UINT ii=0; ii<nAllCells; ii++)
               Y_old[ii]+=Xzones[jj][ii]*beta_old[jj];
-       
-          // write the inital guess to hdf5 (as Y_old) 
-          HDF5Tools::
-            write_sequential_to_HDF5(
-                                     Y_old
-                                     , "/Y_old"
-                                     , inputdata
-                                     , dir.Y_old_h5file
-                                     , "Y_old"
-                                     //, dir.Y_old_xmffile
-                                     );
+
+          // write the inital guess to hdf5 (as Y_old)
+          HDF5Tools::h5g_Write(
+                               Y_old
+                               , dir.Y_old_h5file
+                               , "/Y_old"
+                               , inputdata
+                               );
           /*
-          Vector<REAL> Y_old_Well (nAllCells,0.0);
-          for(int ii=0;ii<nAllCells;ii++)
+            Vector<REAL> Y_old_Well (nAllCells,0.0);
+            for(int ii=0;ii<nAllCells;ii++)
             Y_old_Well[ii] = Y_old[ii];
-          
-          General::add_wells_to_field( inputdata, Y_old_Well );
-          
-          HDF5Tools::
-            write_sequential_to_HDF5(
-                                     Y_old_Well
-                                     , "/Y_old_Well"
-                                     , inputdata
-                                     , dir.Y_old_Well_h5file
-                                     , "Y_old_Well"
-                                     , dir.Y_old_xmffile
-                                     );
+
+            General::add_wells_to_field( inputdata, Y_old_Well );
+
+            HDF5Tools::
+            h5g_Write(
+            Y_old_Well
+            , "/Y_old_Well"
+            , inputdata
+            , dir.Y_old_Well_h5file
+            , "Y_old_Well"
+            , dir.Y_old_xmffile
+            );
           */
 
         } // end: else: if ( inputdata.problem_types.using_existing_Yold ...
@@ -473,7 +463,7 @@ namespace Dune {
                                       inputdata,
                                       dir );
         }
-        
+
         if( inputdata.inversion_parameters.max_iter == 0 ){
           if( helper.rank()==0 )
             std::cout << "Y_estimate and Estimation-Variance stored on refined grid. Stop here." << std::endl;
@@ -505,15 +495,15 @@ namespace Dune {
       REAL L_p = 0.0;
       objectivefunction
         <GRID,
-        GFS_GW,
-        GFS_TP,
-        GFS_CG,
-        DIR,
-        IDT,
-        YFG,
-        MEASLIST,
-        SensCl
-        >
+         GFS_GW,
+         GFS_TP,
+         GFS_CG,
+         DIR,
+         IDT,
+         YFG,
+         MEASLIST,
+         SensCl
+         >
         ( theGrid,
           gfs_gw,
           dir,
@@ -564,7 +554,7 @@ namespace Dune {
       int acceptflag = 0;    // flag for acceptable estimates, which are close to optimal
       REAL delta_L = 1E+8;
       std::vector< std::string > vtu_list_Y_old;
-    
+
       logger << " ..initilization done! (in " << watch.elapsed() << " sec )" << std::endl;
 
       // L_p corresponding old iteration:
@@ -578,30 +568,29 @@ namespace Dune {
 
 
       Vector<REAL> smoothed_orig_YField;
-      HDF5Tools::read_parallel_from_HDF5
-        <GV_GW,Dune::Interior_Partition>( gv_0
-                                          , inputdata
-                                          , smoothed_orig_YField
-                                          , "/YFieldSmoothed"
-                                          , local_count
-                                          , local_offset
-                                          , dir.kfield_h5file + "_smoothed"
-                                          , 1 // P0 blocksize
-                                          , FEMType::DG // P0
-                                          , 0 // structure is on grid level 0
-                                          );
+      HDF5Tools::h5g_pRead<GV_GW,Dune::Interior_Partition>( gv_0
+                                                            , smoothed_orig_YField
+                                                            , dir.kfield_h5file + "_smoothed"
+                                                            , "/YFieldSmoothed"
+                                                            , local_offset
+                                                            , local_count
+                                                            , inputdata
+                                                            , 1 // P0 blocksize
+                                                            , FEMType::DG // P0
+                                                            , 0 // structure is on grid level 0
+                                                            );
       /*
       // DEBUG CODE:
       YFG yfg_smoothed_Yorig(inputdata,dir,helper.getCommunicator());
       if( helper.size() > 1 )
-        yfg_smoothed_Yorig.parallel_import_from_local_vector( smoothed_orig_YField, local_count, local_offset );
+      yfg_smoothed_Yorig.parallel_import_from_local_vector( smoothed_orig_YField, local_count, local_offset );
       else
-        yfg_smoothed_Yorig.import_from_vector( smoothed_orig_YField );
+      yfg_smoothed_Yorig.import_from_vector( smoothed_orig_YField );
 
       yfg_smoothed_Yorig.plot2vtu( gv_0,
-                                   dir.Y_orig_vtu + "_smoothed_inv",
-                                   "Y_smoothed",
-                                   baselevel );
+      dir.Y_orig_vtu + "_smoothed_inv",
+      "Y_smoothed",
+      baselevel );
       */
 
       /*==================
@@ -725,44 +714,44 @@ namespace Dune {
 
         // seqential code:
         if(helper.rank()==0){
-          
+
           watch.reset();
-      
+
           sensitivity.get_JQJ( CokrigingMatrixM );
 
           for(UINT iPoint=0; iPoint < nMeas; iPoint++){
             CokrigingMatrixM( iPoint, iPoint ) += MeasurementErrorsV[iPoint];
           }
 
-          // Last lines and last columns of M 
+          // Last lines and last columns of M
           for(UINT jPoint=0; jPoint < nMeas; jPoint++){
-            for(UINT ii=0;ii<nzones; ii++){    
+            for(UINT ii=0;ii<nzones; ii++){
               CokrigingMatrixM( nMeas+ii , jPoint ) = sensitivity.get_JX(jPoint,ii);
               CokrigingMatrixM( jPoint, nMeas+ii )  = sensitivity.get_JX(jPoint,ii);
             }
           }
-   
+
           // lower-left block of M:
-          for(UINT ii=0;ii<nzones; ii++){ 
+          for(UINT ii=0;ii<nzones; ii++){
             CokrigingMatrixM( nMeas+ii, nMeas+ii ) = -1.0 / R_bb[ii];
           }
-     
+
           Vector<REAL> RHS( nMeas + nzones, 0.0 );
           for( UINT iPoint=0; iPoint<nMeas; iPoint++){
             RHS[ iPoint ] = orig_measurements[iPoint].value - sim_measurements[ iPoint ].value;
             RHS[ iPoint ] += sensitivity.get_J_times_Y_old(iPoint);
           }
-     
+
           // Last elements of the RHS:
           for(UINT ii=0;ii<nzones; ii++){
             RHS[ nMeas+ii ] = -1.0 / R_bb[ii] * beta_star[ii];
           }
-     
-          // Now it's time to solve this equation to get the next iteration     
+
+          // Now it's time to solve this equation to get the next iteration
           logger << "=== Solve cokriging system" << std::endl;
           CokrigingMatrixM.row_equilibration(); // This function must not be called twice!
           CokrigingMatrixM.gauss_solver( xNew, RHS );
-          std::cout << "Solving Cokriging System on root in iteration #" << it_counter 
+          std::cout << "Solving Cokriging System on root in iteration #" << it_counter
                     << " DONE! ( build up and solving took " << watch.elapsed() << " sec )."
                     << std::endl;
 
@@ -789,8 +778,8 @@ namespace Dune {
                 logger<<std::endl;
               }
             }
-       
-     
+
+
             logger<<" RHS: ";
             if( RHS.size() > 20 ) {
               logger<<"Larger than 20x20. Do not print."<<std::endl;
@@ -800,7 +789,7 @@ namespace Dune {
                 logger<<RHS[ii]<<" ";
               logger<<std::endl;
             }
-     
+
             logger<<" Solution Cokriging: ";
             if( xNew.size() > 20 ) {
               logger<<"Larger than 20x20. Do not print."<<std::endl;
@@ -811,14 +800,14 @@ namespace Dune {
               logger<<std::endl;
             }
           }
-     
+
           watch.reset();
           // extract ksi out of RHS:
           for( UINT iPoint = 0; iPoint<nMeas; iPoint++ ){
             ksi_new[ iPoint ] = xNew[ iPoint ];
           }
         }
-        
+
 #ifdef PARALLEL_KSI_JQ
         // Broadcast ksi_new from 0 to all other processors using MPI_BCast
         MPI_Bcast( &(ksi_new[0]),
@@ -830,11 +819,11 @@ namespace Dune {
 
         // sequential code:
         if(helper.rank()==0){
-     
+
           // extract beta_new out of RHS:
           for( UINT iZone=0; iZone < nzones; ++iZone )
             beta_new[ iZone ] = xNew[ nMeas + iZone ];
-        
+
           Y_new.resize(0);
           Y_new.resize( nAllCells, 0.0 );
           for(UINT iZone=0; iZone < nzones; ++iZone )
@@ -852,16 +841,16 @@ namespace Dune {
           Vector<REAL> JQ;
           UINT mGroup = iPoint % helper.size();
           if( mGroup == helper.rank() ){
-            //std::cout << "Process " << helper.rank() 
+            //std::cout << "Process " << helper.rank()
             //          << " reading JQ " << iPoint
             //          << std::endl;
-            HDF5Tools::read_sequential_from_HDF5( JQ
-                                                  , "/JQ"
-                                                  , local_count
-                                                  , local_offset
-                                                  , dir.JQ_h5file[iPoint]
-                                                  , inputdata
-                                                  );
+            HDF5Tools::h5g_Read( JQ
+                                 , dir.JQ_h5file[iPoint]
+                                 , "/JQ"
+                                 , local_offset
+                                 , local_count
+                                 , inputdata
+                                 );
             JQ *= ksi_new[ iPoint ]; // multipliation by a scalar
             ksi_JQ += JQ;
           }
@@ -881,20 +870,20 @@ namespace Dune {
         if(helper.rank()==0){
 
 #ifdef PARALLEL_KSI_JQ
-            for( UINT iCell=0; iCell<nAllCells; iCell++) {
-              Y_new[ iCell ] += ksi_JQ_sum[ iCell ];
-            }
+          for( UINT iCell=0; iCell<nAllCells; iCell++) {
+            Y_new[ iCell ] += ksi_JQ_sum[ iCell ];
+          }
 #else
           // Calculate Y_new = transpose(JQ) * ksi // could be done in parallel! but it seems also sequential very fast!
           for(UINT iPoint=0; iPoint<nMeas; iPoint++  ){
             Vector<REAL> JQ;
-            HDF5Tools::read_sequential_from_HDF5( JQ
-                                                  , "/JQ"
-                                                  , local_count
-                                                  , local_offset
-                                                  , dir.JQ_h5file[iPoint]
-                                                  , inputdata
-                                                  );
+            HDF5Tools::h5g_Read( JQ
+                                 , dir.JQ_h5file[iPoint]
+                                 , "/JQ"
+                                 , local_offset
+                                 , local_count
+                                 , inputdata
+                                 );
             for( UINT iCell=0; iCell<nAllCells; iCell++) {
               Y_new[ iCell ] += JQ[ iCell ] * ksi_new[ iPoint ];
             }
@@ -904,16 +893,16 @@ namespace Dune {
 
 #endif
 
-            
+
           if(CR>-1){
             for( UINT iCell=0; iCell<nAllCells; iCell++) {
               Y_new[ iCell ] += Y_u[ iCell ];
             }
           }
 
-            
+
           logger<<"generating new solution took "<<watch.elapsed()<<" sec."<<std::endl;
-                
+
           // Compute the current step size
           stepsize = 0.0;
           for( unsigned int iCell=0; iCell<nAllCells; iCell++){
@@ -936,7 +925,7 @@ namespace Dune {
 
         } // END: if(helper.rank()==0)
 
-        // receive the weighting on all processes except P0  
+        // receive the weighting on all processes except P0
         if(helper.rank()>0){
           MPI_Recv(&weighting,1, MPI_DOUBLE,0,helper.rank(),helper.getCommunicator(),MPI_STATUS_IGNORE);
         }
@@ -984,20 +973,17 @@ namespace Dune {
 
             for( UINT iZone=0; iZone < nzones; ++iZone )
               beta_try[ iZone ] = weighting * beta_new[ iZone ] + (1.0 - weighting) * beta_old[ iZone ];
-            
+
             //std::cout << "DEBUG: beta_try = " << std::endl;
             //std::cout << beta_try << std::endl;
 
             //write SEQUENTIAL the new trial solution
-            HDF5Tools::
-              write_sequential_to_HDF5(
-                                       Y_try
-                                       , "/Y_try"
-                                       , inputdata
-                                       , dir.Y_try_h5file
-                                       , "Y_try"
-                                       //, dir.Y_try_xmffile
-                                       );
+            HDF5Tools::h5g_Write(
+                                 Y_try
+                                 , dir.Y_try_h5file
+                                 , "/Y_try"
+                                 , inputdata
+                                 );
 
             logger<<"Evaluate the value of the objective function based on the intermediate solution Y_try"<<std::endl;
 
@@ -1139,19 +1125,16 @@ namespace Dune {
               for( UINT iZone=0; iZone < nzones; ++iZone )
                 beta_old[ iZone ] = beta_try[ iZone ];
 
-              HDF5Tools::
-                write_sequential_to_HDF5(
-                                         Y_old
-                                         , "/Y_old"
-                                         , inputdata
-                                         , dir.Y_old_h5file
-                                         , "Y_old"
-                                         //, dir.Y_old_xmffile
-                                         );
+              HDF5Tools::h5g_Write(
+                                   Y_old
+                                   , dir.Y_old_h5file
+                                   , "/Y_old"
+                                   , inputdata
+                                   );
 
               std::ostringstream cmdline;
               cmdline << "cp " << dir.Y_old_h5file
-                      << " " << dir.bufferdimdir 
+                      << " " << dir.bufferdimdir
                       << "/Y_old_" << it_counter
                       << ".h5";
 
@@ -1164,18 +1147,18 @@ namespace Dune {
 
 
               /*
-              Vector<REAL> Y_old_Well( Y_old );
-              General::add_wells_to_field( inputdata, Y_old_Well );
-          
-              HDF5Tools::
-                write_sequential_to_HDF5(
-                                         Y_old_Well
-                                         , "/Y_old_Well"
-                                         , inputdata
-                                         , dir.Y_old_Well_h5file
-                                         , "Y_old_Well"
-                                         , dir.Y_old_xmffile
-                                         );
+                Vector<REAL> Y_old_Well( Y_old );
+                General::add_wells_to_field( inputdata, Y_old_Well );
+
+                HDF5Tools::
+                h5g_Write(
+                Y_old_Well
+                , "/Y_old_Well"
+                , inputdata
+                , dir.Y_old_Well_h5file
+                , "Y_old_Well"
+                , dir.Y_old_xmffile
+                );
               */
 
               Vector<UINT> dimensions(1,ksi_old.size());
@@ -1183,44 +1166,43 @@ namespace Dune {
               //std::cout << "DEBUG: ksi_old write to file = " << std::endl;
               //std::cout << ksi_old << std::endl;
 
-              HDF5Tools::
-                write_sequential_to_HDF5_without_DUNE( dimensions,
-                                                       ksi_old,
-                                                       "/ksi_old",
-                                                       dir.ksi_old_h5file );
+              HDF5Tools::h5_Write( ksi_old,
+                                   dir.ksi_old_h5file,
+                                   "/ksi_old",
+                                   dimensions
+                                   );
 
-              dimensions[0]=nzones; 
+              dimensions[0]=nzones;
 
               //std::cout << "DEBUG: beta_old write file = " << std::endl;
               //std::cout << beta_old << std::endl;
-              HDF5Tools::
-                write_sequential_to_HDF5_without_DUNE( dimensions,
-                                                       beta_old,
-                                                       "/beta_old",
-                                                       dir.beta_old_h5file );
+              HDF5Tools::h5_Write( beta_old,
+                                   dir.beta_old_h5file,
+                                   "/beta_old",
+                                   dimensions );
 
-     
+
               if( L_try < L_accept_value ){
                 std::cout << "Trial solution is close to optimal and it is acceptable!!!" << std::endl;
                 logger << "Trial solution is close to optimal and it is acceptable!!!" << std::endl;
                 acceptflag = 1;
               }
-     
-              //break doesn't work in parallel -> because break is then only done on P0 
+
+              //break doesn't work in parallel -> because break is then only done on P0
               weighting_loop=0;
             } else {
               weighting = weighting / 2.0;
               logger<<"No improvement of L, therefore try it again with a reduced weighting = "<<weighting<<std::endl;
             }
-       
+
             // send the needed information of the weighting loop to P1,...
             for(int ii=1;ii<helper.size();ii++){
               MPI_Send(&weighting,1, MPI_DOUBLE,ii,ii,helper.getCommunicator());
               MPI_Send(&weighting_loop,1, MPI_INT,ii,ii,helper.getCommunicator());
-     
+
             }
           } // END: if(helper.rank()==0)
-     
+
           // be sure Y_old is there
           if(helper.size()>1)
             MPI_Barrier(helper.getCommunicator());
@@ -1241,7 +1223,7 @@ namespace Dune {
               vtu_list_Y_old.push_back( vtu_file.str() );
             }
           }
-     
+
           // receive the needed loop-data (weighting loop)
           if(helper.rank()>0){
             MPI_Recv(&weighting,1, MPI_DOUBLE,0,helper.rank(),helper.getCommunicator(),MPI_STATUS_IGNORE);
@@ -1254,16 +1236,16 @@ namespace Dune {
             sim_measurements = measurements_try;
             sim_measurements.write_to_logger("Y_try: simulated measurements");
           }
-                    
-            
+
+
           //MPI_Bcast(&(weighting_loop[0]),1,MPI_INT,0,helper.getCommunicator()); DOES NOT WORK WHY!???
         } // end of while( weighting > weighting_limit )
         /*
-         * DONE: weighting loop 
+         * DONE: weighting loop
          */
 
         logger<<"...weighting loop DONE! ( took "<<watch.elapsed()<<" sec )"<<std::endl;
-        
+
         // now the weighting loop is done and it will be calculated sequential again
         if(helper.rank()==0){ // something to do for P0
 
@@ -1285,7 +1267,7 @@ namespace Dune {
                delta_L < inputdata.inversion_parameters.dL_lim_fac * nMeas
                ||
                (weighting <= weighting_limit && acceptflag == 1)
-                ) ){
+               ) ){
 
             std::cout << std::endl << "Iteration #"<< it_counter <<" done: "
                       << std::endl;
@@ -1347,14 +1329,14 @@ namespace Dune {
             logger<<"QUITTING ALGORITHM: GOT STUCK"<<std::endl;
             loopflag = 0;
           }
-     
+
           // send the loop flag to all processors
           for(int ii=1;ii<helper.size();ii++){
-            MPI_Send(&loopflag,1, MPI_INT,ii,ii,helper.getCommunicator()); 
+            MPI_Send(&loopflag,1, MPI_INT,ii,ii,helper.getCommunicator());
           }
 
           bAllowRemovingJQ_h5file = loopflag;
-     
+
 #ifdef ESTIMATION_VARIANCE
           if(!loopflag && CR==-1){
             DenseMatrix<REAL> inv_CokrigingMatrixM( CokrigingMatrixM.n_rows(), CokrigingMatrixM.n_cols(), 0.0 );
@@ -1362,19 +1344,19 @@ namespace Dune {
             watch.reset();
             CokrigingMatrixM.inverse( inv_CokrigingMatrixM ); // Calculation of inverse might take very long!
             std::cout << "Computing inverse of cokriging matrix on root took: "
-                      << watch.elapsed() << " sec !" 
+                      << watch.elapsed() << " sec !"
                       << std::endl;
 
             inv_CokrigingMatrixM.write_to_HDF5( dir.cokriging_inverse_h5file, "/Minv" );
           }
 #endif
-     
+
         } // END: if(helper.rank()==0)
-        
+
         // be sure inverse cokriging is written.
         if(helper.size()>1)
           MPI_Barrier(helper.getCommunicator());
- 
+
         //receive the loopflag
         if(helper.rank()>0){
           MPI_Recv(&loopflag,1, MPI_INT,0,helper.rank(),helper.getCommunicator(),MPI_STATUS_IGNORE);
@@ -1418,19 +1400,17 @@ namespace Dune {
         // Read /Y_old in parallel on gv_0 and store it to Y_current.
 
         Vector<REAL> Y_current;
-        HDF5Tools::read_parallel_from_HDF5
-          <GV_GW,Dune::Interior_Partition>( 
-                                           gv_0
-                                           , inputdata
-                                           , Y_current
-                                           , "/Y_old"
-                                           , local_count
-                                           , local_offset
-                                           , dir.Y_old_h5file
-                                           , 1 // P0 blocksize
-                                           , FEMType::DG // P0
-                                           , 0 // structure is on grid level 0
-                                            );
+        HDF5Tools::h5g_pRead<GV_GW,Dune::Interior_Partition>( gv_0
+                                                              , Y_current
+                                                              , dir.Y_old_h5file
+                                                              , "/Y_old"
+                                                              , local_offset
+                                                              , local_count
+                                                              , inputdata
+                                                              , 1 // P0 blocksize
+                                                              , FEMType::DG // P0
+                                                              , 0 // structure is on grid level 0
+                                                              );
 
         if( smoothed_orig_YField.size() == Y_current.size() ) {
 
@@ -1443,7 +1423,7 @@ namespace Dune {
                       << std::endl;
           }
 
-        } 
+        }
         else {
           std::cout << "WARNING: Cannot compute Quality(Y_est) due to different size: "
                     << "smoothed_orig_YField.size() = " << smoothed_orig_YField.size()
@@ -1461,20 +1441,19 @@ namespace Dune {
           General::createPVDfromVtuList( dir.Y_old_pvd, vtu_list_Y_old );
       }
 
-    
+
       /*
        * save the estimates as vtu files
        */
-    
+
       //save the estimated Y field
       if(CR>-1){
         if(helper.rank()==0){
-          HDF5Tools::
-            write_sequential_to_HDF5( Y_old
-                                      , "/Y_cond"
-                                      , inputdata
-                                      , dir.Y_cond_h5file[CR]
-                                      );
+          HDF5Tools::h5g_Write( Y_old
+                                , dir.Y_cond_h5file[CR]
+                                , "/Y_cond"
+                                , inputdata
+                                );
         }
 
         YFG yfg_Y_old( inputdata, dir, helper.getCommunicator() );
@@ -1489,12 +1468,11 @@ namespace Dune {
       }else{
 
         if(helper.rank()==0){
-          HDF5Tools::
-            write_sequential_to_HDF5( Y_old
-                                      , "/Y_est"
-                                      , inputdata
-                                      , dir.Y_estimated_h5file
-                                      );
+          HDF5Tools::h5g_Write( Y_old
+                                , dir.Y_estimated_h5file
+                                , "/Y_est"
+                                , inputdata
+                                );
         }
 
         if( inputdata.problem_types.refine_estimate ){
@@ -1516,23 +1494,23 @@ namespace Dune {
       }
 
 
-    
+
       if(helper.rank()==0){
-        
+
         std::cout << "total measuring points : "<<nMeas<<std::endl;
         for( UINT iPoint=0; iPoint < nMeas; iPoint++ ){
 
           REAL discrepancy = std::abs( orig_measurements[iPoint].value - sim_measurements[iPoint].value );
           REAL relativerfehler = std::abs( ( orig_measurements[iPoint].value - sim_measurements[iPoint].value ) / orig_measurements[iPoint].value );
-            
-          measurement_ostream << iPoint << ":" 
+
+          measurement_ostream << iPoint << ":"
                               << orig_measurements[iPoint].value<<":"
                               << sim_measurements[iPoint].value<<":"
                               << discrepancy << ":"
                               << relativerfehler
                               << std::endl;
         }
-        
+
         likelihood_ostream.close();
         measurement_ostream.close();
       }
@@ -1575,35 +1553,32 @@ namespace Dune {
 
         // Compute NormalizedError[i] := ( Y_orig[i] - Y_est[i] ) / sigma[i]
         Vector<REAL> NormalizedError;
-        HDF5Tools::read_parallel_from_HDF5
-          <GV_GW,Dune::Interior_Partition>( gv_0
-                                            , inputdata
-                                            , NormalizedError
-                                            , "/YField"
-                                            , local_count
-                                            , local_offset
-                                            , dir.kfield_h5file
-                                            , 1 // P0 blocksize
-                                            , FEMType::DG // P0
-                                            , 0 // structure is on grid level 0
-                                            );
+        HDF5Tools::h5g_pRead<GV_GW,Dune::Interior_Partition>( gv_0
+                                                              , dir.kfield_h5file
+                                                              , "/YField"
+                                                              , NormalizedError
+                                                              , local_offset
+                                                              , local_count
+                                                              , inputdata
+                                                              , 1 // P0 blocksize
+                                                              , FEMType::DG // P0
+                                                              , 0 // structure is on grid level 0
+                                                              );
 
         UINT originalFieldSize = NormalizedError.size();
 
         Vector<REAL> Y_current;
-        HDF5Tools::read_parallel_from_HDF5
-          <GV_GW,Dune::Interior_Partition>( 
-                                           gv_0
-                                           , inputdata
-                                           , Y_current
-                                           , "/Y_old"
-                                           , local_count
-                                           , local_offset
-                                           , dir.Y_old_h5file
-                                           , 1 // P0 blocksize
-                                           , FEMType::DG // P0
-                                           , 0 // structure is on grid level 0
-                                            );
+        HDF5Tools::h5g_pRead<GV_GW,Dune::Interior_Partition>( gv_0
+                                                              , Y_current
+                                                              , dir.Y_old_h5file
+                                                              , "/Y_old"
+                                                              , local_offset
+                                                              , local_count
+                                                              , inputdata
+                                                              , 1 // P0 blocksize
+                                                              , FEMType::DG // P0
+                                                              , 0 // structure is on grid level 0
+                                                              );
 
         UINT estimatedFieldSize = Y_current.size();
 
@@ -1623,7 +1598,7 @@ namespace Dune {
           YFG yfg_NormalizedError( inputdata, dir, helper.getCommunicator() );
 
           if( helper.size() > 1 )
-            yfg_NormalizedError.parallel_import_from_local_vector( NormalizedError, local_count, local_offset );
+            yfg_NormalizedError.parallel_import_from_local_vector( NormalizedError, local_offset, local_count );
           else
             yfg_NormalizedError.import_from_vector( NormalizedError );
 
@@ -1643,19 +1618,19 @@ namespace Dune {
           //
           // Norm(x,m,s) = 1./(sqrt(2*pi)*s) * exp( -(x-m)**2 / (2*s*s) )
           // plot [-5:5] Norm(x,0,1), "histogram.dat" using 1:2 with steps
-          // 
+          //
 
         }
 
 #endif //USE_HISTO_PLOT
-          
+
         // Wait until files are deleted by process 0.
         if( helper.size()>1 )
           MPI_Barrier(helper.getCommunicator());
 
       }
 #endif
-    
+
 
       double L_return=0;
 
@@ -1663,7 +1638,7 @@ namespace Dune {
       /************************************************************************
        Output history of objective function to the screen and to rank0-logfile
       *************************************************************************/
-   
+
       if(helper.rank()==0){
 
         logger<<std::endl<<"Development of objective function:"<<std::endl;
@@ -1674,7 +1649,7 @@ namespace Dune {
         UINT iCounter=0;
         for( std::vector<std::vector<REAL_PAIR>>::const_iterator L_it=L_history.begin()
                ; L_it!=L_history.end() ; L_it++ ){
-            
+
           if(iCounter==0){
             std::cout<<"Initial guess: " << std::endl;
             logger<<"Initial guess: " << std::endl;
@@ -1686,7 +1661,7 @@ namespace Dune {
           ++iCounter;
           UINT wCounter=0;
           for( std::vector<REAL_PAIR>::const_iterator L_w_it=(*L_it).begin()
-                 ; L_w_it!=(*L_it).end() 
+                 ; L_w_it!=(*L_it).end()
                  ; L_w_it++ ){
 
             REAL w_Current = (*L_w_it).first;
@@ -1694,28 +1669,28 @@ namespace Dune {
             REAL percentage = L_current/LStart;
 
             if(iCounter!=0){
-              std::cout << "weighting = " 
+              std::cout << "weighting = "
                         << std::fixed << std::setw(6) << std::setprecision(4)
                         << w_Current << ", ";
             }
-            std::cout << "L = " 
+            std::cout << "L = "
                       << std::scientific << std::setw(6) << std::setprecision(2)
                       << L_current
-                      << " ( " 
+                      << " ( "
                       << std::scientific << std::setw(6) << std::setprecision(2)
                       << percentage*100 << "% )"
                       << std::endl;
             ++wCounter;
-            
-            // Be careful: 
+
+            // Be careful:
             // L_Try might exceed LStart, but the
             // fraction for the plot must never exceed 1
             REAL fraction = std::min( percentage, 1.0 );
             UINT tmp_n = std::floor( std::floor( fraction*50 + 0.5 ) + 0.5 );
 
             //std::cout << "tmp_n = " << tmp_n << std::endl;
-         
-            logger << "w = " 
+
+            logger << "w = "
                    << std::fixed << std::setw(6) << std::setprecision(4)
                    << w_Current << ": |";
             for(UINT jj=0; jj<tmp_n; jj++ )
@@ -1734,7 +1709,7 @@ namespace Dune {
 
       orig_measurements.write_to_logger("original measurements");
       sim_measurements.write_to_logger("estimated measurements");
-    
+
       if(helper.rank()==0){
         logger<<std::endl
               <<"Number of measurements : "<<nMeas
@@ -1751,7 +1726,7 @@ namespace Dune {
                  <<" , "<<nMeas<<" ) = "<<L_accept_value
                  <<std::endl;
       }
-    
+
       if( helper.size()>1 ){
         // Broadcast L_return to other processes:
         MPI_Bcast(&(L_return),1,MPI_DOUBLE,0,helper.getCommunicator());
@@ -1760,7 +1735,7 @@ namespace Dune {
       return L_return;
     }
 
-   
+
   }
 }
 
