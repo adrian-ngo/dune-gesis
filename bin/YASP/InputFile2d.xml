@@ -15,6 +15,9 @@
 #define VERBOSITY_DEBUG_LEVEL     9
 -->
 <inputfile verbosity="6">
+  <!-- ***************************************** -->
+  <!-- Which quantities should be plotted ? -->
+  <!-- ***************************************** -->
   <plot_options
       vtk_plot_yfield="yes"
       vtk_plot_wells="no"
@@ -36,7 +39,7 @@
       vtk_plot_m0_old="no"
       />
   <!-- ***************************************** -->
-  <!-- General switches: -->
+  <!-- What problems should be solved? -->
   <!-- ***************************************** -->
   <problem_types 
       new_YField="yes"  
@@ -84,7 +87,7 @@
   <!-- *********************************************** -->
   <!-- Geo-statistical properties of the random field  -->
   <!-- *********************************************** -->
-  <yfield_properties vertical_zones="1" well_type="cell" random_seed="100">
+  <yfield_properties vertical_zones="1" well_type="cell" random_seed="0">
     <zone 
         model="spherical"
         bottom="10"
