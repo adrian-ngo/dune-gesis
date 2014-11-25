@@ -1,3 +1,7 @@
+#!/bin/sh
+#
+#
+#
 echo "Download DUNE modules (tar balls)."
 wget http://www.dune-project.org/download/2.3.1/dune-common-2.3.1.tar.gz
 wget http://www.dune-project.org/download/2.3.1/dune-geometry-2.3.1.tar.gz

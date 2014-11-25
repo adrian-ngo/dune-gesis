@@ -148,12 +148,12 @@ make_install()
         echo "Special configure of parallel FFTW."
 	./configure --prefix=$installdir MPICC=mpicc --enable-threads --enable-mpi
         echo "Special configure of parallel FFTW done."
-    if [[ "$packagename" == *"hdf5-1.8"* ]]; # means: $packagename contains hdf5-1.8
+    elif [[ "$packagename" == *"hdf5-1.8"* ]]; # means: $packagename contains hdf5-1.8
     then
         echo "Special configure of parallel HDF5."
 	./configure --prefix=$installdir CC=mpicc --enable-parallel --enable-shared
         echo "Special configure of parallel HDF5 done."
-    elif [ "$packagename" = "ug-3.11.0" ]
+    elif [[ "$packagename" = "ug-3.11.0" ]];
     then
         echo "Special configure of UG for DUNE."
 	./configure --prefix=$installdir --enable-dune --enable-parallel CC=g++ MPICC=mpicc CXXFLAGS="-O3 -DNDEBUG" F77=gfortran
