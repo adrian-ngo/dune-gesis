@@ -1,7 +1,7 @@
 DUNE-GESIS
 ==========
 
-This is version 1.0.1-rc1 of the DUNE-GESIS module.
+This is version 1.0.1 of the DUNE-GESIS module.
 
 GESIS (GEoStatistical Inversion based on Stationary problems) 
 is a collection of applications for the solution of 
@@ -39,7 +39,7 @@ The following six applications can be built:
 Applications 1-4 are based on the cell-centered finite volume and the discontinuous Galerkin schemes (CCFV/DG),
 applications 5-6 are based on the standard Galerkin FEM method and the streamline diffusion method (FEM/SDFEM).
 
-If you need help, please contact the author <ngo@eclipso.de>.
+If you need help, please contact the author Adrian Ngo <ngo@eclipso.de>.
 
 
 
@@ -98,19 +98,13 @@ and version 2 of the GNU General Public License with a special run-time exceptio
 
 See the file COPYING for full copying permissions.
 
+
+
 Installation
 ------------
 
 Short installation instructions can be found in file INSTALL. For the
-full instructions please see [1].
-
-Inside the 'tools/' directory, you can find some useful shell scripts and an example of a DUNE build configuration file 
-which may help you download and install the software required to build DUNE-GESIS.
-The shell script 'getDUNE.sh' helps you download the correct version of all DUNE modules (tar balls) required for DUNE-GESIS.
-Alternatively, the shell script 'gitcloneDUNE.sh' helps you download the correct version of all DUNE modules via git (faster!).
-The shell script 'getSoftware.sh' downloads the external software libraries.
-The shell script 'bash_install.sh' can be used to build and install those external software libraries into your home directory.
-Please have a look inside these scripts before you run them.
+full instructions about DUNE please see [1].
 
 
 
