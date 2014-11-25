@@ -1,0 +1,38 @@
+######################################################################################################################################
+#
+#
+# DUNE options file (Read http://www.dune-project.org/doc/installation-notes.html)
+#
+#
+# You must go to the DUNE root directory (this is the directory where you can see all your dune-modules)
+# and use the tools 'dunecontrol' to build DUNE-GESIS.
+# Run
+# ./dune-common/bin/dunecontrol --help 
+# to see the documentation of this tool.
+#
+#
+# Starting the DUNE build using autotools:
+# ========================================
+# Run
+# ./dune-common/bin/dunecontrol --opts="examples.opts" --module="dune-gesis" all
+#
+#
+# Starting the DUNE build using CMake:
+# ====================================
+# Run
+# ./dune-common/bin/dunecontrol --use-cmake --builddir="../Build" --opts="examples.opts" --module="dune-gesis" all
+#
+# With CMake, you have the option to build everything outside the source directory (clear seperation between source code and build results).
+#
+######################################################################################################################################
+#
+#
+CONFIGURE_FLAGS="--enable-parallel CC=gcc CXX=g++ MPICC=mpicc CXXFLAGS='-march=native -O3 -DNDEBUG' --with-ug=$HOME/Software/ug-3.11.0 --with-fftw3=$HOME/Software/fftw-3.3.4 --with-hdf5=$HOME/Software/hdf5-1.8.13 --without-parmetis --with-metis=$HOME/Software/DUNE/Downloads/metis-4.0.3 --with-metis-lib=libmetis.a --with-boost=$HOME/Software/boost_1_47_0"
+#
+#
+CMAKE_FLAGS="-DSUPERLU_ROOT=$HOME/Software/superlu_4.3 -DFFTW3_ROOT_DIR=$HOME/Software/fftw-3.3.4 -DHDF5_ROOT=$HOME/Software/hdf5-1.8.13 -DBOOST_ROOT=$HOME/Software/boost_1_47_0"
+#
+#
+MAKE_FLAGS="-j 8 -s -k"
+#
+#
