@@ -9,11 +9,13 @@
 #ifndef DUNE_GESIS_FFT_FIELD_GENERATOR_HH
 #define	DUNE_GESIS_FFT_FIELD_GENERATOR_HH
 
+
 #include <fftw3.h>
 #include <fftw3-mpi.h>
 
 #include <time.h>                      // define time()
 
+#ifdef OLD_GEN
 /*
   Random Generator Classes
 */
@@ -22,6 +24,13 @@
 #include <dune/gesis/yfield/RAND/mersenne.cc>             // code for random number generator
 #include <dune/gesis/yfield/RAND/stoc1.cc>                // random library source code
 #include <dune/gesis/yfield/RAND/userintf.cc>             // define system specific user interface
+
+#else
+
+#include <random>      // C++11 random number generator
+
+#endif
+
 
 #include <dune/gesis/common/io/HDF5Tools.hh>
 
@@ -563,6 +572,7 @@ namespace Dune {
           watch.reset();
 
 
+#ifdef OLD_GEN
           // initialize pseudo-random generator
           int seed = inputdata.yfield_properties.random_seed;
           if( seed == 0 )
@@ -576,6 +586,27 @@ namespace Dune {
           }
 
           StochasticLib1 stochastic( seed ); // make instance of random library
+
+#else
+
+          // initialize pseudo-random generator
+          std::random_device rd;
+          std::mt19937_64 gen; // 64-bit Mersenne Twister
+          std::normal_distribution<> ndist(0,1); // mean = 0, sigma = 1
+
+          int seed = inputdata.yfield_properties.random_seed;
+          if( seed == 0 ){
+            seed = rd();
+          }
+          // different seed for different processors -> very IMPORTANT to obtain the right result!
+          seed += my_rank;
+
+          gen.seed( seed );
+            
+          if(my_rank==0)
+            std::cout << "seed = " << seed << std::endl;
+
+#endif
 	
           fftw_complex *KField;
           KField = (fftw_complex*) fftw_malloc( ( alloc_local ) * sizeof (fftw_complex) );
@@ -588,9 +619,13 @@ namespace Dune {
 
 			  
             // normal distribution with mean 0 and standard deviation 1
+#ifdef OLD_GEN
             random_epsilon[0] = stochastic.Normal( 0.0, 1.0 );
             random_epsilon[1] = stochastic.Normal( 0.0, 1.0 );
-
+#else
+            random_epsilon[0] = ndist(gen);
+            random_epsilon[1] = ndist(gen);
+#endif
             REAL lambda = tmp_vec[ jj ] / scalingfactor;
 
             if (lambda > 0.0) {
@@ -623,10 +658,17 @@ namespace Dune {
           
           if(!CR){
             if(my_rank==0){
-                if(inputdata.yfield_properties.zones[ii].qbb_y>0.0)
-                    beta_mean= inputdata.yfield_properties.zones[ii].beta + stochastic.Normal(0.0, 1.0) * std::sqrt( inputdata.yfield_properties.zones[ii].qbb_y );
-                else
-                    beta_mean= inputdata.yfield_properties.zones[ii].beta;
+              if(inputdata.yfield_properties.zones[ii].qbb_y>0.0){
+#if OLD_GEN
+                REAL rv = stochastic.Normal(0.0, 1.0);
+#else
+                REAL rv = ndist(gen);
+#endif
+
+                beta_mean = inputdata.yfield_properties.zones[ii].beta + rv * std::sqrt( inputdata.yfield_properties.zones[ii].qbb_y );
+              }
+              else
+                beta_mean= inputdata.yfield_properties.zones[ii].beta;
             }
           }
           
@@ -1073,6 +1115,7 @@ namespace Dune {
           Dune::Timer watch;
           watch.reset();
     
+#ifdef OLD_GEN
           // initialize pseudo-random generator
           int seed = inputdata.yfield_properties.random_seed;
           if( seed == 0 )
@@ -1090,6 +1133,27 @@ namespace Dune {
           //fftw_complex *EigenvaluesRandomized; // This variable is not needed if we use KField directly to store the result of both input and output of the FFT backward transformation
           //EigenvaluesRandomized = (fftw_complex*) fftw_malloc(( /*Ny * Nx*/alloc_local ) * sizeof (fftw_complex));
 
+#else
+          // initialize pseudo-random generator
+          std::random_device rd;
+          std::mt19937_64 gen; // 64-bit Mersenne Twister
+          std::normal_distribution<> ndist(0,1); // mean = 0, sigma = 1
+
+          int seed = inputdata.yfield_properties.random_seed;
+          if( seed == 0 ){
+            seed = rd();
+          }
+          // different seed for different processors -> very IMPORTANT to obtain the right result!
+          seed += my_rank;
+
+          gen.seed( seed );
+            
+          if(my_rank==0)
+            std::cout << "seed = " << seed << std::endl;
+
+#endif
+
+
           fftw_complex *KField;
           KField = (fftw_complex*) fftw_malloc(( /*Ny * Nx*/alloc_local ) * sizeof (fftw_complex));
 
@@ -1105,9 +1169,13 @@ namespace Dune {
 
           for (UINT jj = 0; jj < tmp_vec.size(); jj++) {
 
-
+#ifdef OLD_GEN
             random_epsilon[0] = stochastic.Normal( 0.0, 1.0 );
             random_epsilon[1] = stochastic.Normal( 0.0, 1.0 );
+#else
+            random_epsilon[0] = ndist(gen);
+            random_epsilon[1] = ndist(gen);
+#endif
       
             lambda = tmp_vec[ jj ] / scalingfactor;
       
@@ -1173,10 +1241,17 @@ namespace Dune {
           REAL beta_mean=0.0;
           if(!CR){
             if(my_rank==0){
-                if(inputdata.yfield_properties.zones[ii].qbb_y>0.0)
-                    beta_mean = inputdata.yfield_properties.zones[ii].beta + stochastic.Normal(0.0, 1.0) * std::sqrt( inputdata.yfield_properties.zones[ii].qbb_y );
-                else
-                    beta_mean = inputdata.yfield_properties.zones[ii].beta;
+              if(inputdata.yfield_properties.zones[ii].qbb_y>0.0)
+                {
+#if OLD_GEN
+                  REAL rv = stochastic.Normal(0.0, 1.0);
+#else
+                  REAL rv = ndist(gen);
+#endif
+                  beta_mean = inputdata.yfield_properties.zones[ii].beta + rv * std::sqrt( inputdata.yfield_properties.zones[ii].qbb_y );
+                }
+              else
+                beta_mean = inputdata.yfield_properties.zones[ii].beta;
             }
             MPI_Bcast(&(beta_mean),1,MPI_DOUBLE,0,comm);
           }

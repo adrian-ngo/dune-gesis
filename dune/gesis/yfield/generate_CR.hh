@@ -32,30 +32,50 @@ void generate_CR( GRID& theGrid,
                   const Dune::MPIHelper& helper
                   ){     
 
-    logger<<"Generate "<<inputdata.CR_parameters.total<<" conditional realizations!!!"<<std::endl;
-    Dune::Timer watch_total;
-    watch_total.reset();
+  logger<<"Generate "<<inputdata.CR_parameters.total<<" conditional realizations!!!"<<std::endl;
+  Dune::Timer watch_total;
+  watch_total.reset();
     
-    // counter if some realizations need to be done more often! 
-    UINT redo=0;
+  // counter if some realizations need to be done more often! 
+  UINT redo=0;
 
-    UINT nmeas=orig_measurements.nMeasurements();
-    std::vector< REAL > MeasurementErrorsV(nmeas, 0.0 );
+  UINT nmeas=orig_measurements.nMeasurements();
+  std::vector< REAL > MeasurementErrorsV(nmeas, 0.0 );
 
-    for(UINT ii=0;ii<nmeas;ii++)
-        MeasurementErrorsV[ ii ] = pow(orig_measurements[ii].value * orig_measurements[ ii ].rel_error 
-                         + orig_measurements[ ii ].abs_error,2);
+  for(UINT ii=0;ii<nmeas;ii++)
+    MeasurementErrorsV[ ii ] = pow(orig_measurements[ii].value * orig_measurements[ ii ].rel_error 
+                                   + orig_measurements[ ii ].abs_error,2);
         
-#ifdef SEED_OFF
-    int seed = 100;
-    // different seed for different processors -> very IMPORTANT to obtain the right result!
-    seed+=helper.rank();
+#ifdef OLD_GEN
+
+  int seed = inputdata.yfield_properties.random_seed;
+  if( seed == 0 )
+    seed = (int) (time(0)); // create seed out ot the current time if the user-specified seed == 0 (default)
+
+  // different seed for different processors -> very IMPORTANT to obtain the right result!
+  seed += helper.rank();
+  StochasticLib1 stochastic( seed ); // make instance of random library
+
 #else
-    int seed = (int) (time(0)); // create seed out ot the current time
-    // different seed for different processors -> very IMPORTANT to obtain the right result!
-    seed+=helper.rank();
+
+  // initialize pseudo-random generator
+  std::random_device rd;
+  std::mt19937_64 gen; // 64-bit Mersenne Twister
+  std::normal_distribution<> ndist(0,1); // mean = 0, sigma = 1
+
+  int seed = inputdata.yfield_properties.random_seed;
+  if( seed == 0 ){
+    seed = rd();
+  }
+  // different seed for different processors -> very IMPORTANT to obtain the right result!
+  seed += helper.rank();
+
+  gen.seed( seed );
+
 #endif
-    StochasticLib1 stochastic( seed ); // make instance of random library
+
+
+
     
     YFG YField_unconditional( yfg_orig );
    
@@ -97,7 +117,13 @@ void generate_CR( GRID& theGrid,
         MEASLIST measurements_rand(orig_measurements);
         //measurements_rand.write_to_logger("measurements rand, before randomizing");
         for(UINT ii=0;ii<nmeas;ii++){
-            measurements_rand[ii].value+=stochastic.Normal( 0.0, std::sqrt(MeasurementErrorsV[ ii ]) );
+#if OLD_GEN
+          REAL rv = stochastic.Normal(0.0, 1.0);
+#else
+          REAL rv = ndist(gen);
+#endif
+
+          measurements_rand[ii].value += rv * std::sqrt(MeasurementErrorsV[ ii ]);
         }
         //measurements_rand.write_to_logger("measurements rand, after randomizing");
         

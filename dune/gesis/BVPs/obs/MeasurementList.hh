@@ -548,10 +548,13 @@ namespace Dune {
         bool bExitWhileLoop = false;
 
         std::random_device rd;
-        std::mt19937 gen(rd());
+        std::mt19937_64 gen; // 64-bit Mersenne Twister
+
+        int seed = rd();
+        gen.seed( seed );
         std::normal_distribution<> distr(0,1);
         //std::uniform_real_distribution<REAL> distr(-1.0, 1.0);
-        //gen.seed(11);
+
 
         while( !instream.eof() && !bExitWhileLoop ) {
           if(iLine > -1){
