@@ -15,21 +15,7 @@
 
 #include <time.h>                      // define time()
 
-#ifdef OLD_GEN
-/*
-  Random Generator Classes
-*/
-#include <dune/gesis/yfield/RAND/randomc.hh>                   // define classes for random number generators
-#include <dune/gesis/yfield/RAND/stocc.hh>                     // define random library classes
-#include <dune/gesis/yfield/RAND/mersenne.cc>             // code for random number generator
-#include <dune/gesis/yfield/RAND/stoc1.cc>                // random library source code
-#include <dune/gesis/yfield/RAND/userintf.cc>             // define system specific user interface
-
-#else
-
-#include <random>      // C++11 random number generator
-
-#endif
+#include <random>      // C++11 random number generator (This works with g++-4.8.)
 
 
 #include <dune/gesis/common/io/HDF5Tools.hh>
@@ -572,23 +558,6 @@ namespace Dune {
           watch.reset();
 
 
-#ifdef OLD_GEN
-          // initialize pseudo-random generator
-          int seed = inputdata.yfield_properties.random_seed;
-          if( seed == 0 )
-            seed = (int) (time(0)); // create seed out ot the current time if the user-specified seed == 0 (default)
-
-          // different seed for different processors -> very IMPORTANT to obtain the right result!
-          seed += my_rank + ii;
-
-          if( inputdata.verbosity >= VERBOSITY_INVERSION ){
-            std::cout << "Seed for new random field = " << seed << std::endl;
-          }
-
-          StochasticLib1 stochastic( seed ); // make instance of random library
-
-#else
-
           // initialize pseudo-random generator
           std::random_device rd;
           std::mt19937_64 gen; // 64-bit Mersenne Twister
@@ -606,7 +575,6 @@ namespace Dune {
           if(my_rank==0)
             std::cout << "seed = " << seed << std::endl;
 
-#endif
 	
           fftw_complex *KField;
           KField = (fftw_complex*) fftw_malloc( ( alloc_local ) * sizeof (fftw_complex) );
@@ -619,13 +587,9 @@ namespace Dune {
 
 			  
             // normal distribution with mean 0 and standard deviation 1
-#ifdef OLD_GEN
-            random_epsilon[0] = stochastic.Normal( 0.0, 1.0 );
-            random_epsilon[1] = stochastic.Normal( 0.0, 1.0 );
-#else
             random_epsilon[0] = ndist(gen);
             random_epsilon[1] = ndist(gen);
-#endif
+
             REAL lambda = tmp_vec[ jj ] / scalingfactor;
 
             if (lambda > 0.0) {
@@ -1115,25 +1079,6 @@ namespace Dune {
           Dune::Timer watch;
           watch.reset();
     
-#ifdef OLD_GEN
-          // initialize pseudo-random generator
-          int seed = inputdata.yfield_properties.random_seed;
-          if( seed == 0 )
-            seed = (int) (time(0)); // create seed out ot the current time if the user-specified seed == 0 (default)
-
-          // +ii for different seeds on different zones (IMPORTANT for small field)
-          // different seed for different processors -> very IMPORTANT to obtain the right result!
-          seed += my_rank + ii;
-          
-          if( inputdata.verbosity >= VERBOSITY_INVERSION ){
-            std::cout << "Seed for new random field = " << seed << std::endl;
-          }
-          StochasticLib1 stochastic(seed); // make instance of random library
-
-          //fftw_complex *EigenvaluesRandomized; // This variable is not needed if we use KField directly to store the result of both input and output of the FFT backward transformation
-          //EigenvaluesRandomized = (fftw_complex*) fftw_malloc(( /*Ny * Nx*/alloc_local ) * sizeof (fftw_complex));
-
-#else
           // initialize pseudo-random generator
           std::random_device rd;
           std::mt19937_64 gen; // 64-bit Mersenne Twister
@@ -1151,8 +1096,6 @@ namespace Dune {
           if(my_rank==0)
             std::cout << "seed = " << seed << std::endl;
 
-#endif
-
 
           fftw_complex *KField;
           KField = (fftw_complex*) fftw_malloc(( /*Ny * Nx*/alloc_local ) * sizeof (fftw_complex));
@@ -1169,13 +1112,8 @@ namespace Dune {
 
           for (UINT jj = 0; jj < tmp_vec.size(); jj++) {
 
-#ifdef OLD_GEN
-            random_epsilon[0] = stochastic.Normal( 0.0, 1.0 );
-            random_epsilon[1] = stochastic.Normal( 0.0, 1.0 );
-#else
             random_epsilon[0] = ndist(gen);
             random_epsilon[1] = ndist(gen);
-#endif
       
             lambda = tmp_vec[ jj ] / scalingfactor;
       
