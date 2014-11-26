@@ -371,10 +371,12 @@ namespace Dune {
                                       GFS_GW,
                                       IDT,
                                       YFG,
+                                      MEASLIST,
                                       DIR>( grid,
                                             gfs_gw,
                                             inputdata,
                                             yfg_orig,
+                                            orig_measurements,
                                             baselevel,
                                             dir,
                                             helper
