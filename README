@@ -170,11 +170,11 @@ VTK files (*.vtu or *.pvtu) containing output that can be opened in the visualiz
 
 Links
 -----
-
-0. http://www.dune-project.org/pdelab/
-1. http://www.dune-project.org
-2. http://www.dune-project.org/doc/installation-notes.html
-3. http://dune-project.org/doc/buildsystem/buildsystem.pdf
-4. http://gcc.gnu.org/onlinedocs/libstdc++/faq.html#faq.license
-5. http://lists.dune-project.org/mailman/listinfo/dune-pdelab
-6. http://users.dune-project.org/projects/dune-pdelab/issues
+0. https://github.com/adrian-ngo/dune-gesis
+1. http://www.dune-project.org/pdelab/
+2. http://www.dune-project.org
+3. http://www.dune-project.org/doc/installation-notes.html
+4. http://dune-project.org/doc/buildsystem/buildsystem.pdf
+5. http://gcc.gnu.org/onlinedocs/libstdc++/faq.html#faq.license
+6. http://lists.dune-project.org/mailman/listinfo/dune-pdelab
+7. http://users.dune-project.org/projects/dune-pdelab/issues
