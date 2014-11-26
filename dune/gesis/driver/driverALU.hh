@@ -80,15 +80,6 @@ namespace Dune {
         extensions[i] = inputdata.domain_data.extensions[i];
 
 
-
-      //#ifdef USE_ALUGRID
-      /*
-        Wait until the new DGF file is fully written before every processor starts reading data from it!
-        Otherwise, we might run into trouble because some fast process is reading old info!
-      */
-      logger << "---MPI_Barrier---" << std::endl;
-      MPI_Barrier( helper.getCommunicator() );
-
       UINT baselevel = inputdata.domain_data.alugrid_baselevel;
 
       // make grid
@@ -96,21 +87,19 @@ namespace Dune {
       Dune::FieldVector<REAL,dim> UpperRight;
       UpperRight[0] = inputdata.domain_data.extensions[0];
       UpperRight[1] = inputdata.domain_data.extensions[1];
+      UpperRight[2] = inputdata.domain_data.extensions[2];
 
       Dune::array<unsigned int,dim> elements;
       elements[0] = inputdata.domain_data.nCells[0];
       elements[1] = inputdata.domain_data.nCells[1];
-
-#ifdef DIMENSION3
-      UpperRight[2] = inputdata.domain_data.extensions[2];
       elements[2] = inputdata.domain_data.nCells[2];
-#endif
 
-      //typedef Dune::ALUGrid<dim,dim,Dune::cube,Dune::nonconforming> GRID;
       typedef Dune::ALUGrid<dim,dim,Dune::cube,Dune::nonconforming> GRID;
 
       watch.reset();
       Dune::StructuredGridFactory<GRID> structuredGridFactory;
+      std::cout << "=== Dune::StructuredGridFactory building 3D ALUGRID ... "
+                << std::endl;
       Dune::shared_ptr<GRID> gridptr =
         structuredGridFactory.createCubeGrid(LowerLeft, UpperRight, elements);
 
@@ -130,13 +119,11 @@ namespace Dune {
 
       std::cout << "ALUGRID grid baselevel = " << grid.maxLevel() << std::endl;
 
-      //#endif // USE_ALUGRID
 
       // 1.) GV and GFS for the Groundwater Equation:
       logger << "Get level gridview for the flow equation." << std::endl;
       typedef typename GRID::LevelGridView GV_GW;
 
-      //const GV_GW &gv_gw = grid.levelView(baselevel);
       GV_GW gv_gw = grid.levelGridView(baselevel); // non-const because load-balancing may change the grid for rt0_pressurefield
 
 
