@@ -29,18 +29,27 @@ Get the correct version of the DUNE modules on which DUNE-GESIS is based:
 'getDUNE.sh' helps you download the correct version of all DUNE modules (tarballs) required for DUNE-GESIS.
 'gitcloneDUNE.sh' (as an alternative to 'getDUNE.sh') helps you download the correct version of all DUNE modules via git (faster!).
 
-An example of a DUNE build configuration file helps you building all DUNE modules.
-Keep the paths to BOOST, UG, FFTW3 and HDF5 (and probably metis) 
+'example.opts' is an example of a DUNE build configuration file 
+that helps you build all DUNE modules using the tool './dune-common/bin/dunecontrol'.
+Keep the reference paths to BOOST, UG, FFTW3 and HDF5 (and probably metis) 
 synchronized with the variables softwaredir and installdir inside 'bash_install.sh'
 
 Have a look inside these scripts before you run them.
 
 For a full explanation of the DUNE installation process please read the installation notes [0]. 
+
+
+
+
+
+
+
+
+
+General build instructions for DUNE modules
+-------------------------------------------
+
 The following introduction is related to the general way how DUNE modules are build. 
-
-
-Getting started
----------------
 
 Suppose you have downloaded all DUNE modules of interest to your
 computer and extracted then in one common directory. See [1] for a

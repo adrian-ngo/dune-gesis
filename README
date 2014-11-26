@@ -103,8 +103,68 @@ See the file COPYING for full copying permissions.
 Installation
 ------------
 
-Short installation instructions can be found in file INSTALL. For the
-full instructions about DUNE please see [1].
+Short installation instructions can be found in file 'INSTALL'. 
+For the full instructions about DUNE please see [1].
+
+
+
+Getting started
+---------------
+The six applications mentioned above (gesis2dDG, gesis3dDG, gesisUG2dDG, gesisALU3dDG, gesis2dFEM, gesis3dFEM)
+are built inside the 'dune-gesis/src/' directory.
+
+To run these applications, switch to one of the working directories
+
+- 'dune-gesis/bin/YASP' for gesis2dDG, gesis3dDG, gesis2dFEM and gesis3dFEM,
+- 'dune-gesis/bin/UG' for gesisUG2dDG,
+- 'dune-gesis/bin/ALUGRID' for gesisALU3dDG
+
+and first run 
+
+./updateBin.sh 
+
+to retrieve the latest build results.
+
+Inside these directories, you will find examples of input files required by these applications.
+The input files contain domain data, grid data and geostatistical properties of the
+parameter field (log hydraulic conductivity) and a set of boundary value problems.
+
+'InputFile2d.xml' for 2-D simulations 
+or 
+'InputFile3d.xml' for for 3-D simulations.
+
+The author is working on the documentation of these input files.
+Please contact him directly via 
+
+"ngo@eclipso.de" 
+
+or take a look at
+
+"https://github.com/adrian-ngo/dune-gesis" 
+
+where updates may be made available in the future.
+
+
+An application can be started in sequential mode directly
+or in parallel mode using mpirun, e.g.:
+
+If you are inside the directory 'dune-gesis/bin/YASP', you may run
+
+./gesis2dDG
+
+or
+
+mpirun -np 4 ./gesis2dDG
+
+The amount of output can be regulated by the verbosity attribute inside the input XML.
+The <domain_data><extensions> tag specifies the length per dimension of the physical domain.
+The <domain_data><virtual_nCells> tag specifies the numbers of mesh cells per dimension.
+
+Different types of output data are found in DATA, BUFFER_DG (BUFFER_FEM) and OUTPUT_DG (OUTPUT_FEM):
+HDF5 files (*.h5) containing multi-dimensional structured arrays of discretized quantities 
+such the parameter field (Y = log conductivity) or the sensitivity fields.
+VTK files (*.vtu or *.pvtu) containing output that can be opened in the visualization tool Paraview.
+
 
 
 
