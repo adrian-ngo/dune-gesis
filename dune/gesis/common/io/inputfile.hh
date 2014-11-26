@@ -1848,7 +1848,7 @@ namespace Dune{
           }
 
           parallel_fine_tuning.JQJ_max
-            = pt.get("inputfile.parallel_fine_tuning.<xmlattr>.JQJ_max",1);
+            = pt.get("inputfile.parallel_fine_tuning.<xmlattr>.JQJ_max",4096);
 
           parallel_fine_tuning.JQJ_slices
             = pt.get("inputfile.parallel_fine_tuning.<xmlattr>.JQJ_slices",1);
