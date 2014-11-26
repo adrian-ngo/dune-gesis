@@ -4,7 +4,7 @@
 # DUNE options file (Read http://www.dune-project.org/doc/installation-notes.html)
 #
 #
-# You must go to the DUNE root directory (this is the directory where you can see all your dune-modules)
+# You must change to the DUNE root directory (this is the directory where you can see all your dune-modules)
 # and use the tools 'dunecontrol' to build DUNE-GESIS.
 # Run
 # ./dune-common/bin/dunecontrol --help 

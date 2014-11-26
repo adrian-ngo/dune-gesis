@@ -1,22 +1,19 @@
 Installation Instructions
 =========================
 
-Inside the 'tools/' directory, you can find some useful shell scripts and 
+Inside the 'tools/installation/' sub-directory, you can find some useful shell scripts and 
 an example of a DUNE build configuration file which may help you download 
 and install the software required to build DUNE-GESIS.
-The shell script 'getDUNE.sh' helps you download the correct version of 
-all DUNE modules (tar balls) required for DUNE-GESIS.
-Alternatively, the shell script 'gitcloneDUNE.sh' helps you download the 
-correct version of all DUNE modules via git (faster!).
-The shell script 'getSoftware.sh' downloads the external software libraries.
-The shell script 'bash_install.sh' can be used to build and install those 
-external software libraries into your home directory.
+
+'getDUNE.sh' helps you download the correct version of all DUNE modules (tarballs) required for DUNE-GESIS.
+'gitcloneDUNE.sh' (as an alternative to 'getDUNE.sh') helps you download the correct version of all DUNE modules via git (faster!).
+'getSoftware.sh' downloads the external software libraries.
+'bash_install.sh' can be used to build and install those external software libraries into your home directory.
+
 Please have a look inside these scripts before you run them.
 
-For a full explanation of the DUNE installation process please read 
-the installation notes [0]. 
-The following introduction is related to the general way how 
-DUNE modules are build. 
+For a full explanation of the DUNE installation process please read the installation notes [0]. 
+The following introduction is related to the general way how DUNE modules are build. 
 
 
 Getting started
