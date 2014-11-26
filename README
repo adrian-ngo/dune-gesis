@@ -1,7 +1,7 @@
 DUNE-GESIS
 ==========
 
-This is version 1.0.1 of the DUNE-GESIS module.
+This is version 1.0.0 of the DUNE-GESIS module.
 
 GESIS (GEoStatistical Inversion based on Stationary problems) 
 is a collection of applications for the solution of 
@@ -54,7 +54,7 @@ DUNE-GESIS depends on the following software packages:
 * The DUNE module dune-pdelab, version 2.0.0.
 * DUNE-GESIS uses lots of templates, so you need a decent C++ compiler.
   C++11 support is required. 
-  It is tested for gcc 4.8.2, gcc 4.8.3 and clang 3.4.
+  It is tested for gcc 4.8 and clang 3.4.
 
 For a full explanation of the DUNE installation process please read
 the installation notes [2] or the build system HOWTO [3].

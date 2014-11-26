@@ -4,8 +4,8 @@
 
 #Name of the module
 Module: dune-gesis
-Version: 1.0.1
-Maintainer: adrian.ngo@iwr.uni-heidelberg.de
+Version: 1.0.0
+Maintainer: ngo@eclipso.de
 #depending on
 #
 Depends: dune-common (>= 2.3.1) dune-istl (>= 2.3.1) dune-geometry (>= 2.3.1) dune-grid (>= 2.3.1) dune-localfunctions (>= 2.3.1) dune-typetree (>= 2.3.1) dune-pdelab (>= 2.0.0)

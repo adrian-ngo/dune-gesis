@@ -1,16 +1,39 @@
 Installation Instructions
 =========================
 
-Inside the 'tools/installation/' sub-directory, you can find some useful shell scripts and 
-an example of a DUNE build configuration file which may help you download 
-and install the software required to build DUNE-GESIS.
+Inside the 'tools/installation/' sub-directory, you can find some useful shell scripts
+which may help you download and install the software required to build DUNE-GESIS.
 
-'getDUNE.sh' helps you download the correct version of all DUNE modules (tarballs) required for DUNE-GESIS.
-'gitcloneDUNE.sh' (as an alternative to 'getDUNE.sh') helps you download the correct version of all DUNE modules via git (faster!).
+The author has tested this on the environments
+
+OS version       : Linux version 3.13.0-39-generic (Ubuntu 14.04.1 LTS, trusty)
+Compiler version : gcc/g++ 4.8 or clang/clang++ 3.4 
+MPI version      : Open MPI 1.6.5 
+CPU(s)           : Intel(R) Core(TM) i7-3630QM CPU @ 2.40GHz
+
+and
+
+OS version       : Linux version 2.6.32-431.29.2.el6.x86_64 (CentOS release 6.5 (Final))
+Compiler version : gcc-4.8 (GCC) 4.8.3
+MPI version      : Intel(R) MPI Library for Linux* OS, Version 4.1 Update 3 Build 20140124
+CPUs             : Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
+
+This is only meant to be a reference.
+
+
+First download and install external libraries:
 'getSoftware.sh' downloads the external software libraries.
 'bash_install.sh' can be used to build and install those external software libraries into your home directory.
 
-Please have a look inside these scripts before you run them.
+Get the correct version of the DUNE modules on which DUNE-GESIS is based:
+'getDUNE.sh' helps you download the correct version of all DUNE modules (tarballs) required for DUNE-GESIS.
+'gitcloneDUNE.sh' (as an alternative to 'getDUNE.sh') helps you download the correct version of all DUNE modules via git (faster!).
+
+An example of a DUNE build configuration file helps you building all DUNE modules.
+Keep the paths to BOOST, UG, FFTW3 and HDF5 (and probably metis) 
+synchronized with the variables softwaredir and installdir inside 'bash_install.sh'
+
+Have a look inside these scripts before you run them.
 
 For a full explanation of the DUNE installation process please read the installation notes [0]. 
 The following introduction is related to the general way how DUNE modules are build. 
