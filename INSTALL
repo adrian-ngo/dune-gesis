@@ -21,6 +21,16 @@ CPUs             : Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
 This is only meant to be a reference.
 
 
+In order to build DUNE-GESIS you need at least the following software on your system:
+
+* A standard compliant C++ compiler, tested are g++ (>= 4.8) and Clang (>=3.4). 
+  Recent versions of ICC (>= 15) should work. 
+* MPI (either OpenMPI, lam, or mpich suffice)
+* automake (>= 1.9)
+* autoconf (>= 2.62)
+* libtool (>= 2.2)
+
+
 First download and install external libraries:
 'getSoftware.sh' downloads the external software libraries.
 'bash_install.sh' can be used to build and install those external software libraries into your home directory.
