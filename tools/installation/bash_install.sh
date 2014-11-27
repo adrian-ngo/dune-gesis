@@ -134,6 +134,10 @@ make_install()
     if [ "$packagename" = "metis-4.0.3" ]
     then
 	make
+        create_directory "$installdir"
+        create_directory "$installdir/Lib"
+        cp libmetis.a $installdir
+        cp Lib/*.h $installdir/Lib
         exit
     fi
     #

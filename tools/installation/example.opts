@@ -24,12 +24,10 @@
 #
 # With CMake, you have the option to build everything outside the source directory (clear seperation between source code and build results).
 #
-# Pre-requisite: gcc-4.8 (or higher: Adjust CC and CXX accordingly! )
-#
 ######################################################################################################################################
 #
 #
-CONFIGURE_FLAGS="--enable-parallel CC=gcc-4.8 CXX=g++-4.8 MPICC=mpicc CXXFLAGS='-march=native -O3 -DNDEBUG' --with-ug=$HOME/Software/ug-3.11.0 --with-fftw3=$HOME/Software/fftw-3.3.4 --with-hdf5=$HOME/Software/hdf5-1.8.13 --without-parmetis --with-metis=$HOME/Software/DUNE/Downloads/metis-4.0.3 --with-metis-lib=libmetis.a --with-boost=$HOME/Software/boost_1_47_0"
+CONFIGURE_FLAGS="--enable-parallel CC=gcc-4.8 CXX=g++-4.8 MPICC=mpiicc CXXFLAGS='-march=native -O3 -DNDEBUG' --with-ug=$HOME/Software/ug-3.11.0 --with-fftw3=$HOME/Software/fftw-3.3.4 --with-hdf5=$HOME/Software/hdf5-1.8.13 --without-parmetis --with-metis=$HOME/Software/metis-4.0.3 --with-metis-lib=libmetis.a --with-boost=$HOME/Software/boost_1_47_0"
 #
 #
 CMAKE_FLAGS="-DSUPERLU_ROOT=$HOME/Software/superlu_4.3 -DFFTW3_ROOT_DIR=$HOME/Software/fftw-3.3.4 -DHDF5_ROOT=$HOME/Software/hdf5-1.8.13 -DBOOST_ROOT=$HOME/Software/boost_1_47_0"
