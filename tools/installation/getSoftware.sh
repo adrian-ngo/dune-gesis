@@ -12,3 +12,5 @@ echo "Get UG ..."
 wget http://conan.iwr.uni-heidelberg.de/download/ug-3.11.0.tar.gz
 echo "Get metis (for ALUGrid) ..."
 wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz
+echo "Get ALUGrid version 1.52 ..."
+wget http://dune.mathematik.uni-freiburg.de/downloads/ALUGrid-1.52.tar.gz

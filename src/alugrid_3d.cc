@@ -78,7 +78,7 @@
 #include <dune/gesis/common/io/IO_routines.hh>
 #include <dune/gesis/yfield/FFTFieldGenerator.hh>
 
-#if HAVE_DUNE_ALUGRID
+#if HAVE_DUNE_ALUGRID || HAVE_ALUGRID
 #include <dune/gesis/driver/driverALU.hh>
 #endif
 
@@ -379,7 +379,7 @@ int main(int argc, char** argv) {
     Yfieldgenerator.init();
 
     double timeCounted = 0;
-#if HAVE_DUNE_ALUGRID
+#if HAVE_DUNE_ALUGRID || HAVE_ALUGRID
     // start the main-work-flow
     timeCounted = Dune::Gesis::driverALU<Dune::Gesis::CInputData,YFG,DIR,dim>( inputdata, Yfieldgenerator, dir, helper );
 #else

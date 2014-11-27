@@ -50,7 +50,7 @@ make_install()
 {
     packagename=$1
     installdir=$softwaredir/$packagename
-    metis_installdir=../metis-4.0.3 # metis is required only for dune-alugrid (3D parallel adaptive code)
+    metis_installdir=$softwaredir/metis-4.0.3 # metis is required only for dune-alugrid (3D parallel adaptive code)
 
     echo "processing package '$packagename'"
     if [ ! -f "$packagename.tar.gz" ]
@@ -157,6 +157,10 @@ make_install()
         echo "Special configure of parallel HDF5."
 	./configure --prefix=$installdir CC=mpicc --enable-parallel --enable-shared
         echo "Special configure of parallel HDF5 done."
+    elif [ "$packagename" = "ALUGrid-1.52" ]
+    then
+        echo "Special configure of ALUGrid 1.52 with metis-4.0.3 for DUNE."
+	./configure --prefix=$installdir CXX=mpic++ CXXFLAGS="-DNDEBUG" --with-metis="$metis_installdir"
     elif [[ "$packagename" = "ug-3.11.0" ]];
     then
         echo "Special configure of UG for DUNE."
