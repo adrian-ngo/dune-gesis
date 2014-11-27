@@ -75,9 +75,16 @@ Optional dependencies
 ---------------------
 * Adaptive mesh refinement in 2-D (sequential mode) requires UG (version 3.11.0 or higher).
   See http://www.iwr.uni-heidelberg.de/iwrwikiequipment/software/ug.
-* Adaptive mesh refinement in 3-D (parallel with dynamic load balancing) requires the DUNE module dune-alugrid (version 2.3 or higher).
-  See http://users.dune-project.org/projects/dune-alugrid
-
+* Adaptive mesh refinement in 3-D (parallel with dynamic load balancing) requires 
+  the external library 'ALUGrid' (version 1.52), available at
+  http://dune.mathematik.uni-freiburg.de/downloads/ALUGrid-1.52.tar.gz
+  or
+  the DUNE module dune-alugrid (version 2.3).
+  See http://users.dune-project.org/projects/dune-alugrid.
+  A partitioning of the domain using the graph partitioning tool Metis (version 4.0.3)  
+  was tested for a special test case. 
+  Metis (version 4.0.3) is available from
+  http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz
 
 
 Recommended software for the visualization of output data

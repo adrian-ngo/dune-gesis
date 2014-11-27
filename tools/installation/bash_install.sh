@@ -101,8 +101,6 @@ make_install()
         echo "Clean up"
 	rm -rvf SuperLU_4.2/
         exit
-    else
-	cd $packagename
     fi
     #
     if [ "$packagename" = "superlu_4.3" ]
@@ -127,8 +125,6 @@ make_install()
         echo "Clean up"
 	rm -rf SuperLU_4.3/
         exit
-    else
-	cd $packagename
     fi
     #
     if [ "$packagename" = "metis-4.0.3" ]
@@ -146,6 +142,9 @@ make_install()
 	make
         exit
     fi
+    #
+    echo "Default change to package directory..."
+    cd $packagename
     #
     if [[ "$packagename" == *"fftw-3.3"* ]]; # means: $packagename contains fftw-3.3
     then
