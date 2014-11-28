@@ -21,26 +21,50 @@ CPUs             : Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz
 This is only meant to be a reference.
 
 
+In order to build DUNE-GESIS you need at least the following software on your system:
+
+* A standard compliant C++ compiler, tested are g++ (>= 4.8) and Clang (>=3.4). 
+  Recent versions of ICC (>= 15) should work. 
+* MPI (either OpenMPI, lam, or mpich suffice)
+* automake (>= 1.9)
+* autoconf (>= 2.62)
+* libtool (>= 2.2)
+
+
 First download and install external libraries:
-'getSoftware.sh' downloads the external software libraries.
-'bash_install.sh' can be used to build and install those external software libraries into your home directory.
+ 'getSoftware.sh' downloads the external software libraries.
+ 'bash_install.sh' can be used to build and install those external software libraries into your home directory.
 
 Get the correct version of the DUNE modules on which DUNE-GESIS is based:
-'getDUNE.sh' helps you download the correct version of all DUNE modules (tarballs) required for DUNE-GESIS.
-'gitcloneDUNE.sh' (as an alternative to 'getDUNE.sh') helps you download the correct version of all DUNE modules via git (faster!).
+ 'getDUNE.sh' helps you download the correct version of all DUNE modules (tarballs) required for DUNE-GESIS.
+ 'gitcloneDUNE.sh' (as an alternative to 'getDUNE.sh') helps you download the correct version of all DUNE modules via git (faster!).
 
-An example of a DUNE build configuration file helps you building all DUNE modules.
-Keep the paths to BOOST, UG, FFTW3 and HDF5 (and probably metis) 
-synchronized with the variables softwaredir and installdir inside 'bash_install.sh'
+ 'example.opts' is an example of a DUNE build configuration file 
+ that helps you build all DUNE modules using the tool './dune-common/bin/dunecontrol'.
+ Keep the reference paths to BOOST, UG, FFTW3 and HDF5 (and probably metis) 
+ synchronized with the variables softwaredir and installdir inside 'bash_install.sh'
+ If your are using your own version of boost in combination with the --with-boost flag
+ it is recommended that the contents of your boost files lie inside a directory called "include/".
+ If this is not the case, simply change to your boost directory and create a symbolic link via
+
+  ln -s . include
 
 Have a look inside these scripts before you run them.
 
 For a full explanation of the DUNE installation process please read the installation notes [0]. 
+
+
+
+
+
+
+
+
+
+General build instructions for DUNE modules
+-------------------------------------------
+
 The following introduction is related to the general way how DUNE modules are build. 
-
-
-Getting started
----------------
 
 Suppose you have downloaded all DUNE modules of interest to your
 computer and extracted then in one common directory. See [1] for a

@@ -651,7 +651,7 @@ namespace Dune {
 
             REAL stochasticDisturbance = inputdata.inversion_parameters.disturbance;
             if( stochasticDisturbance > 1E-12 )
-              stochasticDisturbance * distr(gen);
+              stochasticDisturbance *= distr(gen);
 
             switch( type ){
             case 1:

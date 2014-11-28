@@ -4,7 +4,7 @@
 # 
 # The special variable BOOST_INCL is required only due to the faulty boost check 
 # in dune-common (2.3.1):
-BOOST_INCL = -I$(BOOST_CPPFLAGS)/include
+BOOST_INCL = -I$(BOOST_CPPFLAGS) -I$(BOOST_CPPFLAGS)/include
 # 
 #
 ##############################################################
@@ -70,6 +70,7 @@ gesisUG2dDG_LDADD = \
 
 gesisUG2dDG_LDFLAGS = $(AM_LDFLAGS) \
 	$(SUPERLU_LDFLAGS) \
+	$(UG_LDFLAGS) \
 	$(DUNE_LDFLAGS)
 
 
@@ -107,7 +108,8 @@ gesisALU3dDG_CPPFLAGS = $(AM_CPPFLAGS) -DUSE_ALUGRID \
 	$(FFTW3_CPPFLAGS) \
 	$(BOOST_INCL) \
 	$(PARMETIS_CPPFLAGS) \
-	$(SUPERLU_CPPFLAGS)
+	$(SUPERLU_CPPFLAGS) \
+	$(ALUGRID_CPPFLAGS)
 
 gesisALU3dDG_LDADD = \
 	$(DUNEMPILDFLAGS) \
@@ -116,11 +118,13 @@ gesisALU3dDG_LDADD = \
 	$(FFTW3_LIBS) \
 	$(PARMETIS_LIBS) \
 	$(SUPERLU_LIBS) \
+	$(ALUGRID_LIBS) \
 	$(DUNE_LDFLAGS) $(DUNE_LIBS) \
 	$(LDADD)
 
 gesisALU3dDG_LDFLAGS = $(AM_LDFLAGS) \
 	$(SUPERLU_LDFLAGS) \
+	$(ALUGRID_LDFLAGS) \
 	$(DUNE_LDFLAGS)
 
 

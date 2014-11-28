@@ -1,8 +1,12 @@
 #ifndef DUNE_GESIS_DRIVER_ALU_HH
 #define DUNE_GESIS_DRIVER_ALU_HH
 
-
+#ifdef HAVE_DUNE_ALUGRID
 #include <dune/alugrid/grid.hh>   // <--- This requires the dune-alugrid module.
+#endif
+#ifdef HAVE_ALUGRID
+#include <dune/grid/alugrid.hh>   // <--- This requires the external library ALUGrid.
+#endif
 
 #include <dune/grid/utility/structuredgridfactory.hh>
 #include <dune/gesis/common/io/HDF5Tools.hh>
@@ -59,11 +63,7 @@ namespace Dune {
       if( helper.rank()==0 && inputdata.verbosity>0 ){
         std::cout << std::endl;
         std::cout << "*************************" << std::endl;
-#ifdef USE_FEM
-        std::cout << "    FEM / SDFEM version" << std::endl;
-#else
         std::cout << "    CCFV / DG(" << pMAX << ") version" << std::endl;
-#endif
         std::cout << "*************************" << std::endl;
         std::cout << std::endl;
       }
@@ -80,8 +80,6 @@ namespace Dune {
         extensions[i] = inputdata.domain_data.extensions[i];
 
 
-
-      //#ifdef USE_ALUGRID
       /*
         Wait until the new DGF file is fully written before every processor starts reading data from it!
         Otherwise, we might run into trouble because some fast process is reading old info!
@@ -101,16 +99,16 @@ namespace Dune {
       elements[0] = inputdata.domain_data.nCells[0];
       elements[1] = inputdata.domain_data.nCells[1];
 
-#ifdef DIMENSION3
       UpperRight[2] = inputdata.domain_data.extensions[2];
       elements[2] = inputdata.domain_data.nCells[2];
-#endif
 
-      //typedef Dune::ALUGrid<dim,dim,Dune::cube,Dune::nonconforming> GRID;
       typedef Dune::ALUGrid<dim,dim,Dune::cube,Dune::nonconforming> GRID;
 
       watch.reset();
       Dune::StructuredGridFactory<GRID> structuredGridFactory;
+
+      std::cout << "=== Dune::StructuredGridFactory.createCubeGrid() building 3D ALUGRID ..." << std::endl;
+
       Dune::shared_ptr<GRID> gridptr =
         structuredGridFactory.createCubeGrid(LowerLeft, UpperRight, elements);
 
@@ -130,7 +128,6 @@ namespace Dune {
 
       std::cout << "ALUGRID grid baselevel = " << grid.maxLevel() << std::endl;
 
-      //#endif // USE_ALUGRID
 
       // 1.) GV and GFS for the Groundwater Equation:
       logger << "Get level gridview for the flow equation." << std::endl;
@@ -154,23 +151,6 @@ namespace Dune {
       //
       //**************************************************************
 
-#ifdef USE_FEM
-
-#ifdef PARALLEL
-
-#ifdef USE_NOVLP_MODE
-      typedef Dune::PDELab::NonoverlappingConformingDirichletConstraints CONSTRAINTS;
-#else
-      typedef Dune::PDELab::OverlappingConformingDirichletConstraints CONSTRAINTS;
-#endif
-
-#else // sequential
-
-      typedef Dune::PDELab::ConformingDirichletConstraints CONSTRAINTS;
-
-#endif // parallel/seqential
-
-#else // using DG
 
 #if USE_YASP
       typedef Dune::PDELab::P0ParallelConstraints CONSTRAINTS;
@@ -182,22 +162,9 @@ namespace Dune {
       typedef Dune::PDELab::P0ParallelGhostConstraints CONSTRAINTS;
 #endif
 
-#endif // USE_FEM
 
-#ifndef NEW_GV
-      //====================================================================
-      // Use default (lexicographical) sorting of grid elements for SDFEM!
-      // Resorting would not reduce the number of iterations for the
-      // AMG based linear solver.
-      //====================================================================
-      typedef typename GRID::LeafGridView GV_TP;
-#endif
 
       typedef Dune::PDELab::ISTLVectorBackend<> VBE_GW; // blocksize=1 for GWE
-#ifdef USE_FEM
-      typedef Dune::PDELab::QkLocalFiniteElementMap<GV_GW,CTYPE,REAL,1> FEM_ELLIP;
-      typedef Dune::PDELab::QkLocalFiniteElementMap<GV_TP,CTYPE,REAL,1> FEM_HYPER;
-#else
       typedef Dune::PDELab::P0LocalFiniteElementMap<CTYPE,REAL,dim> FEM_ELLIP;
 
 #ifdef USE_Pk
@@ -213,7 +180,7 @@ namespace Dune {
       logger << "DG: Using QkDG for the hyperbolic PDE with blocksize "
              << blocksize << std::endl;
 #endif
-#endif
+
 
 
       //**************************************************************
@@ -228,9 +195,6 @@ namespace Dune {
       Vector<REAL> local_Yfield_vector;
       Vector<UINT> local_count;
       Vector<UINT> local_offset;
-
-
-#ifdef PARALLEL_OFF
 
       if( ( helper.size() > 1 )
           /*&& ( inputdata.yfield_properties.variance != 0 )*/
@@ -258,7 +222,6 @@ namespace Dune {
 
       }
 
-#endif // #ifdef PARALLEL
 
       if( helper.rank()==0 && inputdata.verbosity >= VERBOSITY_DEBUG_LEVEL ) {
         std::cout << "yfg_orig.size() = " << yfg_orig.size() << std::endl;
@@ -278,48 +241,9 @@ namespace Dune {
       std::vector< Vector<UINT> > nCellsExt;
       yfg_orig.export_nCellsExt( nCellsExt );
 
-      typedef typename IDT::SDT SDT;
 
-      typedef GroundwaterForwardProblem<GV_GW,REAL,IDT,SDT,YFG> GWP_FWD;
       // 1.) GFS for the Flow Equation:
       typedef Dune::PDELab::GridFunctionSpace<GV_GW,FEM_ELLIP,CONSTRAINTS,VBE_GW> GFS_GW;
-
-      typedef typename Dune::PDELab::BackendVectorSelector<GFS_GW,REAL>::Type VCType_GW;
-
-#ifdef NEW_GV
-#ifdef USE_DGF_PressureField
-      logger << "Using DGF_PressureField ... " << std::endl;
-      typedef DGF_PressureField<GFS_GW,VCType_GW> RT0_PF;
-#else
-      logger << "Using RT0_PressureField ... " << std::endl;
-      typedef RT0_PressureField<GV_GW,GFS_GW,GWP_FWD> RT0_PF;
-#endif
-
-      typedef typename GRID::LeafGridView OLD_GV_TP;
-      typedef ReorderedGridView
-        < OLD_GV_TP
-          , RT0_PF
-          , PressureLikeOrdering
-          > GV_TP;
-      // Grid elements will be sorted according to the appropriate hydraulic head.
-#endif
-
-
-      // 2.) GFS for the Transport Equation:
-#ifdef USE_FEM
-      typedef Dune::PDELab::ISTLVectorBackend<> VBE_TP; // blocksize=1 for TPE with SDFEM
-#else
-      typedef Dune::PDELab::ISTLVectorBackend<Dune::PDELab::ISTLParameters::static_blocking,blocksize> VBE_TP;
-#endif
-      typedef Dune::PDELab::GridFunctionSpace<GV_TP,FEM_HYPER,CONSTRAINTS,VBE_TP> GFS_TP;
-      typedef typename Dune::PDELab::BackendVectorSelector<GFS_TP,REAL>::Type VCType_TP;
-
-      // WARNING: Here, CG == DG, L2-Projection is switched OFF!
-      typedef FEM_HYPER FEMCG;
-      typedef VBE_TP VBE_CG;
-      typedef CONSTRAINTS CGCONSTRAINTS;
-      typedef Dune::PDELab::GridFunctionSpace<GV_TP,FEMCG,CGCONSTRAINTS,VBE_CG> GFS_CG;
-      typedef typename Dune::PDELab::BackendVectorSelector<GFS_CG,REAL>::Type VCType_CG;
 
 
       typedef MeasurementList<CPointData> MEASLIST;
@@ -336,23 +260,6 @@ namespace Dune {
       //
       //**************************************************************
 
-#ifdef USE_FEM
-
-
-#ifndef NEW_GV
-      logger << "Get leaf gridview for the transport equation." << std::endl;
-      const GV_TP &gv_tp = grid.leafGridView();
-#endif
-
-      // 1.) Groundwater Equation using Standard Galerkin
-      FEM_ELLIP fem_ellip(gv_gw);
-      logger << "FEM: Using Q1FEM for the elliptic PDE" << std::endl;
-
-      // 2.) Transport Equation using Streamline Diffusion
-      FEM_HYPER fem_hyper(gv_tp);
-      logger << "FEM: Using Q1FEM for the hyperbolic PDE" << std::endl;
-
-#else
 
 #ifdef USE_SIMPLEX
       const Dune::GeometryType::BasicType bt = Dune::GeometryType::simplex;
@@ -365,18 +272,10 @@ namespace Dune {
       logger << "FEM: Using P0FEM for the elliptic PDE" << std::endl;
       FEM_HYPER fem_hyper;
 
-#endif
+
 
       CONSTRAINTS con_gw;
       GFS_GW gfs_gw(gv_gw,fem_ellip,con_gw);
-
-
-
-#if defined USE_FEM && defined PARALLEL && defined USE_NOVLP_MODE
-      con_gw.compute_ghosts( gfs_gw );
-      CONSTRAINTS con_tp;
-      con_tp.compute_ghosts( gfs_tp );
-#endif
 
 
       Dune::Gesis::hAdaptiveLoopForM1<GRID,

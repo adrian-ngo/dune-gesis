@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Script to install all extra packages needed for DUNE-GESIS
 # Author: A. Ngo
@@ -50,7 +50,7 @@ make_install()
 {
     packagename=$1
     installdir=$softwaredir/$packagename
-    metis_installdir=../metis-4.0.3 # metis is required only for dune-alugrid (3D parallel adaptive code)
+    metis_installdir=$softwaredir/metis-4.0.3 # metis is required only for dune-alugrid (3D parallel adaptive code)
 
     echo "processing package '$packagename'"
     if [ ! -f "$packagename.tar.gz" ]
@@ -61,17 +61,15 @@ make_install()
     #
     if [[ "$packagename" == *"boost"* ]]; # means: $packagename contains boost
     then
-        echo "Special unpacking BOOST to destination directory. This is required ONLY due to the dune-common m4 check for boost."
-        installdir=$softwaredir/$packagename/include
-        extdir=$softwaredir/temp_boost_extraction_dir
-        create_directory "$extdir"
-        tar xzvf $packagename.tar.gz -C $extdir/.
-        cd $extdir
-        mv $packagename "include"
-        cd ..
-        mv temp_boost_extraction_dir "$packagename"
-        echo "Special unpacking BOOST to destination directory done. Finished. No build needed."
-        echo "Your special Boost version is now in $installdir/."
+        echo "Special unpacking BOOST to destination directory + symbolic link to itself named include/."
+        echo "This is required ONLY due to the dune-common m4 check for boost."
+        echo "processing package '$packagename.tar.gz'"
+        create_directory "$installdir"
+        tar xzvf $packagename.tar.gz -C $installdir/.
+        cd "$installdir" 
+        ln -s . include
+        echo "Special unpacking BOOST to destination directory + symbolic link to itself named include/ done. Finished. No build needed."
+        echo "Your special Boost version is now in $installdir."
         exit
     else
         echo "Default unpacking."
@@ -101,8 +99,6 @@ make_install()
         echo "Clean up"
 	rm -rvf SuperLU_4.2/
         exit
-    else
-	cd $packagename
     fi
     #
     if [ "$packagename" = "superlu_4.3" ]
@@ -127,13 +123,15 @@ make_install()
         echo "Clean up"
 	rm -rf SuperLU_4.3/
         exit
-    else
-	cd $packagename
     fi
     #
     if [ "$packagename" = "metis-4.0.3" ]
     then
 	make
+        create_directory "$installdir"
+        create_directory "$installdir/Lib"
+        cp libmetis.a $installdir
+        cp Lib/*.h $installdir/Lib
         exit
     fi
     #
@@ -142,6 +140,9 @@ make_install()
 	make
         exit
     fi
+    #
+    echo "Default change to package directory..."
+    cd $packagename
     #
     if [[ "$packagename" == *"fftw-3.3"* ]]; # means: $packagename contains fftw-3.3
     then
@@ -153,6 +154,10 @@ make_install()
         echo "Special configure of parallel HDF5."
 	./configure --prefix=$installdir CC=mpicc --enable-parallel --enable-shared
         echo "Special configure of parallel HDF5 done."
+    elif [ "$packagename" = "ALUGrid-1.52" ]
+    then
+        echo "Special configure of ALUGrid 1.52 with metis-4.0.3 for DUNE."
+	./configure --prefix=$installdir CXX=mpic++ CXXFLAGS="-DNDEBUG" --with-metis="$metis_installdir"
     elif [[ "$packagename" = "ug-3.11.0" ]];
     then
         echo "Special configure of UG for DUNE."
@@ -169,7 +174,7 @@ make_install()
     cd ..
     #
     echo "clean up"
-    rm -rvf $packagename
+    rm -rf $packagename
 }
 
 

@@ -164,17 +164,6 @@ namespace Dune {
       // Loop over grid cells, check if the current point belongs to that cell.
       // If yes, get the local coordinate and evaluate the dgf on that cell at that point
 
-      typedef typename GV::Grid GRIDTYPE;
-      // make a mapper for codim 0 entities in the leaf grid
-      Dune::LeafMultipleCodimMultipleGeomTypeMapper<GRIDTYPE, P0Layout> mapper(gv.grid()); // get the underlying hierarchical grid out ot the gridview
-
-      //    logger << "Taking measurements... " << std::endl;
-      //    logger << helper.rank() << " mapper-size=" << mapper.size() << std::endl;
-
-
-      //const typename GV::IndexSet& is = gv.indexSet();
-
-
       for (UINT index = 0; index < nPoints; index++){
 
         Dune::FieldVector<REAL, 1 > measured_value1;

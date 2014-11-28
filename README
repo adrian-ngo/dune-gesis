@@ -75,9 +75,16 @@ Optional dependencies
 ---------------------
 * Adaptive mesh refinement in 2-D (sequential mode) requires UG (version 3.11.0 or higher).
   See http://www.iwr.uni-heidelberg.de/iwrwikiequipment/software/ug.
-* Adaptive mesh refinement in 3-D (parallel with dynamic load balancing) requires the DUNE module dune-alugrid (version 2.3 or higher).
-  See http://users.dune-project.org/projects/dune-alugrid
-
+* Adaptive mesh refinement in 3-D (parallel with dynamic load balancing) requires 
+  the external library 'ALUGrid' (version 1.52), available at
+  http://dune.mathematik.uni-freiburg.de/downloads/ALUGrid-1.52.tar.gz
+  or
+  the DUNE module dune-alugrid (version 2.3).
+  See http://users.dune-project.org/projects/dune-alugrid.
+  A partitioning of the domain using the graph partitioning tool Metis (version 4.0.3)  
+  was tested for a special test case. 
+  Metis (version 4.0.3) is available from
+  http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz
 
 
 Recommended software for the visualization of output data
@@ -103,18 +110,78 @@ See the file COPYING for full copying permissions.
 Installation
 ------------
 
-Short installation instructions can be found in file INSTALL. For the
-full instructions about DUNE please see [1].
+Short installation instructions can be found in file 'INSTALL'. 
+For the full instructions about DUNE please see [1].
+
+
+
+Getting started
+---------------
+The six applications mentioned above (gesis2dDG, gesis3dDG, gesisUG2dDG, gesisALU3dDG, gesis2dFEM, gesis3dFEM)
+are built inside the 'dune-gesis/src/' directory.
+
+To run these applications, switch to one of the working directories
+
+- 'dune-gesis/bin/YASP' for gesis2dDG, gesis3dDG, gesis2dFEM and gesis3dFEM,
+- 'dune-gesis/bin/UG' for gesisUG2dDG,
+- 'dune-gesis/bin/ALUGRID' for gesisALU3dDG
+
+and first run 
+
+./updateBin.sh 
+
+to retrieve the latest build results.
+
+Inside these directories, you will find examples of input files required by these applications.
+The input files contain domain data, grid data and geostatistical properties of the
+parameter field (log hydraulic conductivity) and a set of boundary value problems.
+
+'InputFile2d.xml' for 2-D simulations 
+or 
+'InputFile3d.xml' for for 3-D simulations.
+
+The author is working on the documentation of these input files.
+Please contact him directly via 
+
+"ngo@eclipso.de" 
+
+or take a look at
+
+"https://github.com/adrian-ngo/dune-gesis" 
+
+where updates may be made available in the future.
+
+
+An application can be started in sequential mode directly
+or in parallel mode using mpirun, e.g.:
+
+If you are inside the directory 'dune-gesis/bin/YASP', you may run
+
+./gesis2dDG
+
+or
+
+mpirun -np 4 ./gesis2dDG
+
+The amount of output can be regulated by the verbosity attribute inside the input XML.
+The <domain_data><extensions> tag specifies the length per dimension of the physical domain.
+The <domain_data><virtual_nCells> tag specifies the numbers of mesh cells per dimension.
+
+Different types of output data are found in DATA, BUFFER_DG (BUFFER_FEM) and OUTPUT_DG (OUTPUT_FEM):
+HDF5 files (*.h5) containing multi-dimensional structured arrays of discretized quantities 
+such the parameter field (Y = log conductivity) or the sensitivity fields.
+VTK files (*.vtu or *.pvtu) containing output that can be opened in the visualization tool Paraview.
+
 
 
 
 Links
 -----
-
-0. http://www.dune-project.org/pdelab/
-1. http://www.dune-project.org
-2. http://www.dune-project.org/doc/installation-notes.html
-3. http://dune-project.org/doc/buildsystem/buildsystem.pdf
-4. http://gcc.gnu.org/onlinedocs/libstdc++/faq.html#faq.license
-5. http://lists.dune-project.org/mailman/listinfo/dune-pdelab
-6. http://users.dune-project.org/projects/dune-pdelab/issues
+0. https://github.com/adrian-ngo/dune-gesis
+1. http://www.dune-project.org/pdelab/
+2. http://www.dune-project.org
+3. http://www.dune-project.org/doc/installation-notes.html
+4. http://dune-project.org/doc/buildsystem/buildsystem.pdf
+5. http://gcc.gnu.org/onlinedocs/libstdc++/faq.html#faq.license
+6. http://lists.dune-project.org/mailman/listinfo/dune-pdelab
+7. http://users.dune-project.org/projects/dune-pdelab/issues
