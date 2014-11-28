@@ -130,9 +130,9 @@ namespace Dune {
                                const EQ::Mode equationMode_=EQ::forward
                                ) :
 #ifdef USE_NUMDIFF
-        NumericalJacobianVolume<GroundWaterOperatorCCFV<GWP,IDT,SDT,BCType,BCExt,SourceType>>(1e-7),
-        NumericalJacobianSkeleton<GroundWaterOperatorCCFV<GWP,IDT,SDT,BCType,BCExt,SourceType>>(1e-7),
-        NumericalJacobianBoundary<GroundWaterOperatorCCFV<GWP,IDT,SDT,BCType,BCExt,SourceType>>(1e-7),
+        Dune::PDELab::NumericalJacobianVolume<GroundWaterOperatorCCFV<GWP,IDT,SDT,BCType,BCExt,SourceType>>(1e-7),
+        Dune::PDELab::NumericalJacobianSkeleton<GroundWaterOperatorCCFV<GWP,IDT,SDT,BCType,BCExt,SourceType>>(1e-7),
+        Dune::PDELab::NumericalJacobianBoundary<GroundWaterOperatorCCFV<GWP,IDT,SDT,BCType,BCExt,SourceType>>(1e-7),
 #endif // USE_NUMDIFF
         gwp( gwp_ ),
         inputdata(inputdata_),
@@ -286,57 +286,10 @@ namespace Dune {
         // diffusive flux for both sides, with tensor:
 
         r_s.accumulate(lfsu_s,0,-A_eff*(x_n(lfsu_n,0)-x_s(lfsu_s,0))*face_volume/distance);
+        r_n.accumulate(lfsu_s,0,A_eff*(x_n(lfsu_n,0)-x_s(lfsu_s,0))*face_volume/distance);
       }
 
 
-
-      template<typename IG, typename LFSU, typename M>
-        void addWellTo_Jacobian_Skeleton( const UINT iWell,
-                                          const IG& ig,
-                                          const LFSU& lfsu_s,
-                                          const LFSU& lfsu_n,
-                                          M& mat_ss, M& mat_sn,
-                                          M& mat_ns, M& mat_nn
-                                          ) const {
-
-        return; // testwise switch off
-
-        // dimensions
-        const int dim = IG::dimension;
-
-        // extract well-data:
-        REAL well_conductivity = setupdata.wdlist.pointdata_vector[iWell].well_conductivity;
-
-        // Check for elements on both sides of ig if they are penetrated by the well!
-        // Only if both sides are penetrated and if the well goes vertically
-        // they are considered as connected via a 1d PDE.
-
-
-        // distance between cell centers in global coordinates
-        Dune::FieldVector<CTYPE,dim> inside_global = ig.inside()->geometry().center();
-        Dune::FieldVector<CTYPE,dim> outside_global = ig.outside()->geometry().center();
-        inside_global -= outside_global;
-        REAL distance = inside_global.two_norm();
-
-        typedef Dune::PDELab::ElementGeometry<typename IG::Entity> EG;
-
-        if( w_outside !=
-            isElementPenetratedByWell(EG(*(ig.inside())),iWell,inputdata,setupdata)
-            &&
-            w_outside !=
-            isElementPenetratedByWell(EG(*(ig.outside())),iWell,inputdata,setupdata) ){
-
-
-          REAL c1 = -well_conductivity / distance;
-          REAL c2 = well_conductivity / distance;
-
-          mat_ss.accumulate( lfsu_s,0, lfsu_s,0 , -c1 );
-          mat_sn.accumulate( lfsu_s,0, lfsu_n,0 , c1 );
-          mat_ns.accumulate( lfsu_n,0, lfsu_s,0 , -c2 );
-          mat_nn.accumulate( lfsu_n,0, lfsu_n,0 , c2 );
-
-        }
-      }
 
 
 
@@ -432,23 +385,6 @@ namespace Dune {
         mat_sn.accumulate( lfsu_s,0, lfsu_n,0 , c1 );
         mat_ns.accumulate( lfsu_n,0, lfsu_s,0 , -c2 );
         mat_nn.accumulate( lfsu_n,0, lfsu_n,0 , c2 );
-
-
-        /*
-        // Add inflow or outlow rates for all the wells
-        UINT nWells = setupdata.wdlist.total;
-        for( UINT iWell=0; iWell<nWells; iWell++ ) {
-        addWellTo_Jacobian_Skeleton( iWell,
-        ig,
-        lfsu_s,
-        lfsu_n,
-        mat_ss,
-        mat_sn,
-        mat_ns,
-        mat_nn
-        );
-        }
-        */
 
       }
 
