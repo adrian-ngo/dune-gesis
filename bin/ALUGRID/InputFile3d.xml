@@ -22,6 +22,7 @@
       vtk_plot_element_ordering="yes"
       vtk_plot_q="yes"
       vtk_plot_m0="yes"
+      vtk_plot_m1="yes"
       vtk_plot_y_smooth="no"
       vtk_plot_h_old="yes"
       vtk_plot_m0_old="yes"
@@ -64,8 +65,8 @@
         globalrefine="0"
         baselevel="0"
         maxsteps="7"
-        refinementfraction="0.95"
-        coarseningfraction="0.05"
+        refinementfraction="0.98"
+        coarseningfraction="0.02"
         TOL="1E-12"
         strategy="1"/>
   </domain_data>
