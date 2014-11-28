@@ -204,8 +204,8 @@ namespace Dune {
           Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
+        //typedef typename LFSU::Traits::FiniteElementType::
+        //Traits::LocalBasisType::Traits::RangeType RangeType;
 
         // dimensions
         const int dim = EG::Geometry::dimension;
@@ -324,8 +324,8 @@ namespace Dune {
           Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
+        //typedef typename LFSU::Traits::FiniteElementType::
+        //Traits::LocalBasisType::Traits::RangeType RangeType;
 
         // dimensions
         const int dim = IG::dimension;
@@ -460,8 +460,8 @@ namespace Dune {
           Traits::LocalBasisType::Traits::DomainFieldType DF;
         typedef typename LFSU::Traits::FiniteElementType::
           Traits::LocalBasisType::Traits::RangeFieldType RF;
-        typedef typename LFSU::Traits::FiniteElementType::
-          Traits::LocalBasisType::Traits::RangeType RangeType;
+        //typedef typename LFSU::Traits::FiniteElementType::
+        //Traits::LocalBasisType::Traits::RangeType RangeType;
 
         // dimensions
         const int dim = IG::dimension;
