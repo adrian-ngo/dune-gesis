@@ -700,7 +700,7 @@ namespace Dune {
         if( iLine < nMeasPointsPerTypePerSetup ){
           std::cout << "WARNING: mismatch in number of type#"
                     << type
-                    << " - measuring points for setup \#"
+                    << " - measuring points for setup number "
                     << iSetup << ": "
                     << " data-file: " << iLine
                     << " input-XML: " << nMeasPointsPerTypePerSetup
