@@ -166,12 +166,12 @@ namespace Dune {
                             )
       :
 #ifdef USE_NUMDIFF
-      Dune::PDELab::NumericalJacobianApplyVolume<ConvectionDiffusionDG<TP,FEM,SOURCE_TYPE> >(1.0e-7),
-        Dune::PDELab::NumericalJacobianApplySkeleton<ConvectionDiffusionDG<TP,FEM,SOURCE_TYPE> >(1.0e-7),
-        Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionDG<TP,FEM,SOURCE_TYPE> >(1.0e-7),
-        Dune::PDELab::NumericalJacobianVolume<ConvectionDiffusionDG<TP,FEM,SOURCE_TYPE> >(1.0e-7),
-        Dune::PDELab::NumericalJacobianSkeleton<ConvectionDiffusionDG<TP,FEM,SOURCE_TYPE> >(1.0e-7),
-        Dune::PDELab::NumericalJacobianBoundary<ConvectionDiffusionDG<TP,FEM,SOURCE_TYPE> >(1.0e-7),
+      Dune::PDELab::NumericalJacobianApplyVolume<ConvectionDiffusionDG<TP,FEM,SOURCE_TYPE,IDT,SDT> >(1.0e-7),
+        Dune::PDELab::NumericalJacobianApplySkeleton<ConvectionDiffusionDG<TP,FEM,SOURCE_TYPE,IDT,SDT> >(1.0e-7),
+        Dune::PDELab::NumericalJacobianApplyBoundary<ConvectionDiffusionDG<TP,FEM,SOURCE_TYPE,IDT,SDT> >(1.0e-7),
+        Dune::PDELab::NumericalJacobianVolume<ConvectionDiffusionDG<TP,FEM,SOURCE_TYPE,IDT,SDT> >(1.0e-7),
+        Dune::PDELab::NumericalJacobianSkeleton<ConvectionDiffusionDG<TP,FEM,SOURCE_TYPE,IDT,SDT> >(1.0e-7),
+        Dune::PDELab::NumericalJacobianBoundary<ConvectionDiffusionDG<TP,FEM,SOURCE_TYPE,IDT,SDT> >(1.0e-7),
 #endif // USE_NUMDIFF
         inputdata( inputdata_ ),
         setupdata( setupdata_ ),
