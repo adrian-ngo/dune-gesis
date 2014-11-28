@@ -556,6 +556,7 @@ namespace Dune {
         //std::uniform_real_distribution<REAL> distr(-1.0, 1.0);
 
 
+        int nMeasPointsPerTypePerSetup = 0;
         while( !instream.eof() && !bExitWhileLoop ) {
           if(iLine > -1){
 
@@ -563,10 +564,11 @@ namespace Dune {
             switch( type ){
             case 1:
               {
+                nMeasPointsPerTypePerSetup = int(head_meas[iSetup].size());
 
                 logger << "iLine = " << iLine << std::endl;
-                logger << "head_meas[iSetup].size() = " << head_meas[iSetup].size() << std::endl;
-                if( iLine >= (int)head_meas[iSetup].size() ){
+                logger << "head_meas[iSetup].size() = " << nMeasPointsPerTypePerSetup << std::endl;
+                if( iLine >= nMeasPointsPerTypePerSetup ){
                   logger << "read_measurements: WARNING: number of meas. points in input XML is less than in head data file." << std::endl;
                   bExitWhileLoop = true;
                   break;
@@ -582,7 +584,8 @@ namespace Dune {
             case 2:
               {
 
-                if( iLine >= (int)M0_meas[iSetup].size() ){
+                nMeasPointsPerTypePerSetup = int(M0_meas[iSetup].size());
+                if( iLine >= nMeasPointsPerTypePerSetup ){
                   logger << "read_measurements: WARNING: number of meas. points in input XML is less than in m0 data file." << std::endl;
                   bExitWhileLoop = true;
                   break;
@@ -598,7 +601,8 @@ namespace Dune {
             case 3:
               {
 
-                if( iLine >= (int)M1_meas[iSetup].size() ){
+                nMeasPointsPerTypePerSetup = int(M1_meas[iSetup].size());
+                if( iLine >= nMeasPointsPerTypePerSetup ){
                   logger << "read_measurements: WARNING: number of meas. points in input XML is less than in m1 data file." << std::endl;
                   bExitWhileLoop = true;
                   break;
@@ -690,6 +694,17 @@ namespace Dune {
 
 
           iLine++;
+        }
+
+
+        if( iLine < nMeasPointsPerTypePerSetup ){
+          std::cout << "WARNING: mismatch in number of type#"
+                    << type
+                    << " - measuring points for setup \#"
+                    << iSetup << ": "
+                    << " data-file: " << iLine
+                    << " input-XML: " << nMeasPointsPerTypePerSetup
+                    << std::endl;
         }
 
 
@@ -978,4 +993,3 @@ namespace Dune {
 } // Dune
 
 #endif  /* DUNE_GESIS_MEASUREMENTLIST_HH */
-

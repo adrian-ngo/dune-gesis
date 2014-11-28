@@ -241,21 +241,20 @@ namespace Dune {
         if( helper.rank()==0 && inputdata.verbosity >= VERBOSITY_EQ_DETAILS )
           std::cout << "Start parallel fetching of Yfield data..." << std::endl;
 
-        HDF5Tools::
-          read_parallel_from_HDF5(
-                                  gv_gw
-                                  , inputdata
-                                  , local_Yfield_vector
-                                  , "/YField"
-                                  , local_count
-                                  , local_offset
-                                  , dir.kfield_h5file
-                                  , 1 // P0 blocksize
-                                  , FEMType::DG // P0
-                                  , 0 // YField is on grid level 0.
-                                  );
+        HDF5Tools::h5g_pRead( gv_gw
+                              , local_Yfield_vector
+                              , dir.kfield_h5file
+                              , "/YField"
+                              , local_offset
+                              , local_count
+                              , inputdata
+                              , 1 // P0 blocksize
+                              , FEMType::DG // P0
+                              , 0 // YField is on grid level 0.
+                              );
 
-        yfg_orig.parallel_import_from_local_vector( local_Yfield_vector, local_count, local_offset );
+        yfg_orig.parallel_import_from_local_vector( local_Yfield_vector, local_offset, local_count );
+
 
       }
 

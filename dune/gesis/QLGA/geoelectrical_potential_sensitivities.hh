@@ -615,13 +615,13 @@ void geoelectrical_potential_sensitivities( // input:
                                 Sensitivity );
 
           // writing the sensitivity to disk in HDF5, needed because the inversion kernel will try to read them from the disk
-          HDF5Tools::write_parallel_to_HDF5( gv_0
-                                             , inputdata
-                                             , Sensitivity
-                                             , "/Sensitivity"
-                                             , inputdata.domain_data.nCells
-                                             , dir.Sensitivity_h5file[global_meas_id]
-                                             );
+          HDF5Tools::h5g_pWrite( gv_0
+                                 , Sensitivity
+                                 , dir.Sensitivity_h5file[global_meas_id]
+                                 , "/Sensitivity"
+                                 , inputdata
+                                 , inputdata.domain_data.nCells
+                                 );
         }
 
         else {
@@ -631,15 +631,14 @@ void geoelectrical_potential_sensitivities( // input:
 
           Vector<UINT> local_count;
           Vector<UINT> local_offset;
-          HDF5Tools::
-            read_parallel_from_HDF5( gv_0
-                                     , inputdata
-                                     , Sensitivity
-                                     , "/Sensitivity"
-                                     , local_count
-                                     , local_offset
-                                     , dir.Sensitivity_h5file[global_meas_id]
-                                     );
+          HDF5Tools::h5g_pRead( gv_0
+                                , Sensitivity
+                                , dir.Sensitivity_h5file[global_meas_id]
+                                , "/Sensitivity"
+                                , local_offset
+                                , local_count
+                                , inputdata
+                                );
         }
 
         REAL s1norm = Sensitivity.one_norm();
@@ -698,13 +697,13 @@ void geoelectrical_potential_sensitivities( // input:
           // if parallel MPI pool then get the sensitivity data from the disk
           if( CommunicatorPool[iConfig%nComm].get_size()>1){
             logger<<"read the sensitivity sequential"<<std::endl; 
-            HDF5Tools::read_sequential_from_HDF5( Sensitivity
-                                                  , "/Sensitivity"
-                                                  , read_local_count
-                                                  , read_local_offset
-                                                  , dir.Sensitivity_h5file[global_meas_id]
-                                                  , inputdata
-                                                  );
+            HDF5Tools::h5g_Read( Sensitivity
+                                 , dir.Sensitivity_h5file[global_meas_id]
+                                 , "/Sensitivity"
+                                 , read_local_offset
+                                 , read_local_count
+                                 , inputdata
+                                 );
 
             if( gv_gw.comm().rank()==0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
               std::cout << "====> m" << global_meas_id 

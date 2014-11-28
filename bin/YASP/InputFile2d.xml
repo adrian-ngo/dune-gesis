@@ -53,7 +53,7 @@
       head_inversion="on"
       transport_inversion_m0="off" 
       transport_inversion_m1="on" 
-      generate_measurement_data="on"
+      generate_measurement_data="off"
       />
   <!-- ***************************************** -->
   <!-- Domain Data: -->
@@ -91,7 +91,7 @@
         embedding_factor="2.0"
         porosity="0.3"
         >
-      <correlationlengths>1.0  1.0</correlationlengths>
+      <correlationlengths>2.0  2.0</correlationlengths>
     </zone>
   </yfield_properties>
   <!-- -->

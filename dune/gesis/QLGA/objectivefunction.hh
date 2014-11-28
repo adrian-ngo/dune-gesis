@@ -99,46 +99,44 @@ namespace Dune {
       // which should e read. Y_old or Y_try?
       // read the needed Y field from disk
       if (old){
-        HDF5Tools::
-          read_parallel_from_HDF5( gv_0
-                                   , inputdata
-                                   , local_Y_old
-                                   , "/Y_old"
-                                   , local_count
-                                   , local_offset
-                                   , dir.Y_old_h5file
-                                   );
+        HDF5Tools::h5g_pRead( gv_0
+                              , local_Y_old
+                              , dir.Y_old_h5file
+                              , "/Y_old"
+                              , local_offset
+                              , local_count
+                              , inputdata
+                              );
       }else{
-        HDF5Tools::
-          read_parallel_from_HDF5( gv_0
-                                   , inputdata
-                                   , local_Y_old
-                                   , "/Y_try"
-                                   , local_count
-                                   , local_offset
-                                   , dir.Y_try_h5file
-                                   );
+        HDF5Tools::h5g_pRead( gv_0
+                              , local_Y_old
+                              , dir.Y_try_h5file
+                              , "/Y_try"
+                              , local_offset
+                              , local_count
+                              , inputdata
+                              );
       }
 
 
       if( it_counter == 0 && inputdata.inversion_parameters.max_iter == 0 ){
         // save the estimated field again with preserved structure
-        HDF5Tools::write_parallel_to_HDF5( gv_0
-                                           , inputdata
-                                           , local_Y_old
-                                           , "/Y_old"
-                                           , inputdata.domain_data.nCells
-                                           , dir.Y_est_h5file
-                                           , 1
-                                           , FEMType::DG
-                                           , 0
-                                           , false // bWriteOnOverlap
-                                           );
+        HDF5Tools::h5g_pWrite( gv_0
+                               , local_Y_old
+                               , dir.Y_est_h5file
+                               , "/Y_old"
+                               , inputdata
+                               , inputdata.domain_data.nCells
+                               , 1
+                               , FEMType::DG
+                               , 0
+                               , false // bWriteOnOverlap
+                               );
       }
 
 
       if(helper.size()>1)
-        Yfieldgenerator_try.parallel_import_from_local_vector( local_Y_old, local_count, local_offset );
+        Yfieldgenerator_try.parallel_import_from_local_vector( local_Y_old, local_offset, local_count );
       else
         Yfieldgenerator_try.import_from_vector( local_Y_old );
   
@@ -768,11 +766,10 @@ namespace Dune {
           Vector<REAL> tmp(1,L_prior);
           Vector<UINT> dimensions(1,1);
 
-          HDF5Tools::
-            write_sequential_to_HDF5_without_DUNE( dimensions,
-                                                   tmp,
-                                                   "/L_prior",
-                                                   dir.L_prior_h5file );
+          HDF5Tools::h5_Write( tmp,
+                               dir.L_prior_h5file,
+                               "/L_prior",
+                               dimensions );
 
         }
         if(helper.size()>1)

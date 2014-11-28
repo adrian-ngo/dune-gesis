@@ -293,21 +293,19 @@ namespace Dune {
         if( helper.rank()==0 && inputdata.verbosity >= VERBOSITY_EQ_DETAILS )
           std::cout << "Start parallel fetching of Yfield data..." << std::endl;
 
-        HDF5Tools::
-          read_parallel_from_HDF5(
-                                  gv_gw
-                                  , inputdata
-                                  , local_Yfield_vector
-                                  , "/YField"
-                                  , local_count
-                                  , local_offset
-                                  , dir.kfield_h5file
-                                  , 1 // P0 blocksize
-                                  , FEMType::DG // P0
-                                  , 0 // YField is on grid level 0.
-                                  );
+        HDF5Tools::h5g_pRead( gv_gw
+                              , local_Yfield_vector
+                              , dir.kfield_h5file
+                              , "/YField"
+                              , local_offset
+                              , local_count
+                              , inputdata
+                              , 1 // P0 blocksize
+                              , FEMType::DG // P0
+                              , 0 // YField is on grid level 0.
+                              );
 
-        yfg_orig.parallel_import_from_local_vector( local_Yfield_vector, local_count, local_offset );
+        yfg_orig.parallel_import_from_local_vector( local_Yfield_vector, local_offset, local_count );
 
       }
 
@@ -362,14 +360,14 @@ namespace Dune {
       logger << "DEBUG: local_count  = " << local_count;
 
       Vector<REAL> Lambdas;
-      HDF5Tools::
-        read_parallel_from_HDF5_without_DUNE( inputdata,
-                                              Lambdas,
-                                              local_count,
-                                              local_offset,
-                                              helper.getCommunicator(),
-                                              "/FFT_R_YY",
-                                              dir.EV_h5file[0] );
+      HDF5Tools::h5_pRead( Lambdas,
+                           dir.EV_h5file[0],
+                           "/FFT_R_YY",
+                           inputdata,
+                           local_offset,
+                           local_count,
+                           helper.getCommunicator()
+                           );
 
 
       C_YY.prepare( 0, local_offset, local_count, false );
@@ -379,14 +377,14 @@ namespace Dune {
       logger << "DEBUG: local_count  = " << local_count;
 
       Vector<REAL> orig_YField(1,0);
-      HDF5Tools::
-        read_parallel_from_HDF5_without_DUNE( inputdata,
-                                              orig_YField,
-                                              local_count,
-                                              local_offset,
-                                              helper.getCommunicator(),
-                                              "/YField",
-                                              dir.kfield_h5file );
+      HDF5Tools::h5_pRead( orig_YField,
+                           dir.kfield_h5file,
+                           "/YField",
+                           inputdata,
+                           local_offset,
+                           local_count,
+                           helper.getCommunicator()
+                           );
 
       orig_YField -= inputdata.yfield_properties.zones[0].beta;
 
@@ -409,38 +407,38 @@ namespace Dune {
 
       logger << "Parallel write to hdf5: smoothed_orig_YField." << std::endl;
 
-      HDF5Tools::
-        write_parallel_to_HDF5_without_DUNE( inputdata,
-                                             inputdata.domain_data.nCells,
-                                             smoothed_orig_YField,
-                                             local_count,
-                                             local_offset,
-                                             helper.getCommunicator(),
-                                             "/YFieldSmoothed",
-                                             dir.kfield_h5file + "_smoothed" );
+      HDF5Tools::h5_pWrite( smoothed_orig_YField,
+                            dir.kfield_h5file + "_smoothed",
+                            "/YFieldSmoothed",
+                            inputdata,
+                            inputdata.domain_data.nCells,
+                            local_offset,
+                            local_count,
+                            helper.getCommunicator()
+                            );
 
       logger << "Parallel read of smoothed_orig_YField from hdf5 to gv_gw." << std::endl;
 
 
 
-      HDF5Tools::read_parallel_from_HDF5( gv_gw
-                                          , inputdata
-                                          , smoothed_orig_YField
-                                          , "/YFieldSmoothed"
-                                          , local_count
-                                          , local_offset
-                                          , dir.kfield_h5file + "_smoothed"
-                                          , 1 // P0 blocksize
-                                          , FEMType::DG // P0
-                                          , 0 // structure is on grid level 0
-                                          );
+      HDF5Tools::h5g_pRead( gv_gw
+                            , smoothed_orig_YField
+                            , dir.kfield_h5file + "_smoothed"
+                            , "/YFieldSmoothed"
+                            , local_offset
+                            , local_count
+                            , inputdata
+                            , 1 // P0 blocksize
+                            , FEMType::DG // P0
+                            , 0 // structure is on grid level 0
+                            );
       //}
 
 
       if( inputdata.plot_options.vtk_plot_y_smooth ) {
         YFG yfg_smoothed_Yorig(inputdata,dir,helper.getCommunicator());
         if( helper.size() > 1 )
-          yfg_smoothed_Yorig.parallel_import_from_local_vector( smoothed_orig_YField, local_count, local_offset );
+          yfg_smoothed_Yorig.parallel_import_from_local_vector( smoothed_orig_YField, local_offset, local_count );
         else
           yfg_smoothed_Yorig.import_from_vector( smoothed_orig_YField );
 
@@ -642,7 +640,7 @@ namespace Dune {
           std::vector<Vector<REAL>>  X(inputdata.yfield_properties.nz); // zonation matrix
           // read the needed data from the HDF5 file -> and again for the different MPI Pools
           for(UINT jj=0; jj<inputdata.yfield_properties.nz; jj++)
-            HDF5Tools::read_sequential_from_HDF5_without_DUNE(X[jj],"/X",dir.zonation_matrix[jj]);
+            HDF5Tools::h5_ReadDirect(X[jj],dir.zonation_matrix[jj],"/X");
 
           for(UINT jj=0; jj<inputdata.yfield_properties.nz; jj++)
             for(UINT ii=0; ii<nAllCells; ii++){
@@ -655,18 +653,18 @@ namespace Dune {
             logkappa[ii]=log(logkappa[ii]);
           }
 
-          HDF5Tools::write_sequential_to_HDF5( logsigma0
-                                               , "/logsigma0"
-                                               , inputdata
-                                               , dir.logsigma0_h5file
-                                               );
+          HDF5Tools::h5g_Write( logsigma0
+                                , dir.logsigma0_h5file
+                                , "/logsigma0"
+                                , inputdata
+                                );
 
-          HDF5Tools::write_sequential_to_HDF5(
-                                              logkappa
-                                              , "/logkappa"
-                                              , inputdata
-                                              , dir.logkappa_h5file
-                                              );
+          HDF5Tools::h5g_Write(
+                               logkappa
+                               , dir.logkappa_h5file
+                               , "/logkappa"
+                               , inputdata
+                               );
         }
       }
 
@@ -696,46 +694,45 @@ namespace Dune {
 
           Vector<REAL> logsigma0;
 
-          HDF5Tools::read_parallel_from_HDF5( gv_gw
-                                              , inputdata
-                                              , logsigma0
-                                              , "/logsigma0"
-                                              , local_count
-                                              , local_offset
-                                              , dir.logsigma0_h5file
-                                              , 1 // P0 blocksize
-                                              , FEMType::DG // P0
-                                              , 0 // structure is on grid level 0
-                                              );
+          HDF5Tools::h5g_pRead( gv_gw
+                                , logsigma0
+                                , dir.logsigma0_h5file
+                                , "/logsigma0"
+                                , local_offset
+                                , local_count
+                                , inputdata
+                                , 1 // P0 blocksize
+                                , FEMType::DG // P0
+                                , 0 // structure is on grid level 0
+                                );
 
 
 
 
           // export the data to the sigma0 Generator
           if(helper.size()>1)
-            log_electricalConductivity.parallel_import_from_local_vector(logsigma0, local_count, local_offset );
+            log_electricalConductivity.parallel_import_from_local_vector(logsigma0, local_offset, local_count );
           else
             log_electricalConductivity.import_from_vector( logsigma0 );
 
 
           Vector<REAL> logkappa;
 
-          HDF5Tools::
-            read_parallel_from_HDF5( gv_gw
-                                     , inputdata
-                                     , logkappa
-                                     , "/logkappa"
-                                     , local_count
-                                     , local_offset
-                                     , dir.logkappa_h5file
-                                     , 1 // P0 blocksize
-                                     , FEMType::DG // P0
-                                     , 0 // structure is on grid level 0
-                                     );
+          HDF5Tools::h5g_pRead( gv_gw
+                                , logkappa
+                                , dir.logkappa_h5file
+                                , "/logkappa"
+                                , local_offset
+                                , local_count
+                                , inputdata
+                                , 1 // P0 blocksize
+                                , FEMType::DG // P0
+                                , 0 // structure is on grid level 0
+                                );
 
           // export the data to the sigma0 Generator
           if(helper.size()>1)
-            log_kappafield.parallel_import_from_local_vector(logkappa, local_count, local_offset );
+            log_kappafield.parallel_import_from_local_vector(logkappa, local_offset, local_count );
           else
             log_kappafield.import_from_vector( logkappa );
 
@@ -824,11 +821,16 @@ namespace Dune {
             std::stringstream datafile_head_measurements;
             datafile_head_measurements << dir.datadimdir << "/head_orig.meas.iSetup" << iSetup;
             bool bReadheadMeasurementDone = false;
-            if( General::bFileExists( datafile_head_measurements.str() ) ){
-              // Read the measurements from another file!
-              bReadheadMeasurementDone = orig_measurements.read_measurements( 1, iSetup, datafile_head_measurements.str(), helper );
+            if( !inputdata.problem_types.new_YField ){
+              if( General::bFileExists( datafile_head_measurements.str() ) ){
+                // Read the measurements from another file!
+                bReadheadMeasurementDone = orig_measurements.read_measurements( 1, iSetup, datafile_head_measurements.str(), helper );
+              }
+            } else {
+              std::cout << "Generate new head measurement data for new parameter field." << std::endl;
             }
 
+            
 
             if( bReadheadMeasurementDone ){
               if(helper.rank()==0){
@@ -860,7 +862,8 @@ namespace Dune {
               datafile_per_Setup << dir.datadimdir
                                  << "/head_orig.meas.iSetup" << iSetup;
 
-              if( inputdata.problem_types.generate_measurement_data ){
+              if( inputdata.problem_types.generate_measurement_data ||
+                  inputdata.problem_types.new_YField ){
                 General::systemCall( "cp -v " + bufferfile_head_measurements.str() + " " + datafile_per_Setup.str() );
               }
             }
@@ -973,17 +976,25 @@ namespace Dune {
             std::stringstream datafile_M0_measurements;
             datafile_M0_measurements << dir.datadimdir << "/m0_orig.meas.iSetup" << iSetup;
             bool bReadM0MeasurementDone = false;
-            if( General::bFileExists( datafile_M0_measurements.str() ) ){
-              // Read the measurements from another file!
-              bReadM0MeasurementDone = orig_measurements.read_measurements( 2, iSetup, datafile_M0_measurements.str(), helper );
+            if( !inputdata.problem_types.new_YField ){
+              if( General::bFileExists( datafile_M0_measurements.str() ) ){
+                // Read the measurements from another file!
+                bReadM0MeasurementDone = orig_measurements.read_measurements( 2, iSetup, datafile_M0_measurements.str(), helper );
+              }
+            } else {
+              std::cout << "Generate new m0 measurement data for new parameter field." << std::endl;
             }
 
             std::stringstream datafile_M1_measurements;
             datafile_M1_measurements << dir.datadimdir << "/m1_orig.meas.iSetup" << iSetup;
             bool bReadM1MeasurementDone = false;
-            if( General::bFileExists( datafile_M1_measurements.str() ) ){
-              // Read the measurements from another file!
-              bReadM1MeasurementDone = orig_measurements.read_measurements( 3, iSetup, datafile_M1_measurements.str(), helper );
+            if( !inputdata.problem_types.new_YField ){
+              if( General::bFileExists( datafile_M1_measurements.str() ) ){
+                // Read the measurements from another file!
+                bReadM1MeasurementDone = orig_measurements.read_measurements( 3, iSetup, datafile_M1_measurements.str(), helper );
+              }
+            } else {
+              std::cout << "Generate new m1 measurement data for new parameter field." << std::endl;
             }
 
             VCType_TP vcM0_orig( gfs_tp, 0.0 );
@@ -1114,7 +1125,8 @@ namespace Dune {
               std::stringstream datafile_per_Setup;
               datafile_per_Setup << dir.datadimdir
                                  << "/m0_orig.meas.iSetup" << iSetup;
-              if( inputdata.problem_types.generate_measurement_data ){
+              if( inputdata.problem_types.generate_measurement_data ||
+                  inputdata.problem_types.new_YField ){
                 General::systemCall( "cp -v " + bufferfile_M0_measurements.str() + " " + datafile_per_Setup.str() );
               }
             }
@@ -1230,7 +1242,8 @@ namespace Dune {
                 std::stringstream datafile_per_Setup;
                 datafile_per_Setup << dir.datadimdir
                                    << "/m1_orig.meas.iSetup" << iSetup;
-                if( inputdata.problem_types.generate_measurement_data ){
+                if( inputdata.problem_types.generate_measurement_data ||
+                    inputdata.problem_types.new_YField ){
                   General::systemCall( "cp -v " + bufferfile_M1_measurements.str() + " " + datafile_per_Setup.str() );
                 }
               }
@@ -1514,45 +1527,44 @@ namespace Dune {
           if(inputdata.problem_types.moments_geoeletric_potential_inversion){
             Vector<REAL> logsigma0;
 
-            HDF5Tools::read_parallel_from_HDF5( gv_gw
-                                                , inputdata
-                                                , logsigma0
-                                                , "/logsigma0"
-                                                , local_count
-                                                , local_offset
-                                                , dir.logsigma0_h5file
-                                                , 1 // P0 blocksize
-                                                , FEMType::DG // P0
-                                                , 0 // structure is on grid level 0
-                                                );
+            HDF5Tools::h5g_pRead( gv_gw
+                                  , logsigma0
+                                  , dir.logsigma0_h5file
+                                  , "/logsigma0"
+                                  , local_offset
+                                  , local_count
+                                  , inputdata
+                                  , 1 // P0 blocksize
+                                  , FEMType::DG // P0
+                                  , 0 // structure is on grid level 0
+                                  );
 
 
 
 
             // export the data to the sigma0 Generator
             if(helper.size()>1)
-              log_electricalConductivity.parallel_import_from_local_vector(logsigma0, local_count, local_offset );
+              log_electricalConductivity.parallel_import_from_local_vector(logsigma0, local_offset, local_count );
             else
               log_electricalConductivity.import_from_vector( logsigma0 );
 
             Vector<REAL> logkappa;
 
-            HDF5Tools::
-              read_parallel_from_HDF5( gv_gw
-                                       , inputdata
-                                       , logkappa
-                                       , "/logkappa"
-                                       , local_count
-                                       , local_offset
-                                       , dir.logkappa_h5file
-                                       , 1 // P0 blocksize
-                                       , FEMType::DG // P0
-                                       , 0 // structure is on grid level 0
-                                       );
+            HDF5Tools::h5g_pRead( gv_gw
+                                  , logkappa
+                                  , dir.logkappa_h5file
+                                  , "/logkappa"
+                                  , local_offset
+                                  , local_count
+                                  , inputdata
+                                  , 1 // P0 blocksize
+                                  , FEMType::DG // P0
+                                  , 0 // structure is on grid level 0
+                                  );
 
             // export the data to the sigma0 Generator
             if(helper.size()>1)
-              log_kappafield.parallel_import_from_local_vector(logkappa, local_count, local_offset );
+              log_kappafield.parallel_import_from_local_vector(logkappa, local_offset, local_count );
             else
               log_kappafield.import_from_vector( logkappa );
 

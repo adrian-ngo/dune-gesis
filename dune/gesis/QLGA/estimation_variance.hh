@@ -30,7 +30,14 @@ namespace Dune {
       Vector<UINT> local_count,local_offset;
 
       for(UINT ii=0; ii<nzones; ii++) {
-        HDF5Tools::read_parallel_from_HDF5<GV,Dune::Interior_Partition>( gv,inputdata,X[ii],"/X",local_count,local_offset,dir.zonation_matrix[ii] );
+        HDF5Tools::h5g_pRead<GV,Dune::Interior_Partition>( gv,
+                                                           X[ii],
+                                                           dir.zonation_matrix[ii],
+                                                           "/X",
+                                                           local_count,
+                                                           local_offset,
+                                                           inputdata
+                                                           );
       }
 
       UINT nAllCells1 = X[0].size();
@@ -42,7 +49,14 @@ namespace Dune {
       }
 
       for(UINT ii=0; ii<nmeas; ii++) {
-        HDF5Tools::read_parallel_from_HDF5<GV,Dune::Interior_Partition>( gv,inputdata,JQ[ii],"/JQ",local_count,local_offset,dir.JQ_h5file[ii] );
+        HDF5Tools::h5g_pRead<GV,Dune::Interior_Partition>( gv,
+                                                           JQ[ii],
+                                                           dir.JQ_h5file[ii],
+                                                           "/JQ",
+                                                           local_offset,
+                                                           local_count,
+                                                           inputdata
+                                                           );
       }
 
       Dune::Timer watch;
@@ -93,18 +107,17 @@ namespace Dune {
                                  "estimation_variance: computing sigma2"
                                  );
 
-      HDF5Tools::
-        write_parallel_to_HDF5( gv
-                                , inputdata
-                                , sigma
-                                , "/sigma2"
-                                , inputdata.domain_data.nCells
-                                , dir.estimation_variance_h5file
-                                , 1            // blocksize for P0
-                                , FEMType::DG  // P0
-                                , 0            // grid level 0 for sigma
-                                , false        // bWriteOnOverlap
-                                );
+      HDF5Tools::h5g_pWrite( gv
+                             , sigma
+                             , dir.estimation_variance_h5file
+                             , "/sigma2"
+                             , inputdata
+                             , inputdata.domain_data.nCells
+                             , 1            // blocksize for P0
+                             , FEMType::DG  // P0
+                             , 0            // grid level 0 for sigma
+                             , false        // bWriteOnOverlap
+                             );
 
 #ifdef VTK_PLOT_V_EST
       typedef Dune::Gesis::FFTFieldGenerator<IDT,REAL,GV::dimension> YFG;
