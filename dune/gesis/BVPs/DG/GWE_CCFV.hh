@@ -189,7 +189,7 @@ namespace Dune {
           std::cout << logMsg << std::endl;
 
 #ifdef USE_OVLP_AMG_PAR_GWE_CCFV
-        Dune::Amg::Parameters amg_params;
+        Dune::Amg::Parameters amg_params = linearsolver.parameters();
         amg_params.setAccumulate( Dune::Amg::atOnceAccu );
         amg_params.setDebugLevel( ls_verbosity );
         //linearsolver.setparams(amg_params);
