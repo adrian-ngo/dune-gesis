@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Script to install all extra packages needed for DUNE-GESIS
 # Author: A. Ngo
@@ -61,17 +61,15 @@ make_install()
     #
     if [[ "$packagename" == *"boost"* ]]; # means: $packagename contains boost
     then
-        echo "Special unpacking BOOST to destination directory. This is required ONLY due to the dune-common m4 check for boost."
-        installdir=$softwaredir/$packagename/include
-        extdir=$softwaredir/temp_boost_extraction_dir
-        create_directory "$extdir"
-        tar xzvf $packagename.tar.gz -C $extdir/.
-        cd $extdir
-        mv $packagename "include"
-        cd ..
-        mv temp_boost_extraction_dir "$packagename"
-        echo "Special unpacking BOOST to destination directory done. Finished. No build needed."
-        echo "Your special Boost version is now in $installdir/."
+        echo "Special unpacking BOOST to destination directory + symbolic link to itself named include/."
+        echo "This is required ONLY due to the dune-common m4 check for boost."
+        echo "processing package '$packagename.tar.gz'"
+        create_directory "$installdir"
+        tar xzvf $packagename.tar.gz -C $installdir/.
+        cd "$installdir" 
+        ln -s . include
+        echo "Special unpacking BOOST to destination directory + symbolic link to itself named include/ done. Finished. No build needed."
+        echo "Your special Boost version is now in $installdir."
         exit
     else
         echo "Default unpacking."
@@ -176,7 +174,7 @@ make_install()
     cd ..
     #
     echo "clean up"
-    rm -rvf $packagename
+    rm -rf $packagename
 }
 
 

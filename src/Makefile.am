@@ -4,7 +4,7 @@
 # 
 # The special variable BOOST_INCL is required only due to the faulty boost check 
 # in dune-common (2.3.1):
-BOOST_INCL = -I$(BOOST_CPPFLAGS)/include
+BOOST_INCL = -I$(BOOST_CPPFLAGS) -I$(BOOST_CPPFLAGS)/include
 # 
 #
 ##############################################################
