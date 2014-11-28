@@ -347,7 +347,8 @@ namespace Dune {
 
           TPM0 tpm0(darcyflux_dgf,inputdata,setupdata);
 
-          //MeshPlecletNumber<GV_TP,TPM0> meshPeclet( *pgv_tp, tpm0, step );
+
+
           MeshPlecletNumber<GV_TP,TPM0> meshPeclet( gv_tp, tpm0, step );
           std::stringstream vtu_Peclet;
           vtu_Peclet << dir.vtudir << "/peclet_step" << step;
@@ -357,6 +358,7 @@ namespace Dune {
                       << meshPeclet.maximum_l() << " / Pe_t = "
                       << meshPeclet.maximum_t() << std::endl;
           }
+
 
 
           UINT allDOFs = gfs_tp.globalSize();
