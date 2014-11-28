@@ -19,10 +19,6 @@
 #include<dune/common/exceptions.hh>
 #include<dune/common/fvector.hh>
 
-//#include<dune/common/geometrytype.hh>
-//#include<dune/grid/common/genericreferenceelements.hh>
-//#include<dune/grid/common/quadraturerules.hh>
-
 #include <dune/geometry/type.hh>
 #include <dune/geometry/referenceelements.hh>
 #include <dune/geometry/quadraturerules.hh>
@@ -31,7 +27,6 @@
 
 #include<dune/pdelab/common/geometrywrapper.hh>
 #include<dune/pdelab/gridoperator/gridoperator.hh>
-//#include<dune/pdelab/gridoperatorspace/gridoperatorspaceutilities.hh>
 #include<dune/pdelab/localoperator/pattern.hh>
 #include<dune/pdelab/localoperator/flags.hh>
 #include<dune/pdelab/localoperator/idefault.hh>
@@ -130,9 +125,6 @@ namespace Dune {
 
 
 
-
-      // Ausgelagerte Funktionen zur Berechnung des Brunnens im Fracture-Model:
-
       // Checks whether 'elementpoint' lies within epsilon reach of 'well_postion' and above 'well_bottom'
       template< typename DFV0   // Dune::FieldVector of codim 0
                 , typename RF
@@ -184,7 +176,6 @@ namespace Dune {
                                     const LFSV& lfsv,
                                     R& residual
                                     ) const {
-        //return; // testwise
 
         // should not be used in the GPE!!!
         if( sourceterm.source_nature == GEOELECTRICAL_POTENTIAL_SOURCE ||
@@ -239,48 +230,14 @@ namespace Dune {
           Dune::GeometryType gt = eg.geometry().type();
           const Dune::QuadratureRule<DF,dim>& rule = Dune::QuadratureRules<DF,dim>::rule(gt,qorder);
 
-          // evaluate Y-field tensor at cell center, assume it is constant over elements
-          Dune::FieldVector<DF,dim> localcenter = Dune::ReferenceElements<DF,dim>::general(gt).position(0,0);
-          // typename GWP::Traits::DiffusionTensorType tensor(gwp.DiffusionTensor(eg.entity(),localcenter));
-
           // loop over quadrature points
           for( typename Dune::QuadratureRule<DF,dim>::const_iterator it=rule.begin()
                  ; it!=rule.end(); ++it ) {
-
-            // evaluate gradient of shape functions (we assume Galerkin method lfsu=lfsv)
-            //std::vector<JacobianType> js(lfsv.size());
-            //lfsv.finiteElement().localBasis().evaluateJacobian(it->position(),js);
-
-            // transform gradient to real element
-            //const Dune::FieldMatrix<DF,dimw,dim> jac = eg.geometry().jacobianInverseTransposed(it->position());
-            //std::vector<Dune::FieldVector<RF,dim> > gradphi(lfsv.size());
-            //for (size_type i=0; i<lfsv.size(); i++) {
-            //  gradphi[i] = 0.0;
-            //  jac.umv(js[i][0],gradphi[i]);
-            //}
-
-            // compute gradient of u
-            //Dune::FieldVector<RF,dim> gradu(0.0);
-            //for (size_type i=0; i<lfsv.size(); i++)
-            //  gradu.axpy(x(lfsv,i),gradphi[i]);
-
-            // compute K * gradient of u
-            //Dune::FieldVector<RF,dim> Kgradu(0.0);
-            //tensor.umv(gradu,Kgradu);
 
             // evaluate basis functions
             std::vector<RangeType> phi(lfsv.size());
             lfsv.finiteElement().localBasis().evaluateFunction(it->position(),phi);
 
-            // evaluate u
-            //RF u=0.0;
-            //for (size_type i=0; i<lfsv.size(); i++)
-            //  u += x(lfsv,i)*phi[i];
-
-            // evaluate reaction term
-            //typename GWP::Traits::RangeFieldType c = gwp.c(eg.entity(),it->position());
-
-            // integrate (K grad u)*grad phi_i + a_0*u*phi_i
 
             RF factor = it->weight() * eg.geometry().integrationElement(it->position());
             RF fval = well_rate * screening_fraction / eg.geometry().volume();
@@ -288,7 +245,6 @@ namespace Dune {
 
             for (size_type i=0; i<lfsv.size(); i++)
               residual.accumulate( lfsv, i, -fval*phi[i]*factor );
-            // r.accumulate( lfsv, i, ( Kgradu*gradphi[i] + c*u*phi[i] )*factor );
           }  // end of loop over quadrature points
 
         }
