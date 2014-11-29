@@ -64,8 +64,8 @@ make_install()
         echo "Special unpacking BOOST to destination directory + symbolic link to itself named include/."
         echo "This is required ONLY due to the dune-common m4 check for boost."
         echo "processing package '$packagename.tar.gz'"
-        create_directory "$installdir"
-        tar xzvf $packagename.tar.gz -C $installdir/.
+        create_directory "$softwaredir"
+        tar xzvf $packagename.tar.gz -C $softwaredir/.
         cd "$installdir" 
         ln -s . include
         echo "Special unpacking BOOST to destination directory + symbolic link to itself named include/ done. Finished. No build needed."
