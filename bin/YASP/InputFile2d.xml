@@ -226,7 +226,7 @@ For the solute tansport equations, the tracer is feeded through an injection wel
       <!-- ***************************************** -->
       <transport_equation recycle_matrix_hierarchy="no" injection_time="100">
         <boundary orientation="west" bctype="1" nstripes="1">
-          <!-- bctype=1 and value=0 means: Dirichlet boundary condition with given value 0 -->
+          <!-- bctype=1 and value=0 means: Inflow (Dirichlet) boundary condition with given value 0 -->
           <stripe value="0.0" regularization_factor="1.0" regularization_type="dynamic">
             <startpoint>20</startpoint>
             <endpoint>30</endpoint>
