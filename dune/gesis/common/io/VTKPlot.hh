@@ -325,8 +325,8 @@ namespace Dune {
                                                       const CInputData& inputdata,
                                                       const std::string & vtu_filename,
                                                       const std::string & Y_old_filename,
-                                                      const std::string & hd5_data_name,
-                                                      YFG& yfg_Y_old,
+                                                      const std::string & groupname,
+                                                      YFG& yfg,
                                                       const int verbosity=0
                                                       ){
 
@@ -340,23 +340,23 @@ namespace Dune {
         HDF5Tools::h5g_pRead( gv_0
                               , local_Y_old
                               , Y_old_filename
-                              , hd5_data_name
+                              , groupname
                               , local_offset
                               , local_count
                               , inputdata
                               );
 
         if( gv_0.comm().size() > 1 ){
-          yfg_Y_old.parallel_import_from_local_vector( local_Y_old,
-                                                       local_offset,
-                                                       local_count
-                                                       );
+          yfg.parallel_import_from_local_vector( local_Y_old,
+                                                 local_offset,
+                                                 local_count
+                                                 );
         }
         else {
-          yfg_Y_old.import_from_vector( local_Y_old );
+          yfg.import_from_vector( local_Y_old );
         }
 
-        yfg_Y_old.plot2vtu( gv_0, vtu_filename, hd5_data_name );
+        yfg.plot2vtu( gv_0, vtu_filename, groupname );
 
         std::stringstream jobtitle;
         jobtitle << "VTK output of HDF5 data to "
@@ -397,7 +397,7 @@ namespace Dune {
         // Idea:
         // 1.) Generate measurements on grid level L1.
         // 2.) Copy the measurement data from BUFFER into DATA sub-dir.
-        // 3.) Run a first inversion on a coarse grid level L0 with refine_estimate = "1". This will produce "Y_estimated_2.h5" with "/Y_est".
+        // 3.) Run a first inversion on a coarse grid level L0 with refine_estimate = "1". This will produce "Y_estimated_2.h5" with groupname "/YField".
         // 4a) mv Y_estimated_2.h5 Y_estimated.h5
         // 4b) rm L_prior.h5 (very important: Its value from L0 will be too small for L1.)
         // 5.) Run a second inversion on level L1 with using_existing_Yold="yes" and start geo_inversion with -c.
@@ -445,7 +445,7 @@ namespace Dune {
         VTKPlot::output_vector_to_vtu( gv_1,
                                        Y_est2,
                                        dir.vtudir + "/Y_est2",
-                                       "Y_est2",
+                                       groupname,
                                        inputdata.verbosity,
                                        true, // subsampling
                                        0 // subsampling degree

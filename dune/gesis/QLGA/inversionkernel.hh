@@ -1,13 +1,17 @@
 #ifndef DUNE_GESIS_INVERSION_KERNEL_HH
 #define DUNE_GESIS_INVERSION_KERNEL_HH
 
-#include <boost/math/special_functions/gamma.hpp>
 
-//          Copyright Joe Coder 2004 - 2006.
-// Distributed under the Boost Software License, Version 1.0.
-//    (See accompanying file LICENSE_1_0.txt or copy at
-//          http://www.boost.org/LICENSE_1_0.txt)
+/*** ***********************************************************************
+     
+     QLGA - Gauss-Newton with line search
+     
+     This inversion scheme is designed to work for the 
+     structured parallel grid YASP.
 
+     Authors: A. Ngo and R. Schwede (2010-2014)
+     
+ *** ***********************************************************************/
 
 #include <dune/gesis/QLGA/SensitivityClass.hh>
 #include <dune/gesis/QLGA/objectivefunction.hh>
@@ -15,6 +19,17 @@
 #ifdef ESTIMATION_VARIANCE
 #include <dune/gesis/QLGA/estimation_variance.hh>
 #endif
+
+/***
+    Copyright John Maddock 2006-7, 2013-14.
+    Copyright Paul A. Bristow 2007, 2013-14.
+    Copyright Nikhar Agrawal 2013-14
+    Copyright Christopher Kormanyos 2013-14
+    Use, modification and distribution are subject to the
+    Boost Software License, Version 1.0. (See accompanying file
+    LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+***/
+#include <boost/math/special_functions/gamma.hpp>
 
 
 namespace Dune {
@@ -172,57 +187,6 @@ namespace Dune {
 
       GV_GW gv_0 = theGrid.levelGridView(0);
 
-      //const GV_GW& gv_gw = gfs_gw.gridView();
-
-
-      // Frag Ronnie:
-      // Ist es nicht genug, "log_electricalConductivity"
-      // und "log_kappafield"
-      // einmal in "initialize_DuneGrid.hh" zu lesen?
-
-      /*
-      // define the sigma0_wrapper and kappa_wrapper! works on all processors!
-      YFG log_electricalConductivity_world(inputdata,dir,helper.getCommunicator());
-      YFG log_kappafield_world(inputdata,dir,helper.getCommunicator());
-
-      if(inputdata.problem_types.moments_geoeletric_potential_inversion){
-      Vector<REAL> logsigma0;
-      HDF5Tools::h5g_pRead( gv_gw
-      , inputdata
-      , logsigma0
-      , "/logsigma0"
-      , local_count
-      , local_offset
-      , dir.logsigma0_h5file
-      );
-      // export the data to the sigma0 Generator
-      if(helper.size()>1)
-      log_electricalConductivity_world.parallel_import_from_local_vector(logsigma0, local_count, local_offset );
-      else
-      log_electricalConductivity_world.import_from_vector( logsigma0 );
-
-
-      Vector<REAL> logkappa;
-      HDF5Tools::
-      h5g_pRead( gv_gw
-      , inputdata
-      , logkappa
-      , "/logkappa"
-      , local_count
-      , local_offset
-      , dir.logkappa_h5file
-      );
-      // export the data to the sigma0 Generator
-      if(helper.size()>1)
-      log_kappafield_world.parallel_import_from_local_vector(logkappa, local_count, local_offset );
-      else
-      log_kappafield_world.import_from_vector( logkappa );
-      }
-      */
-
-
-      //const FieldWrapperType log_sigma0_wrapper_world( inputdata, setupdata, log_electricalConductivity_world );
-      //const FieldWrapperType log_kappa_wrapper_world( inputdata, setupdata, log_kappafield_world );
 
       // chi 2 test for acceptance
       REAL L_accept_value = 2.0 * boost::math::gamma_p_inv( 0.5*nMeas, inputdata.inversion_parameters.L_accept_confidence_interval );
@@ -281,14 +245,14 @@ namespace Dune {
           if( General::bFileExists( dir.Y_estimated_h5file ) ){
 
             if( helper.rank()==0 && inputdata.verbosity >= VERBOSITY_INVERSION )
-              std::cout << "For the initial guess: Read /Y_est from "
+              std::cout << "For the initial guess: Read YField from "
                         << dir.Y_estimated_h5file << std::endl;
-            logger << "For the initial guess: Read /Y_est from "
+            logger << "For the initial guess: Read /YField from "
                    << dir.Y_estimated_h5file << std::endl;
 
             HDF5Tools::h5g_Read( Y_old
                                  , dir.Y_estimated_h5file
-                                 , "/Y_est"
+                                 , "/YField"
                                  , local_offset
                                  , local_count
                                  , inputdata
@@ -297,14 +261,14 @@ namespace Dune {
           else {
 
             if( helper.rank()==0 && inputdata.verbosity >= VERBOSITY_INVERSION )
-              std::cout << "For the initial guess: Read /Y_old from "
+              std::cout << "For the initial guess: Read /YField from "
                         << dir.Y_old_h5file << std::endl;
-            logger << "For the initial guess: Read /Y_old from "
+            logger << "For the initial guess: Read /YField from "
                    << dir.Y_old_h5file << std::endl;
 
             HDF5Tools::h5g_Read( Y_old
                                  , dir.Y_old_h5file
-                                 , "/Y_old"
+                                 , "/YField"
                                  , local_offset
                                  , local_count
                                  , inputdata
@@ -362,24 +326,9 @@ namespace Dune {
           HDF5Tools::h5g_Write(
                                Y_old
                                , dir.Y_old_h5file
-                               , "/Y_old"
+                               , "/YField"
                                , inputdata
                                );
-
-          /*
-            Vector<REAL> Y_old_Well( Y_old );
-            General::add_wells_to_field( inputdata, Y_old_Well );
-
-            HDF5Tools::
-            h5g_Write(
-            Y_old_Well
-            , "/Y_old_Well"
-            , inputdata
-            , dir.Y_old_Well_h5file
-            , "Y_old_Well"
-            , dir.Y_old_xmffile
-            );
-          */
 
         } else { // generate a homogeneous intial guess!
 
@@ -401,26 +350,9 @@ namespace Dune {
           HDF5Tools::h5g_Write(
                                Y_old
                                , dir.Y_old_h5file
-                               , "/Y_old"
+                               , "/YField"
                                , inputdata
                                );
-          /*
-            Vector<REAL> Y_old_Well (nAllCells,0.0);
-            for(int ii=0;ii<nAllCells;ii++)
-            Y_old_Well[ii] = Y_old[ii];
-
-            General::add_wells_to_field( inputdata, Y_old_Well );
-
-            HDF5Tools::
-            h5g_Write(
-            Y_old_Well
-            , "/Y_old_Well"
-            , inputdata
-            , dir.Y_old_Well_h5file
-            , "Y_old_Well"
-            , dir.Y_old_xmffile
-            );
-          */
 
         } // end: else: if ( inputdata.problem_types.using_existing_Yold ...
       }// end:  if(helper.rank()==0)
@@ -433,35 +365,33 @@ namespace Dune {
       if( inputdata.problem_types.refine_estimate ){
 
         if( General::bFileExists( dir.Y_old_h5file ) ){
-          VTKPlot::
-            plotDataToRefinedGrid< GRID,
-                                   GV_GW,
-                                   IDT,
-                                   DIR,
-                                   YFG
-                                   >( theGrid,
-                                      gv_0,
-                                      dir.Y_old_h5file,
-                                      dir.Y_old2_h5file,
-                                      "/Y_old",
-                                      inputdata,
-                                      dir );
+          VTKPlot::plotDataToRefinedGrid< GRID,
+                                          GV_GW,
+                                          IDT,
+                                          DIR,
+                                          YFG
+                                          >( theGrid,
+                                             gv_0,
+                                             dir.Y_old_h5file,
+                                             dir.Y_old2_h5file,
+                                             "/YField",
+                                             inputdata,
+                                             dir );
         }
 
         if( General::bFileExists( dir.estimation_variance_h5file ) ){
-          VTKPlot::
-            plotDataToRefinedGrid< GRID,
-                                   GV_GW,
-                                   IDT,
-                                   DIR,
-                                   YFG
-                                   >( theGrid,
-                                      gv_0,
-                                      dir.estimation_variance_h5file,
-                                      dir.V_est2_h5file,
-                                      "/sigma2",
-                                      inputdata,
-                                      dir );
+          VTKPlot::plotDataToRefinedGrid< GRID,
+                                          GV_GW,
+                                          IDT,
+                                          DIR,
+                                          YFG
+                                          >( theGrid,
+                                             gv_0,
+                                             dir.estimation_variance_h5file,
+                                             dir.V_est2_h5file,
+                                             "/sigma2",
+                                             inputdata,
+                                             dir );
         }
 
         if( inputdata.inversion_parameters.max_iter == 0 ){
@@ -579,19 +509,6 @@ namespace Dune {
                                                             , FEMType::DG // P0
                                                             , 0 // structure is on grid level 0
                                                             );
-      /*
-      // DEBUG CODE:
-      YFG yfg_smoothed_Yorig(inputdata,dir,helper.getCommunicator());
-      if( helper.size() > 1 )
-      yfg_smoothed_Yorig.parallel_import_from_local_vector( smoothed_orig_YField, local_count, local_offset );
-      else
-      yfg_smoothed_Yorig.import_from_vector( smoothed_orig_YField );
-
-      yfg_smoothed_Yorig.plot2vtu( gv_0,
-      dir.Y_orig_vtu + "_smoothed_inv",
-      "Y_smoothed",
-      baselevel );
-      */
 
       /*==================
        * Inversion scheme
@@ -651,7 +568,7 @@ namespace Dune {
                                               inputdata,
                                               vtu_Y_old.str(),
                                               dir.Y_old_h5file,
-                                              "/Y_old",
+                                              "/YField",
                                               yfg_Y_old
                                               );
 #endif
@@ -981,7 +898,7 @@ namespace Dune {
             HDF5Tools::h5g_Write(
                                  Y_try
                                  , dir.Y_try_h5file
-                                 , "/Y_try"
+                                 , "/YField"
                                  , inputdata
                                  );
 
@@ -1128,7 +1045,7 @@ namespace Dune {
               HDF5Tools::h5g_Write(
                                    Y_old
                                    , dir.Y_old_h5file
-                                   , "/Y_old"
+                                   , "/YField"
                                    , inputdata
                                    );
 
@@ -1145,21 +1062,6 @@ namespace Dune {
                         << it_counter << ".h5"
                         << std::endl;
 
-
-              /*
-                Vector<REAL> Y_old_Well( Y_old );
-                General::add_wells_to_field( inputdata, Y_old_Well );
-
-                HDF5Tools::
-                h5g_Write(
-                Y_old_Well
-                , "/Y_old_Well"
-                , inputdata
-                , dir.Y_old_Well_h5file
-                , "Y_old_Well"
-                , dir.Y_old_xmffile
-                );
-              */
 
               Vector<UINT> dimensions(1,ksi_old.size());
 
@@ -1217,7 +1119,7 @@ namespace Dune {
                                                     inputdata,
                                                     vtu_file.str(),
                                                     dir.Y_old_h5file,
-                                                    "/Y_old",
+                                                    "/YField",
                                                     yfg_Y_old
                                                     );  // function defined in this file
               vtu_list_Y_old.push_back( vtu_file.str() );
@@ -1397,13 +1299,13 @@ namespace Dune {
         // The quality measure is then defined as
         // || Y_old - alpha * C_YY * Y_orig || in the 2-norm.
         //
-        // Read /Y_old in parallel on gv_0 and store it to Y_current.
+        // Read Y_old in parallel on gv_0 and store it to Y_current.
 
         Vector<REAL> Y_current;
         HDF5Tools::h5g_pRead<GV_GW,Dune::Interior_Partition>( gv_0
                                                               , Y_current
                                                               , dir.Y_old_h5file
-                                                              , "/Y_old"
+                                                              , "/YField"
                                                               , local_offset
                                                               , local_count
                                                               , inputdata
@@ -1461,7 +1363,7 @@ namespace Dune {
                                               inputdata,
                                               dir.Y_cond_vtu[CR],
                                               dir.Y_old_h5file,
-                                              "/Y_old",
+                                              "/YField",
                                               yfg_Y_old
                                               );
 
@@ -1470,25 +1372,24 @@ namespace Dune {
         if(helper.rank()==0){
           HDF5Tools::h5g_Write( Y_old
                                 , dir.Y_estimated_h5file
-                                , "/Y_est"
+                                , "/YField"
                                 , inputdata
                                 );
         }
 
         if( inputdata.problem_types.refine_estimate ){
-          VTKPlot::
-            plotDataToRefinedGrid< GRID,
-                                   GV_GW,
-                                   IDT,
-                                   DIR,
-                                   YFG
-                                   >( theGrid,
-                                      gv_0,
-                                      dir.Y_estimated_h5file,
-                                      dir.Y_estimated2_h5file,
-                                      "/Y_est",
-                                      inputdata,
-                                      dir );
+          VTKPlot::plotDataToRefinedGrid< GRID,
+                                          GV_GW,
+                                          IDT,
+                                          DIR,
+                                          YFG
+                                          >( theGrid,
+                                             gv_0,
+                                             dir.Y_estimated_h5file,
+                                             dir.Y_estimated2_h5file,
+                                             "/YField",
+                                             inputdata,
+                                             dir );
         }
 
       }
@@ -1571,7 +1472,7 @@ namespace Dune {
         HDF5Tools::h5g_pRead<GV_GW,Dune::Interior_Partition>( gv_0
                                                               , Y_current
                                                               , dir.Y_old_h5file
-                                                              , "/Y_old"
+                                                              , "/YField"
                                                               , local_offset
                                                               , local_count
                                                               , inputdata

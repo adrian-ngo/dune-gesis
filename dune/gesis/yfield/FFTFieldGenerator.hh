@@ -2025,8 +2025,8 @@ namespace Dune {
                                        log_conductivity_field,
                                        filename,
                                        title,
-                                       inputdata.verbosity
-                                       ,true,
+                                       inputdata.verbosity,
+                                       true,
                                        0
                                        );
 

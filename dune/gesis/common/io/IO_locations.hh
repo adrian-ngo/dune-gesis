@@ -226,11 +226,11 @@ namespace Dune {
 
 
         kfield_properties_file=yfielddir+"/yfield_properties.dat";
-        kfield_h5file = yfielddir+"/Yfield.h5";
-        extended_yfield_h5file = yfielddir+"/ext_Yfield.h5";
-        //kfield_Well_h5file=yfielddir+"/Yfield_Well.h5";
+        kfield_h5file = yfielddir+"/YField.h5";
+        extended_yfield_h5file = yfielddir+"/ext_YField.h5";
+        //kfield_Well_h5file=yfielddir+"/YField_Well.h5";
 
-        kfield_h5file_without_wells=yfielddir+"/Yfield_without_wells.h5";
+        kfield_h5file_without_wells=yfielddir+"/YField_without_wells.h5";
 
         unconditionalField_h5file=bufferdimdir+"/Y_unconditional.h5";
 

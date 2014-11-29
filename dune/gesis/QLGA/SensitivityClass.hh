@@ -844,7 +844,7 @@ namespace Dune {
                                    pool_gv_gw[iPool]
                                    , local_Y_old
                                    , dir.Y_old_h5file
-                                   , "/Y_old"
+                                   , "/YField"
                                    , local_offset
                                    , local_count
                                    , inputdata
@@ -855,7 +855,7 @@ namespace Dune {
                 *(pool_gv_gw[iPool])
                 , inputdata
                 , local_Y_old_Well
-                , "/Y_old_Well"
+                , "/YField"
                 , local_count
                 , local_offset
                 , dir.Y_old_Well_h5file
@@ -952,7 +952,7 @@ namespace Dune {
                 if(Y_old.size()==0){
                   HDF5Tools::h5g_Read( Y_old
                                        , dir.Y_old_h5file
-                                       , "/Y_old"
+                                       , "/YField"
                                        , local_offset
                                        , local_count
                                        , inputdata
@@ -1599,7 +1599,7 @@ namespace Dune {
 
             HDF5Tools::h5g_Read( Y_old
                                  , dir.Y_old_h5file
-                                 , "/Y_old"
+                                 , "/YField"
                                  , local_offset
                                  , local_count
                                  , inputdata

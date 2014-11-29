@@ -102,7 +102,7 @@ namespace Dune {
         HDF5Tools::h5g_pRead( gv_0
                               , local_Y_old
                               , dir.Y_old_h5file
-                              , "/Y_old"
+                              , "/YField"
                               , local_offset
                               , local_count
                               , inputdata
@@ -111,7 +111,7 @@ namespace Dune {
         HDF5Tools::h5g_pRead( gv_0
                               , local_Y_old
                               , dir.Y_try_h5file
-                              , "/Y_try"
+                              , "/YField"
                               , local_offset
                               , local_count
                               , inputdata
@@ -124,7 +124,7 @@ namespace Dune {
         HDF5Tools::h5g_pWrite( gv_0
                                , local_Y_old
                                , dir.Y_est_h5file
-                               , "/Y_old"
+                               , "/YField"
                                , inputdata
                                , inputdata.domain_data.nCells
                                , 1

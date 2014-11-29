@@ -42,8 +42,8 @@
   <!-- What problems should be solved? -->
   <!-- ***************************************** -->
   <problem_types 
-      new_YField="yes"  
-      new_Eigenvalues="yes"
+      new_YField="no"  
+      new_Eigenvalues="no"
       synthetic="yes" 
       using_existing_Yold="yes"
       refine_estimate="0"
@@ -67,16 +67,6 @@
     </lineplot>
     <chunks>16 16</chunks>
     <yasp_grid baselevel="0" maxlevel="0" overlap="1"></yasp_grid>
-    <ug_grid
-        heapsize="2000"
-        globalrefine="0"
-        baselevel="0"
-        maxsteps="20"
-        refinementtype="nonconforming"
-        refinementfraction="0.2"
-        coarseningfraction="0.15"
-        TOL="1E-12"
-        strategy="0"/>
   </domain_data>
   <!-- *********************************************** -->
   <!-- Geo-statistical properties of the random field  -->

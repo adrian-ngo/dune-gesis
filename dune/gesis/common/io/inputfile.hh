@@ -19,16 +19,25 @@
 #include <string>
 #include <vector>
 
-/*
-    We use the XML Parser Boost.PropertyTree.
-    See for example
-    http://www.boost.org/doc/libs/1_47_0/doc/html/property_tree.html
-*/
 
+/***
+    Boost.PropertyTree (http://www.boost.org/doc/libs/1_57_0/doc/html/property_tree.html)
+    Copyright © 2008 Marcin Kalicinski
+    Distributed under the Boost Software License, Version 1.0. 
+    (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+ ***/
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/property_tree/detail/xml_parser_error.hpp>
+
+/***
+    Boost.Foreach (http://www.boost.org/doc/libs/1_57_0/doc/html/foreach.html)
+    Copyright © 2004 Eric Niebler
+    Distributed under the Boost Software License, Version 1.0. 
+    (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+ ***/
 #include <boost/foreach.hpp>
+
 
 #include "dune/gesis/common/Vector.hh"
 #include "dune/gesis/common/general.hh"

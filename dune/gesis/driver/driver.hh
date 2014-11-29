@@ -287,11 +287,11 @@ namespace Dune {
       if( ( helper.size() > 1 )
           /*&& ( inputdata.yfield_properties.variance != 0 )*/
           ) {
-        //std::string YField_h5_filename = dir.yfielddir + "/Yfield.h5";
+        //std::string YField_h5_filename = dir.yfielddir + "/YField.h5";
 
 
         if( helper.rank()==0 && inputdata.verbosity >= VERBOSITY_EQ_DETAILS )
-          std::cout << "Start parallel fetching of Yfield data..." << std::endl;
+          std::cout << "Start parallel fetching of YField data..." << std::endl;
 
         HDF5Tools::h5g_pRead( gv_gw
                               , local_Yfield_vector
@@ -322,7 +322,7 @@ namespace Dune {
       /*
         if( helper.size()>1 ){
         yfg_orig.parallel_add_wells_to_hdf5( gv_gw,
-        "/YField_Well",
+        "/YField",
         inputdata.domain_data.nCells,
         inputdata.domain_data.virtual_gridsizes,
         dir.kfield_Well_h5file );
@@ -330,7 +330,7 @@ namespace Dune {
       */
 
       if( inputdata.plot_options.vtk_plot_yfield ){
-        yfg_orig.plot2vtu( gv_gw, dir.Y_orig_vtu, "Y_orig", baselevel );
+        yfg_orig.plot2vtu( gv_gw, dir.Y_orig_vtu, "YField", baselevel );
       }
 
 
@@ -444,7 +444,7 @@ namespace Dune {
 
         yfg_smoothed_Yorig.plot2vtu( gv_gw,
                                      dir.Y_orig_vtu + "_smoothed",
-                                     "Y_smoothed",
+                                     "YField",
                                      baselevel );
       }
 
