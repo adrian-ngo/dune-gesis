@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!--
-<?xml-stylesheet href="InputFile.xsl" type="text/xsl"?>
+In this exmaple, the flow is driven by a gradient in the hydraulic head and by injection and extraction wells.
+For the solute tansport equations, the tracer is feeded through an injection well. See well_data 
 -->
 <!-- 
 #define VERBOSITY_SILENT          0
@@ -39,7 +40,46 @@
       vtk_plot_m0_old="no"
       />
   <!-- ***************************************** -->
-  <!-- What problems should be solved? -->
+  <!-- problem_types: What problems should be solved? -->
+  <!-- new_YField="no": 
+       Re-load the Y-field from a HDF5 file if it exists and has the same geostatistical properties. 
+       Otherwise ("yes"), generate a new random field. -->
+  <!-- new_Eigenvalues="yes": 
+       Re-calculate the auto-covariance function and the eigenvalues of the circulant
+       matrix (for the case that a new field should be generated). 
+       Otherwise ("no"), skip this step. -->
+  <!-- synthetic="yes":
+       Working with synthetically generated fields. 
+       Otherwise ("no"), you must provide all measurement data yourself. -->
+  <!-- -->
+  <!-- using_existing_Yold="yes":
+       Use the estimate of a previous inversion run as the initial guess for the next inversion.
+       In this case, you must start 'gesis2dDG' or 'gesis2dFEM' with the parameter -c.
+       Otherwise, the old inversion result will be removed and the computation starts
+       with a homogeneous guess.
+  -->
+  <!-- refine_estimate="0": Keep this default if you do not plan to work with two global refinement levels.
+       refine_estimate="1": The result of your parameter estimation will be projected into a once globally
+       refined mesh and can be used as the initial guess for a next inversion on the once globally refined mesh.
+  -->
+  <!--
+      head_forward="on":       Solve the steady-state groundwater equation (forward problem).
+      transport_forward="on":  Solve the steady-state forward groundwater and transport equations (zero-th and first temp.moments).
+  -->
+  <!-- lnK_inversion="on"              : Use direct measurements of Y=log(K) for your inversion. -->
+  <!-- head_inversion="on"             : Use head measurements for your inversion. -->
+  <!-- transport_inversion_m0="on"     : Use m0 measurements for your inversion. -->
+  <!-- transport_inversion_m1="on"     : Use m0 measurements for your inversion. -->
+  <!-- generate_measurement_data="on"  : 
+       Solve the forward problems listed by the previous three XML attributes 
+       'head_inversion', 'transport_inversion_m0' and/or 'transport_inversion_m1' 
+       and take point measurements listed at the points listed below in the 
+       XML-tags: head_measurements, m0_measurements and/or m1_measurements.
+       The measurement points for head inversion are active if head_inversion="on".
+       The measurement points for m0 inversion are active if transport_inversion_m0="on".
+       The measurement points for m1 inversion are active if transport_inversion_m1="on".
+  -->
+  <!-- -->
   <!-- ***************************************** -->
   <problem_types 
       new_YField="no"  
@@ -58,6 +98,10 @@
   <!-- ***************************************** -->
   <!-- Domain Data: -->
   <!-- ***************************************** -->
+  <!-- extensions:     Lx  Ly (physical lenghts of the domain in x and y direction) -->
+  <!-- virtual_nCells: Nx  Ny (number of cells in the structured mesh in x and y direction) 
+       The log conductivity field is resolved on the very same mesh yielding N = Nx * Ny cells in total. -->
+  <!-- Please do not change the remaing domain data. -->
   <domain_data>
     <extensions>51.2   51.2</extensions>
     <virtual_nCells>128   128</virtual_nCells>
@@ -72,12 +116,18 @@
   <!-- Geo-statistical properties of the random field  -->
   <!-- *********************************************** -->
   <yfield_properties vertical_zones="1" well_type="cell" random_seed="0">
+    <!-- model    : The variogram model can be either "gaussian", "exponential" or "spherical". -->
+    <!-- variance : The variance in the semi-variogram function. -->
+    <!-- beta     : The trend coefficient = mean value of the Y=log(K). (Only one dimension!) -->
+    <!-- qbb_y    : The variability of beta. -->
+    <!-- porosity : The porosity is assumed to be constant in space. Range=(0.01,0.99) -->
+    <!-- -->
+    <!-- The correlation lengths are specified per dimension. -->
     <zone 
         model="spherical"
         variance="1.0"
         beta="-6.1" 
         qbb_y="0.0005" 
-        embedding_factor="2.0"
         porosity="0.3"
         >
       <correlationlengths>2.0  2.0</correlationlengths>
@@ -88,20 +138,20 @@
   <!-- ***************************************** -->
   <!-- Transport Problem: -->
   <!-- ***************************************** -->
+  <!-- a_l            : longitudinal dispersivity used for the Scheidegger dispersion tensor -->
+  <!-- a_t            : transversal dispersivity used for the Scheidegger dispersion tensor -->
+  <!-- D_m            : molecular diffusion -->
+  <!-- istl_max_iter  : maximal number of iteration steps for the linear solver of the transport equations -->
+  <!-- istl_reduction : reduction of the residual for the linear solver of the transport equations -->
+  <!-- tolerance      : Used only for adaptive forward solution of the transport equations (stopping criteria when maximal undershoots are below 1.0 percent ) -->
   <transport_parameters
       a_l="1E-3"
       a_t="1E-4"
       D_m="1E-9"
       deltaSD_factor="1.0"
-      refined_diffusion="1.0"
-      l2_diffusion="1.0"
-      l2_diffusion_adjoint="1"
-      tolerance="1.0"
-      dg_method="SIPG" 
-      dg_weights="on" 
-      dg_gamma="2.0"
       istl_max_iter="2000"
       istl_reduction="1e-8"
+      tolerance="1.0"
       />
   <!-- -->
   <!-- -->
@@ -109,19 +159,21 @@
   <!-- ***************************************** -->
   <!-- Inverse Problem: -->
   <!-- ***************************************** -->
-  <!-- -->
-  <!-- -->
-  <!-- -->
+  <!-- max_iter    : maximal number of Gauss-Newton steps in the inversion scheme -->
+  <!-- disturbance : You may add extra noise to your measurement data. disturbance="5.0" would add 5 percent normally distributed error. -->
+  <!-- m1relerror  : from the maximum over all m1 measurements within a setup, we take 0.005 = 0.5 percent as the maximal absolute error.
+       Take care: The choice of this value has a direct influence on the value of the objective function and therefore on the convergence 
+       behaviour of the inversion scheme. The larger the value for 'm1relerror', the smaller the objective function becomes. -->
+  <!-- Do not change the other values -->
   <inversion_parameters
-      L_prior="on"
       max_iter="20"
+      disturbance="0.0"
+      m1relerror="0.005"
       lim_stepsize="0.75" 
       weighting_lim="1E-3"
       dY_lim="0.05" 
       dL_lim_fac="0.02"
       L_accept_confidence_interval="0.95"
-      disturbance="0.0"
-      m1relerror="0.005"
       />
   <!-- -->
   <!-- -->
@@ -141,24 +193,28 @@
       <!-- ***************************************** -->
       <flow_equation recycle_matrix_hierarchy="yes">
         <boundary orientation="west" bctype="1" nstripes="1">
+          <!-- bctype=1 and value=100 means: Dirichlet boundary condition with given value 100 -->
           <stripe value="100">
             <startpoint>0.0</startpoint>
             <endpoint>100.0</endpoint>
           </stripe> 
         </boundary> 
         <boundary orientation="east" bctype="1">
+          <!-- bctype=1 and value=99.88 means: Dirichlet boundary condition with given value 99.88 -->
           <stripe value="99.88" >
             <startpoint>0.0</startpoint>
             <endpoint>100.0</endpoint>
           </stripe>
         </boundary>
         <boundary orientation="south" bctype="0">
+          <!-- bctype=0 means: Neumann boundary condition with zero flux -->
           <stripe value="0.0">
             <startpoint>0.0</startpoint>
             <endpoint>100.0</endpoint>
           </stripe>
         </boundary>
         <boundary orientation="north" bctype="0">
+          <!-- bctype=0 means: Neumann boundary condition with zero flux -->
           <stripe value="0.0">
             <startpoint>0.0</startpoint>
             <endpoint>100.0</endpoint>
@@ -170,24 +226,28 @@
       <!-- ***************************************** -->
       <transport_equation recycle_matrix_hierarchy="no" injection_time="100">
         <boundary orientation="west" bctype="1" nstripes="1">
+          <!-- bctype=1 and value=0 means: Dirichlet boundary condition with given value 0 -->
           <stripe value="0.0" regularization_factor="1.0" regularization_type="dynamic">
             <startpoint>20</startpoint>
             <endpoint>30</endpoint>
           </stripe> 
         </boundary>
         <boundary orientation="east" bctype="-1">
+          <!-- bctype=-1 means: Outflow boundary condition with convective flux only given by the solution itself -->
           <stripe value="0.0">
             <startpoint>0.0</startpoint>
             <endpoint>100.0</endpoint>
           </stripe>
         </boundary>
         <boundary orientation="south" bctype="0">
+          <!-- bctype=0 means: Neumann boundary condition with zero flux -->
           <stripe value="0.0">
             <startpoint>0.0</startpoint>
             <endpoint>100.0</endpoint>
           </stripe>
         </boundary>
         <boundary orientation="north" bctype="0">
+          <!-- bctype=0 means: Neumann boundary condition with zero flux -->
           <stripe value="0.0">
             <startpoint>0.0</startpoint>
             <endpoint>100.0</endpoint>
@@ -211,7 +271,10 @@
         <!-- zBottom    = (lower) z-coordinate at the location of the well-bottom -->
         <!-- k_well     = choose a very high conductivity inside the well, e.g. 10.0 -->
         <!-- flow_rate  = negative for pumping or positive for injection -->
-        <!-- temperature= temperature difference for injection (will not be used for extraction wells) -->
+        <!-- T              = temperature difference for injection (will not be used for extraction wells) -->
+        <!-- t_inject       = injection time for the heat tracer -->
+        <!-- c              = concentration of the tracer (only active for positive flow rates) -->        
+        <!-- injection_time = injection time for the solute tracer -->
         <!-- One line per well: -->
         <!-- x   zTop     zBottom   k_well    flow_rate    T     t_inject   c     injection_time -->
         12.5       25.01     25.0      10.0        2.4e-3     0.0   100      0.0  100
@@ -407,7 +470,10 @@
         <!-- zBottom    = (lower) z-coordinate at the location of the well-bottom -->
         <!-- k_well     = choose a very high conductivity inside the well, e.g. 10.0 -->
         <!-- flow_rate  = negative for pumping or positive for injection -->
-        <!-- temperature= temperature difference for injection (will not be used for extraction wells) -->
+        <!-- T              = temperature difference for injection (will not be used for extraction wells) -->
+        <!-- t_inject       = injection time for the heat tracer -->
+        <!-- c              = concentration of the tracer (only active for positive flow rates) -->        
+        <!-- injection_time = injection time for the solute tracer -->
         <!-- One line per well: -->
         <!-- x   zTop     zBottom   k_well    flow_rate    T     t_inject   c     injection_time -->
         25.01       12.5     12.4      10.0        2.4e-3     0.0   100      0.0  100
@@ -603,7 +669,10 @@
         <!-- zBottom    = (lower) z-coordinate at the location of the well-bottom -->
         <!-- k_well     = choose a very high conductivity inside the well, e.g. 10.0 -->
         <!-- flow_rate  = negative for pumping or positive for injection -->
-        <!-- temperature= temperature difference for injection (will not be used for extraction wells) -->
+        <!-- T              = temperature difference for injection (will not be used for extraction wells) -->
+        <!-- t_inject       = injection time for the heat tracer -->
+        <!-- c              = concentration of the tracer (only active for positive flow rates) -->        
+        <!-- injection_time = injection time for the solute tracer -->
         <!-- One line per well: -->
         <!-- x   zTop     zBottom   k_well    flow_rate    T     t_inject   c     injection_time -->
         37.5       25.01     25.0      10.0        2.4e-3     0.0   100.0    0.0  100.0
@@ -798,7 +867,10 @@
         <!-- zBottom    = (lower) z-coordinate at the location of the well-bottom -->
         <!-- k_well     = choose a very high conductivity inside the well, e.g. 10.0 -->
         <!-- flow_rate  = negative for pumping or positive for injection -->
-        <!-- temperature= temperature difference for injection (will not be used for extraction wells) -->
+        <!-- T              = temperature difference for injection (will not be used for extraction wells) -->
+        <!-- t_inject       = injection time for the heat tracer -->
+        <!-- c              = concentration of the tracer (only active for positive flow rates) -->        
+        <!-- injection_time = injection time for the solute tracer -->
         <!-- One line per well: -->
         <!-- x   zTop     zBottom   k_well    flow_rate    T     t_inject   c     injection_time -->
         25.01       37.5     37.4      10.0        2.4e-3     0.0   100.0    0.0  100.0
