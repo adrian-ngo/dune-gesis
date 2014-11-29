@@ -1,22 +1,23 @@
 /*
  * File:   FFTFieldGenerator.hh
- * Author: ngo
+ * Author: A. Ngo (2010-2014)
  *
- * Created on June 25, 2010, 3:43 PM
- * Last Modified on Friday July 28, 2014
  */
 
 #ifndef DUNE_GESIS_FFT_FIELD_GENERATOR_HH
 #define	DUNE_GESIS_FFT_FIELD_GENERATOR_HH
 
-
+/***
+    FFTW was written by Matteo Frigo and Steven G. Johnson. 
+    * Copyright (c) 2003, 2007-14 Matteo Frigo
+    * Copyright (c) 2003, 2007-14 Massachusetts Institute of Technology
+    URL: http://www.fftw.org/
+ ***/
 #include <fftw3.h>
 #include <fftw3-mpi.h>
 
-#include <time.h>                      // define time()
-
+#include <time.h>      // define time()
 #include <random>      // C++11 random number generator (This works with g++-4.8.)
-
 
 #include <dune/gesis/common/io/HDF5Tools.hh>
 
@@ -31,21 +32,13 @@ namespace Dune {
 
     private:
 
-      //UINT dim;
       UINT nzones;
       const IDT &inputdata;
       const IO_Locations &dir;
-
-      // MPI communicator and information about rank and size
-      // const Dune::MPIHelper &helper;
-
       const MPI_Comm &comm;
       int my_rank,comm_size;
 
       std::vector< Vector<UINT> > nCells_ExtendedDomain;
-      //  std::vector<std::string> R_YY_filename;
-      //  std::vector<std::string> ev_filename;
-      //  std::vector<std::string> X_filename;
 
       // Note:
       // Always remeber that Y=log(K) where log is the natural logarithm.
@@ -136,8 +129,6 @@ namespace Dune {
         :
         inputdata( inputdata_ )
         , dir(dir_)
-        //, helper( helper_ )
-        //, comm( helper_.getCommunicator() )
         , comm(comm_)
       {
         //setting my_rank  (rank within the stored communicator)
@@ -175,33 +166,15 @@ namespace Dune {
           }
         }
 
-        /* -> not needed!!!! makes it for later use only complitcated! -> no special case for a homogenous field!!!
-         * REASONS: - seldom used, mostly for test cases
-         *          - makes the inversion to complicated. you need always this two cases! homo-or hetero!
-         if( inputdata.yfield_properties.variance == 0 )
-         {
-         KFieldVector.resize( 1 );
-         int seed = (int) time(0); // create seed out ot the current time
-         logger << std::endl;
-         logger << "Seed for homogeneous field with new random mean = " << seed << std::endl;
-         logger << std::endl;
-         StochasticLib1 stochastic( seed ); // make instance of random library
-         #ifdef SEED_OFF
-         REAL beta_mean = inputdata.yfield_properties.beta;
-         #else
-         REAL beta_mean = inputdata.yfield_properties.beta + stochastic.Normal(0.0, inputdata.yfield_properties.qbb_y);
-         #endif
-         KFieldVector[ 0 ] = beta_mean;
-         }*/
 #ifdef FFT_THREADS
         //initialization for the multi-threaded fft
         fftw_init_threads();
 #endif
       };
 
+
+
       // This function can be used for dim=2 or dim=3
-
-
       // compute the size of the extended domain required for circulant embedding
       void extend_domain()
       {
@@ -283,51 +256,6 @@ namespace Dune {
                                                &local_n0, &local_0_start);
 
 
-          /*
-          // Only for the special tensors 'z_mirror', 'y_mirror' and 'x_mirror' remember this cycle :
-          // Nz - Ny - Nx - Nz - Ny - ...
-          // iz - iy - ix - iz - iy - ...
-
-          std::vector<std::vector< std::vector<REAL> > > z_mirror; // Nz x Ny x Nx
-          z_mirror.resize( Nz );
-          for (UINT iz = 0; iz < Nz; iz++) {
-          z_mirror[ iz ].resize( Ny );
-          for (UINT iy = 0; iy < Ny; iy++) {
-          z_mirror[ iz ][ iy ].resize( Nx );
-          for( UINT ix = 0; ix < Nx; ix++ ) {
-          z_mirror[ iz ][ iy ][ ix ] = std::min((REAL) iz, (REAL) (Nz-iz)) * dz;
-          }
-          }
-          }
-
-          std::vector<std::vector< std::vector<REAL> > > y_mirror; // Ny x Nx x Nz
-          y_mirror.resize( Ny );
-          for( UINT iy = 0; iy < Ny; iy++ ) {
-          y_mirror[ iy ].resize( Nx );
-          for( UINT ix = 0; ix < Nx; ix++ ) {
-          y_mirror[ iy ][ ix ].resize( Nz );
-          for( UINT iz = 0; iz < Nz; iz++) {
-          y_mirror[ iy ][ ix ][ iz ] = std::min( (REAL) iy, (REAL) (Ny-iy) ) * dy;
-          }
-          }
-          }
-
-          std::vector<std::vector< std::vector<REAL> > > x_mirror; // Nx x Nz x Ny
-          x_mirror.resize( Nx );
-          for (UINT ix = 0; ix < Nx; ix++) {
-          x_mirror[ ix ].resize( Nz );
-          for (UINT iz = 0; iz < Nz; iz++) {
-          x_mirror[ ix ][ iz ].resize( Ny );
-          for( UINT iy = 0; iy < Ny; iy++ ) {
-          x_mirror[ ix ][ iz ][ iy ] = std::min((REAL) ix, (REAL) (Nx-ix)) * dx;
-          }
-          }
-          }
-
-
-
-          std::vector< std::vector< std::vector<REAL> > > R_YY; // Nz x Ny x Nx  ( iz, iy, ix)
-          */
           std::vector<REAL> R_YY(alloc_local);
 
           Vector<REAL> X( dim, 0.0 );
@@ -353,11 +281,6 @@ namespace Dune {
               }
             }
           }
-          /*
-            x_mirror.clear();
-            y_mirror.clear();
-            z_mirror.clear();
-          */
 
           // writing of the R_YY in HDF5
           Vector<UINT> local_count(3,0), local_offset(3,0);
@@ -860,36 +783,13 @@ namespace Dune {
 
           watch.reset();
 
-          // plot this file in octave using
-          // load "RYY.dat"REAL
-          // pcolor(log(R_YY)); shading flat; colorbar
-
 
           //logger << "Use FFTW_FORWARD(2d) to generate eigenvalues..." << std::endl;
-
-
           /*
            *
            * calculate the FFT of R_YY in the extended domain!!!
            *
            */
-          /*
-            char sWisdomFileName[100];
-            sprintf( sWisdomFileName, "wisdom_%ux%u.dat", Ny, Nx );
-
-            FILE * rFile;
-            rFile = fopen(sWisdomFileName, "r");
-            if (rFile != NULL) {
-            //logger << "Importing wisdom file "<< sWisdomFileName << std::endl;
-            bWisdomFileExists = true;
-            fftw_import_wisdom_from_file(rFile);
-            fclose(rFile);
-            }else{
-            logger << "FFTW(2d): wisdom file " << sWisdomFileName << " not found." << std::endl;
-            }
-          */
-          //fftw_complex *R_YY_complex; // Ny x Nx;
-          //R_YY_complex = (fftw_complex*) fftw_malloc((/*Ny * Nx*/alloc_local) * sizeof (fftw_complex));
 
           fftw_complex *Eigenvalues;
           Eigenvalues = (fftw_complex*) fftw_malloc((/*Ny * Nx*/alloc_local) * sizeof (fftw_complex));
@@ -1535,40 +1435,7 @@ namespace Dune {
         logger << "LocalCount = " << LocalCount << std::endl;
         logger << "LocalOffset = " << LocalOffset << std::endl;
 
-        /*
-        General::log_elapsed_time( watch.elapsed(),
-                                   comm,
-                                   inputdata.verbosity,
-                                   "EVAL",
-                                   "parallel_import_from_local_vector: Evaluate KFieldVector once at the beginning." );
-        */
       };
-
-
-      // not used now, just test-wise:
-      // overloaded with extra parameter for the well:
-      /*
-        void parallel_import_from_local_vector(
-        const Vector<REAL>& local_Yfield_vector,
-        const Vector<REAL>& local_Yfield_Well_vector,
-        const Vector<UINT>& local_count,
-        const Vector<UINT>& local_offset
-        )
-        {
-
-        LocalYFieldVector.clear();
-
-        LocalYFieldVector.resize(local_Yfield_vector.size());
-        LocalYFieldVector = local_Yfield_vector; // this vector contains the Y-field data from the current hyperslab
-
-        LocalYFieldVector_Well.resize(local_Yfield_Well_vector.size());
-        LocalYFieldVector_Well = local_Yfield_Well_vector;
-
-        LocalCount = local_count; // this vector contains the dimensions (the number of cells per dimension) of the current hyperslab
-        LocalOffset = local_offset; // this vector describes the distance of the current hyperslab from the origin
-        };
-
-      */
 
 
 
@@ -1596,14 +1463,6 @@ namespace Dune {
 
       void export_to_vector(Vector<REAL>& kfield_vector )
       {
-        /*
-         * ->deleted!
-         if( inputdata.yfield_properties.variance == 0 )
-         {
-         kfield_vector[ 0 ] = KFieldVector[ 0 ];
-         return;
-         }
-        */
         UINT VectorSize = 0;
         if (dim == 3)
           {
@@ -1694,10 +1553,7 @@ namespace Dune {
                        bool lnK=false ) const
       {
 
-        // Special Test Case 2d:
-        //output = -6.0 + x[0]/500.0;
-        //output = -6.0 + 3.0 * ((x[1]-250.0)+(x[0]-250.0))/500.0;
-
+        // Special Test Cases for 2d:
 #ifdef HOMOGEN
         {
           output = -6.0;
@@ -1869,10 +1725,6 @@ namespace Dune {
         //if( helper.rank() == 0 )
         if( my_rank == 0 )
           {
-            /*
-              if( inputdata.yfield_properties.variance != 0 )
-              {
-            */
             watch.reset();
 
             //loading is in HDF5 or *.dat, (see FFTFieldGenerator.hh)
@@ -1946,19 +1798,8 @@ namespace Dune {
 
         // Get the conductivity field on the grid for the vtkwriter
         typedef typename GV::Grid GRIDTYPE; // get the grid-type out of the gridview-type
-        //typedef typename GV::Grid::template Codim<0>::Entity Entity;
-        //typedef typename GV::Grid::template Codim<0>::EntityPointer EntityPointer;
-
-        //typedef typename GV::Traits::template Codim < 0 > ::Iterator ElementLeafIterator;
         typedef typename GV::template Codim<0>::template Partition<Dune::All_Partition>::Iterator ElementLeafIterator;
 
-        //typedef typename ElementLeafIterator::Entity::Geometry LeafGeometry;
-
-        // make a mapper for codim 0 entities in the leaf grid
-        //Dune::LeafMultipleCodimMultipleGeomTypeMapper<GRIDTYPE, P0Layout>
-        //  mapper(gv.grid()); // get the underlying hierarchical grid out ot the gridview
-
-        // make a mapper for codim 0 entities in the level(0) grid
         Dune::LevelMultipleCodimMultipleGeomTypeMapper<GRIDTYPE, P0Layout>
           mapper(gv.grid(),gv_level); // get the underlying hierarchical grid out ot the gridview
 

@@ -1,16 +1,13 @@
 /*
  * File:   IO_routines.hh
- * Author: ngo
+ * Author: A. Ngo (2010-2014)
  *
- * Created on Jan 26, 2013
+ * 
  */
 
 #ifndef DUNE_GESIS_IO_ROUTINES_HH
 #define	DUNE_GESIS_IO_ROUTINES_HH
 
-#if HAVE_HDF5
-#include "hdf5.h"
-#endif
 #include <dune/gesis/common/io/HDF5Tools.hh>
 #include <dune/gesis/common/io/VTKPlot.hh>
 #include <dune/gesis/common/io/DGFTools.hh>

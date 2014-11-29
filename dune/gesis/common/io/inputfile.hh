@@ -493,7 +493,6 @@ namespace Dune{
       REAL dY_lim;
       REAL dL_lim_fac;
       REAL L_accept_confidence_interval;
-      int histogram_bins;
       REAL disturbance;    // add artifical disturbance to measurement data for test of stability of the inversion scheme
       REAL m1relerror;
     };
@@ -1831,9 +1830,6 @@ namespace Dune{
 
           inversion_parameters.L_accept_confidence_interval
             = pt.get("inputfile.inversion_parameters.<xmlattr>.L_accept_confidence_interval",1.0);
-
-          inversion_parameters.histogram_bins
-            = pt.get("inputfile.inversion_parameters.<xmlattr>.histogram_bins",10);
 
           inversion_parameters.disturbance
             = pt.get("inputfile.inversion_parameters.<xmlattr>.disturbance",0.0);

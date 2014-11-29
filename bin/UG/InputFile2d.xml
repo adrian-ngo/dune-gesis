@@ -73,7 +73,6 @@
   <yfield_properties vertical_zones="1" well_type="cell" random_seed="100">
     <zone 
         model="spherical"
-        bottom="10"
         variance="1.0"
         beta="-6.1" 
         qbb_y="0.0005" 
@@ -120,32 +119,11 @@
       dY_lim="0.05" 
       dL_lim_fac="0.02"
       L_accept_confidence_interval="0.95"
-      histogram_bins="25"
       disturbance="0.0"
       m1relerror="0.005"
       />
   <!-- -->
   <!-- -->
-  <!-- ***************************************** -->
-  <!-- Parallel calculations fine tuning parameters: -->
-  <!-- ***************************************** -->
-  <!-- -->
-  <!-- -->
-  <parallel_fine_tuning
-      maxNComm="1"
-      JQJ_max="4096"
-      JQJ_slices="1"
-      />
-  <!-- -->
-  <!-- -->    
-  <!-- ***************************************** -->
-  <!-- Conditional realizations(CR) parameters : -->
-  <!-- ***************************************** -->
-  <CR_parameters
-      total="10"
-      start_counting="1"
-      max_iterations="2"
-      />
   <!-- -->
   <!-- -->
   <!-- ***************************************** -->

@@ -1,3 +1,13 @@
+/***
+    This header file contains a lot of macros that are used to
+    control the compilation flow in order to switch between
+    different implementation options.
+
+    Warning: Do not change these macros unless you are really sure of what you are doing!
+    
+    A. Ngo (2010-2014)
+***/
+
 #define MAJOR_VERSION 1
 #define MINOR_VERSION 0
 #define PDELAB_VERSION 23

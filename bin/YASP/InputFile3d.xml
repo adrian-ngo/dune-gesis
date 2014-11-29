@@ -84,7 +84,6 @@
   <yfield_properties vertical_zones="1" well_type="cell" random_seed="9128">
     <zone 
         model="spherical"
-        bottom="8" 
         variance="1.0" 
         beta="-6.0" 
         qbb_y="0.1" 
@@ -129,7 +128,6 @@
       dY_lim="0.01"
       dL_lim_fac="0.02"
       L_accept_confidence_interval="0.95"
-      histogram_bins="25"
       disturbance="0.05"
       m1relerror="0.005"
       />

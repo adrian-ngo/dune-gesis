@@ -524,11 +524,11 @@ namespace Dune {
 
         REAL x;
         REAL y;
-        REAL current_x;
-        REAL current_y;
+        REAL current_x(0.0);
+        REAL current_y(0.0);
 #ifdef DIMENSION3
         REAL z;
-        REAL current_z;
+        REAL current_z(0.0);
 #endif
 
         std::string contents( Dune::Gesis::General::readTextFile2String( filename, helper ) );

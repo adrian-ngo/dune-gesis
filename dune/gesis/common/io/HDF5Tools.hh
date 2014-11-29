@@ -25,8 +25,17 @@
 #include <dune/pdelab/common/geometrywrapper.hh>
 #include <assert.h>
 #include <sstream>
-
 #include <dune/gesis/common/MyMPIComm.hh>
+
+/***
+    http://www.hdfgroup.org/HDF5/release/obtain5.html
+    HDF5 (Hierarchical Data Format 5) Software Library and Utilities
+    Copyright 2006-2014 by The HDF Group.
+ ***/
+#if HAVE_HDF5
+#include "hdf5.h"
+#endif
+
 
 extern CLogfile logger;
 
