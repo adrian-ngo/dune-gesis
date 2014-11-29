@@ -1,7 +1,8 @@
-/*
- * MeasurementList.hh
- * Author: R.L.Schwede and A. Ngo
- */
+/***
+ * "MeasurementList.hh"
+ *
+ * Authors: R.L.Schwede and A. Ngo (2010-2014)
+ ***/
 #ifndef DUNE_GESIS_MEASUREMENTLIST_HH
 #define DUNE_GESIS_MEASUREMENTLIST_HH
 
