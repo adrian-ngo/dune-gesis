@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #
 # Download all DUNE modules necessary for DUNE-GESIS via git:

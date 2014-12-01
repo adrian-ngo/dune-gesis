@@ -127,6 +127,7 @@ make_install()
     #
     if [ "$packagename" = "metis-4.0.3" ]
     then
+        cd $packagename
 	make
         create_directory "$installdir"
         create_directory "$installdir/Lib"
