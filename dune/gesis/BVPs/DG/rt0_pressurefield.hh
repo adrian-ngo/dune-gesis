@@ -139,7 +139,8 @@ namespace Dune{
 
       //typedef std::map<Dune::bigunsignedint<58>,REAL> ContainerType; // using a map is better than using a vector because idx is not necessarily successive
 
-      typedef std::map<UINT,REAL> ContainerType;
+      //typedef std::map<UINT,REAL> ContainerType;
+      typedef std::map<Idx,REAL> ContainerType;
 
 
       typedef typename GV::Traits::template Codim<0>::Entity ElementType;
@@ -164,6 +165,8 @@ namespace Dune{
 #else
         Idx idx = gv.grid().localIdSet().id(e);
 #endif
+
+        logger << "decltype(idx)=" << General::type_name<decltype(idx)>() << std::endl;
 
         for(UINT i=0;i<coefficients.size();i++)
           data_container[blocksize*idx+i] = coefficients[i];
@@ -199,7 +202,7 @@ namespace Dune{
         const DGF dgf(gfs_gw_,vc_h_);
         const DARCY_FLUX_DGF darcyflux_dgf( gwp, gfs_gw_, vc_h_, baselevel );
 
-        logger << "RT0_pf: Start element loop." << std::endl;
+        //logger << "RT0_pf: Start element loop." << std::endl;
         // element loop
         for( ElementIterator eit=gv.template begin<0,Dune::All_Partition>()
                ; eit!=gv.template end<0,Dune::All_Partition>()
@@ -211,6 +214,9 @@ namespace Dune{
 
           Dune::FieldVector<REAL,dim> insideCellCenterGlobal =
             eit->geometry().global(insideCellCenterLocal);
+
+          //logger << "insideCellCenterGlobal = " << insideCellCenterGlobal << std::endl;
+          //logger << "insideCellCenterLocal = " << insideCellCenterLocal << std::endl;
 
           Dune::FieldVector<REAL,1> pCellcenter(0.0);
           dgf.evaluate( *eit, insideCellCenterLocal, pCellcenter );
@@ -228,7 +234,7 @@ namespace Dune{
             //
             int faceCounter=0;
 
-            //unsigned int intersection_index = 0;
+            //intersection loop:
             for( IntersectionIterator iit = gv.ibegin(*eit)
                    ; iit!=gv.iend(*eit)
                    ; ++iit )
@@ -316,7 +322,8 @@ namespace Dune{
 
                 //std::cout << "DEBUG: setup matrix... " << std::endl;
 
-                Dune::FieldVector<REAL,dim> faceElementLocal = iit->geometryInInside().global(faceLocal);
+                Dune::FieldVector<REAL,dim> faceElementLocal 
+                  = iit->geometryInInside().global(faceLocal);
                 //std::cout << "DEBUG: faceElementLocal = " << faceElementLocal << std::endl;
 
                 Dune::FieldVector<REAL,dim> flux;
@@ -324,8 +331,8 @@ namespace Dune{
                 //std::cout << "DEBUG: flux = " << flux << std::endl;
 
                 // This maybe not such a bad idea:
-                for(int i=0;i<dim;i++)
-                  normal[i] *= normal[i];
+                //for(int i=0;i<dim;i++)
+                //  normal[i] *= normal[i];
                 //std::cout << "DEBUG: normalized normal = " << normal << std::endl;
 
 
@@ -333,23 +340,31 @@ namespace Dune{
 
                 Dune::FieldVector<REAL,dim> indexvector;
                 for(int i=0;i<dim;i++)
-                  indexvector[i] = (REAL) i;
+                  indexvector[i] = (REAL) i + 1E-3; // This +1E-3 is very important due to the (int) casting in the next line!
 
                 int component_index = (int) std::abs( normal * indexvector );
 
 #ifdef USE_LOCAL_COORD
-                XY(faceCounter,2*component_index) = faceElementLocal[component_index];
+                //logger << "faceCounter = " << faceCounter << std::endl;
+                //logger << "normal = " << normal << std::endl;
+                //logger << "indexvector = " << indexvector << std::endl;
+                //logger << "component_index = " << component_index << std::endl;
+
+                XY(faceCounter,2*component_index) 
+                  = faceElementLocal[component_index] 
+                  - insideCellCenterLocal[component_index];
 #else
                 Dune::FieldVector<REAL,dim> faceGlobal = eit->geometry().global(faceElementLocal);
                 //std::cout << "DEBUG: faceGlobal = " << faceGlobal << std::endl;
-                XY(faceCounter,2*component_index) = faceGlobal[component_index];
+                XY(faceCounter,2*component_index) 
+                  = faceGlobal[component_index];
 #endif
 
                 XY(faceCounter,2*component_index+1) = 1.0;
 
                 faceCounter++;
 
-                //std::cout << std::endl;
+                //logger << std::endl;
 
 
               } // intersection loop
@@ -381,20 +396,21 @@ namespace Dune{
 
             XY(2*dim,2*dim) = 1.0;
 
-            //std::cout << "XY = " << XY << std::endl;
-            //std::cout << "rhs = " << rhs << std::endl;
+            //logger << "XY = " << XY << std::endl;
+            //logger << "rhs = " << rhs << std::endl;
 
             XY.gauss_solver( coeff, rhs );
 
           } // if(eit->partitionType()==Dune::InteriorEntity)
 
-          //std::cout << "coeff = " << coeff << std::endl;
+          //std::cout << "  rank = " << gv.comm().rank() 
+          //          << " coeff = " << coeff << std::endl;
 
           this->appendNewElement( *eit, coeff );  // data_container gets filled here!
 
         } // element loop
 
-        logger << "RT0_pf: Element loop done." << std::endl;
+        //logger << "RT0_pf: Element loop done." << std::endl;
 
         // std::cout << "rt0_pressurefield calculated on interior partitions." << std::endl;
         // std::cout << "Start MPI communications..." << std::endl;
@@ -433,7 +449,7 @@ namespace Dune{
         for(int i=0;i<blocksize;i++){
           //coefficients[i] = data_container[ blocksize * idx + i ];
           typename ContainerType::const_iterator it =
-            data_container.find( blocksize*idx+i );
+            data_container.find( blocksize*idx + i );
           if(it != data_container.end())
             coefficients[i] = it->second;
           else
@@ -565,72 +581,76 @@ namespace Dune{
 
   Herleitung: Rekonstruktion des Potentialfeldes phi aus dem Darcyfluss q=(qx,qy,qz)
 
-  phi(x,y,z) = ax²+bx+cy²+dy+ez²+fz+g
+  Ansatz für das Potential:
+  phi(x,y,z) = 0.5*a(x-x0)² + bx + 0.5*c(y-y0)² + dy + 0.5*e(z-z0)² + fz + g
 
-  1 Gleichung, 1 Unbekante g:
-  center = (x0,y0,z0)
+  1 Gleichung, 1 Unbekante g an der Stelle center = (x0,y0,z0):
   h(center) = phi(center)
 
   3 Gleichungen mit 6 Unbekannten a,...,f:
   - K * grad phi (x,y,z) = -K * ( ax+b, cy+d, ez+f ) = (qx, qy, qz)
 
   An zwei Stellen face1 und face2 evaluiert, ergibt 6 Gleichungen:
-  face1: x1,y1,z1 with normal (1,0,0)
-  face2: x2,y2,z2 with normal (0,1,0)
-  face3: x3,y3,z3 with normal (0,0,1)
-  face4: x4,y4,z4 with normal (-1,0,0)
-  face5: x5,y5,z5 with normal (0,-1,0)
-  face6: x6,y6,z6 with normal (0,0,-1)
+  face1   (east): x1,y1,z1 with normal (1,0,0)
+  face2  (north): x2,y2,z2 with normal (0,1,0)
+  face3    (top): x3,y3,z3 with normal (0,0,1)
+  face4   (west): x4,y4,z4 with normal (-1,0,0)
+  face5  (south): x5,y5,z5 with normal (0,-1,0)
+  face6 (bottom): x6,y6,z6 with normal (0,0,-1)
 
   1.) -K1 (a*x1 + b) = qx (face1)
   =>
   (a*x1 + b) = - qx(face1) / K1
 
 
-  2.) -K2 (c*y1 + d) = qy (face1)
+  2.) -K2 (c*y1 + d) = qy (face2)
   =>
-  (c*y1 + d) = - qy(face1) / K2
+  (c*y1 + d) = - qy(face2) / K2
 
 
-  3.) -K3 (e*z1 + f) = qz (face1)
+  3.) -K3 (e*z1 + f) = qz (face3)
   =>
-  (e*z1 + f) = - qz(face1) / K3
+  (e*z1 + f) = - qz(face3) / K3
 
 
-  4.) -K4 (a*x2 + b) = qx (face2)
+  4.) -K4 (a*x2 + b) = qx (face4)
   =>
-  (a*x2 + b) = - qx(face2) / K4
+  (a*x2 + b) = - qx(face4) / K4
 
 
-  5.) -K5 (c*y2 + d) = qy (face2)
+  5.) -K5 (c*y2 + d) = qy (face5)
   =>
-  (c*y2 + d) = - qy(face2) / K5
+  (c*y2 + d) = - qy(face5) / K5
 
 
-  6.) -K6 (e*z2 + f) = qz (face2)
+  6.) -K6 (e*z2 + f) = qz (face6)
   =>
-  (e*z2 + f) = - qz(face2) / K6
+  (e*z2 + f) = - qz(face6) / K6
 
 
-  7.) phi(x0,y0,z0) = a*x0²+b*x0+c*y0²+d*y0+e*z0²+f*z0+g = h(x0,y0,z0)
+  7.) phi(x0,y0,z0) 
+  = 0.5*a*x0² + b*x0 
+  + 0.5*c*y0² + d*y0 
+  + 0.5*e*z0² + f*z0 + g 
+  = h(x0,y0,z0)
 
 
 
   ==> Matrix-Schreibweise: XX * coeff = rhs
 
-  a   b   c   d   e   f   g
+  a        b       c   d       e   f   g
 
-  x1   1   0   0   0   0   0       a         - qx(face1) / K1
-  0   0  y1   1   0   0   0       b         - qy(face2) / K2
-  0   0   0   0  z1   1   0       c         - qz(face3) / K3
-  x2   1   0   0   0   0   0   *   d    =    - qx(face4) / K4
-  0   0  y2   1   0   0   0       e         - qy(face5) / K5
-  0   0   0   0  z2   1   0       f         - qz(face6) / K6
-  x0² x0  y0² y0  z0² z0   1       g             h(center)
+  x1       1       0   0       0   0   0       a         - qx(face1) / K1
+  0        0      y1   1       0   0   0       b         - qy(face2) / K2
+  0        0       0   0      z1   1   0       c         - qz(face3) / K3
+  x2       1       0   0       0   0   0   *   d    =    - qx(face4) / K4
+  0        0      y2   1       0   0   0       e         - qy(face5) / K5
+  0        0       0   0      z2   1   0       f         - qz(face6) / K6
+  0.5*x0² x0  0.5*y0² y0  0.5*z0² z0   1       g             h(center)
 
 
   Evaluierung:
-  phi(x,y,z) = a*x² + b*x + c*y² + d*y + e*z² + f*z + g
+  phi(x,y,z) = 0.5*a*(x-x0)² + b*(x-x0) + 0.5*c*(y-y0)² + d*(y-y0) + 0.5*e*(z-z0)² + f*(z-z0) + g
 
 
 
