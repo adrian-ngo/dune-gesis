@@ -37,8 +37,7 @@
 
 #include <dune/gesis/BVPs/obs/MeasurementList.hh>
 
-//#include <dune/gesis/BVPs/adaptive/driver_h_adaptive.hh>
-#include <dune/gesis/BVPs/adaptive/driver_h_adaptive_M1.hh>
+#include <dune/gesis/BVPs/adaptive/driver_h_adaptive.hh>
 
 
 #include <dune/gesis/BVPs/totalMass.hh>
@@ -278,16 +277,14 @@ namespace Dune {
       GFS_GW gfs_gw(gv_gw,fem_ellip,con_gw);
 
 
-      Dune::Gesis::hAdaptiveLoopForM1<GRID,
+      Dune::Gesis::hAdaptiveLoopForM0<GRID,
                                       GFS_GW,
                                       IDT,
                                       YFG,
-                                      MEASLIST,
                                       DIR>( grid,
                                             gfs_gw,
                                             inputdata,
                                             yfg_orig,
-                                            orig_measurements,
                                             baselevel,
                                             dir,
                                             helper

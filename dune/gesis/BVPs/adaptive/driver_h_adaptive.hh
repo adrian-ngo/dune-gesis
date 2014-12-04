@@ -32,7 +32,7 @@ namespace Dune {
       typename YFG,
       typename DIR
       >
-    void adaptiveDrive_h_rgv( GRID& grid,
+    void hAdaptiveLoopForM0( GRID& grid,
                               GFS_GW& gfs_gw,  // <-- changed after refinement and load-balancing!
                               const IDT& inputdata,
                               YFG& yfg, // <-- changed after refinement and load-balancing!

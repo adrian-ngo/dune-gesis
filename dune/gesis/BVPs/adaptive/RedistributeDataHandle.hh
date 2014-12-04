@@ -2,20 +2,21 @@
 #define DUNE_GEOINVERSION_REDISTRIBUTE_DATAHANDLE_HH
 
 //! Data handle for load_balance()
-template<typename GridType,typename VCType>
+template<typename GridType,typename ContainerType>
 class RedistributeDataHandle :
-  public Dune::CommDataHandleIF<RedistributeDataHandle<GridType,VCType>, int>
+  public Dune::CommDataHandleIF<RedistributeDataHandle<GridType,ContainerType>,typename ContainerType::mapped_type>
 {
 
-  typedef typename GridType::LocalIdSet IdSet;
+  typedef typename GridType::LocalIdSet IdSet; // reuired for ALUGRID
+  typedef typename IdSet::IdType Idx;
 
-  typedef typename IdSet::IdType Id;
   const GridType &grid;
-  std::map<Id,REAL> &elementTags;
+  ContainerType& elementTags;
+  //std::map<Id,REAL> &elementTags;
 
 public:
   RedistributeDataHandle(const GridType &grid_,
-                         std::map<Id,REAL> &elementTags_
+                         ContainerType& elementTags_
                          ) :
     grid(grid_),
     elementTags(elementTags_)
@@ -58,9 +59,10 @@ public:
   void gather(MessageBuffer &buff,
               const typename GridType::template Codim<0>::Entity &e) const
   {
-
-    typename std::map<Id,REAL>::const_iterator it =
+    //typename std::map<Id,REAL>::const_iterator it =
+    typename ContainerType::const_iterator it =
       elementTags.find(grid.localIdSet().id(e));
+
     if(it != elementTags.end())
       buff.write(it->second);
   }

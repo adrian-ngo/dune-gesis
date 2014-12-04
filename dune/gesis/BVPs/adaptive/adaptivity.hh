@@ -25,7 +25,7 @@
 
 #include<dune/grid/io/file/vtk/subsamplingvtkwriter.hh>
 
-//#include "RedistributeDataHandle.hh"
+#include "RedistributeDataHandle.hh"
 
 namespace Dune {
   namespace Gesis {
@@ -695,19 +695,17 @@ namespace Dune {
 
         // loadbalance the grid
         //typedef RedistributeDataHandle<Grid,VCType_GW> DataHandle;
-        //typedef RedistributeDataHandle<Grid,TagMap> DataHandle;
-        //typedef RedistributeDataHandle2<GV_GW,TagMap> DataHandle;
-        typedef CoarseGridP0Datahandle<GV_GW,TagMap> DataHandle;
+        typedef RedistributeDataHandle<Grid,TagMap> DataHandle;
+        //typedef CoarseGridP0Datahandle<GV_GW,TagMap> DataHandle;
 
-        //DataHandle dh(grid,elementTagMap /* vc_h */);
-        DataHandle dh(gv_gw,elementTagMap /* vc_h */);
+        DataHandle dh(grid,elementTagMap /* vc_h */);
+        //DataHandle dh(gv_gw,elementTagMap);
 
-        //grid.loadBalance(static_cast<Dune::CommDataHandleIF<DataHandle, int>&>(dh));
-        //grid.loadBalance(static_cast<Dune::CommDataHandleIF<DataHandle, Id>&>(dh));
+        logger << "gv_gw.loadBalance(...)" << std::endl;
         grid.loadBalance(static_cast<Dune::CommDataHandleIF<DataHandle, typename TagMap::mapped_type>&>(dh));
 
 
-
+        logger << "gv_gw.communicate(...)" << std::endl;
         gv_gw.communicate( dh, Dune::InteriorBorder_All_Interface, Dune::ForwardCommunication);
 
         // yfg must be re-loaded for the new processor distribution!

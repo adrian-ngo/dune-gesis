@@ -299,27 +299,26 @@ namespace Dune {
           }
 
           if(step<=maxsteps){
-            /*
-              std::stringstream vtu_Y;
-              vtu_Y << dir.vtudir << "/Y_step" << step;
-              gwp_fwd.getYfieldgenerator().plot2vtu( gv_gw, vtu_Y.str(), baselevel );
 
-              std::stringstream vtu_h;
-              vtu_h  << dir.vtudir << "/h_step" << step;
-              Dune::Gesis::VTKPlot::output2vtu( gfs_gw.gridView(),
-              gfs_gw,
-              vc_h,
-              vtu_h.str(),
-              "h",
-              inputdata.verbosity,
-              true,
-              std::max(0,pMAX-1) );
+#ifdef DEBUG_PLOT
+            std::stringstream vtu_Y;
+            vtu_Y << dir.vtudir << "/Y_step" << step;
+            gwp_fwd.getYfieldgenerator().plot2vtu( gv_gw, vtu_Y.str(), "Y", baselevel );
 
-              std::stringstream vtu_hLeaf;
-              vtu_hLeaf << dir.vtudir << "/h_leaf_0" << step;
-              rt0_pressurefield->plot2vtu( gv_tp, vtu_hLeaf.str() );
-            */
+            std::stringstream vtu_h;
+            vtu_h  << dir.vtudir << "/h_step" << step;
+            Dune::Gesis::VTKPlot::output2vtu( gfs_gw, //.gridView(),
+                                              vc_head,
+                                              vtu_h.str(),
+                                              "h",
+                                              inputdata.verbosity,
+                                              true,
+                                              std::max(0,pMAX-1) );
 
+            std::stringstream vtu_hLeaf;
+            vtu_hLeaf << dir.vtudir << "/h_leaf_0" << step;
+            rt0_pressurefield->plot2vtu( gv_tp, vtu_hLeaf.str() );
+#endif
 
             if( inputdata.plot_options.vtk_plot_element_ordering ){
               std::stringstream vtu_gv_tp;
