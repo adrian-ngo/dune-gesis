@@ -784,9 +784,9 @@ namespace Dune {
                 if(CommunicatorPool[iPool][ii].get_rank()==0){
                   pool_X[iPool].resize(nzones);
                   for(UINT jj=0; jj<nzones; jj++)
-                    HDF5Tools::h5_ReadDirect( pool_X[iPool][jj],
-                                              dir.zonation_matrix[jj],
-                                              "/X" );
+                    HDF5Tools::h5_Read( pool_X[iPool][jj],
+                                        dir.zonation_matrix[jj],
+                                        "/X" );
                 }
               }
             }

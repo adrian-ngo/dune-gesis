@@ -1268,11 +1268,11 @@ namespace Dune {
        *
        */
 
-      static void h5_ReadDirect(
-                                Vector<REAL>& local_data
-                                , const std::string & filename
-                                , const std::string & groupname
-                                )
+      static void h5_Read(
+                          Vector<REAL>& local_data
+                          , const std::string & filename
+                          , const std::string & groupname
+                          )
       {
 
 

@@ -225,9 +225,9 @@ namespace Dune {
         //read the zonation matrix on P0
         Xzones.resize(nzones);
         for(UINT jj=0; jj<nzones; jj++)
-          HDF5Tools::h5_ReadDirect( Xzones[jj],
-                                    dir.zonation_matrix[jj],
-                                    "/X" );
+          HDF5Tools::h5_Read( Xzones[jj],
+                              dir.zonation_matrix[jj],
+                              "/X" );
 
         /*
          * get the initial log K field
@@ -284,9 +284,9 @@ namespace Dune {
 
 
           if( General::bFileExists( dir.ksi_old_h5file ) ){
-            HDF5Tools::h5_ReadDirect( ksi_old,
-                                      dir.ksi_old_h5file,
-                                      "/ksi_old" );
+            HDF5Tools::h5_Read( ksi_old,
+                                dir.ksi_old_h5file,
+                                "/ksi_old" );
             std::cout << "ksi_old read from file " << dir.ksi_old_h5file
                       << std::endl;
           }
@@ -297,9 +297,9 @@ namespace Dune {
 
           Vector<REAL> tmp;
           if( General::bFileExists( dir.L_prior_h5file ) ){
-            HDF5Tools::h5_ReadDirect( tmp,
-                                      dir.L_prior_h5file,
-                                      "/L_prior" );
+            HDF5Tools::h5_Read( tmp,
+                                dir.L_prior_h5file,
+                                "/L_prior" );
             L_prior_ini = tmp[0];
           }
           else {
@@ -309,9 +309,9 @@ namespace Dune {
           //std::cout << "DEBUG: L_prior_ini read from file = " << std::endl;
           //std::cout << L_prior_ini << std::endl;
 
-          HDF5Tools::h5_ReadDirect( tmp,
-                                    dir.beta_old_h5file,
-                                    "/beta_old" );
+          HDF5Tools::h5_Read( tmp,
+                              dir.beta_old_h5file,
+                              "/beta_old" );
           for(UINT ii=0; ii<nzones; ii++)
             beta_old[ii]=tmp[ii];
           //std::cout << "DEBUG: beta_old read from file = " << std::endl;

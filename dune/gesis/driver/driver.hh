@@ -640,7 +640,7 @@ namespace Dune {
           std::vector<Vector<REAL>>  X(inputdata.yfield_properties.nz); // zonation matrix
           // read the needed data from the HDF5 file -> and again for the different MPI Pools
           for(UINT jj=0; jj<inputdata.yfield_properties.nz; jj++)
-            HDF5Tools::h5_ReadDirect(X[jj],dir.zonation_matrix[jj],"/X");
+            HDF5Tools::h5_Read(X[jj],dir.zonation_matrix[jj],"/X");
 
           for(UINT jj=0; jj<inputdata.yfield_properties.nz; jj++)
             for(UINT ii=0; ii<nAllCells; ii++){
