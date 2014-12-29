@@ -9,9 +9,13 @@
 namespace Dune {
   namespace Gesis {
 
-    template<typename GV,typename IDT,typename DIR>
+    template<typename GV,
+             typename IDT,
+             typename FD,
+             typename DIR>
     void estimation_variance( const GV& gv,
                               const IDT& inputdata,
+                              const FD& fielddata,
                               DIR& dir,
                               Vector<REAL>& sigma
                               ){
@@ -20,23 +24,24 @@ namespace Dune {
 
       Dune::Gesis::DenseMatrix<REAL> invM(0,0,0.0);
 
-      invM.read_from_HDF5(dir.cokriging_inverse_h5file,"/Minv",inputdata);
+      invM.read_from_HDF5(dir.cokriging_inverse_h5file,"/Minv");
 
       UINT nzones=inputdata.yfield_properties.nz;
       UINT nmeas=invM.n_rows()-nzones;
       dir.set_inversion(nmeas);
 
       std::vector< Vector<REAL> > JQ(nmeas), X(nzones);
-      Vector<UINT> local_count,local_offset;
+      Vector<UINT> local_offset;
+      Vector<UINT> local_count;
 
       for(UINT ii=0; ii<nzones; ii++) {
-        HDF5Tools::h5g_pRead<GV,Dune::Interior_Partition>( gv,
+        HDF5Tools::h5g_pRead<GV,FD,Dune::Interior_Partition>( gv,
                                                            X[ii],
                                                            dir.zonation_matrix[ii],
                                                            "/X",
-                                                           local_count,
                                                            local_offset,
-                                                           inputdata
+                                                           local_count,
+                                                           fielddata
                                                            );
       }
 
@@ -49,13 +54,13 @@ namespace Dune {
       }
 
       for(UINT ii=0; ii<nmeas; ii++) {
-        HDF5Tools::h5g_pRead<GV,Dune::Interior_Partition>( gv,
+        HDF5Tools::h5g_pRead<GV,FD,Dune::Interior_Partition>( gv,
                                                            JQ[ii],
                                                            dir.JQ_h5file[ii],
                                                            "/JQ",
                                                            local_offset,
                                                            local_count,
-                                                           inputdata
+                                                           fielddata
                                                            );
       }
 
@@ -102,7 +107,7 @@ namespace Dune {
       
       General::log_elapsed_time( watch.elapsed(),
                                  gv.comm(),
-                                 inputdata.verbosity,
+                                 General::verbosity,
                                  "EVAL",
                                  "estimation_variance: computing sigma2"
                                  );
@@ -111,8 +116,7 @@ namespace Dune {
                              , sigma
                              , dir.estimation_variance_h5file
                              , "/sigma2"
-                             , inputdata
-                             , inputdata.domain_data.nCells
+                             , fielddata
                              , 1            // blocksize for P0
                              , FEMType::DG  // P0
                              , 0            // grid level 0 for sigma

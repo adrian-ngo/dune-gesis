@@ -79,9 +79,7 @@ namespace Dune {
                            vc_head,
                            dir.vtudir + "/test_h_orig",
                            "h_orig",
-                           inputdata.verbosity,
-                           true,
-                           0 );
+                           -1 );
 
       typedef GradientVectorField<GWP_FWD,GFS_GW> DARCY_FLUX_DGF;
       DARCY_FLUX_DGF darcyflux_dgf( gwp_fwd,
@@ -94,9 +92,7 @@ namespace Dune {
                                   darcyflux_dgf,
                                   dir.vtudir + "/test_q_orig",
                                   "q_orig",
-                                  inputdata.verbosity,
-                                  true,
-                                  0 );
+                                  1 );
 
 
 #ifdef NEW_GV
@@ -358,9 +354,7 @@ namespace Dune {
                                  vc_m0,
                                  vtu_m0_file_before_solve.str(),
                                  "m0_orig_before",
-                                 inputdata.verbosity,
-                                 true,
-                                 std::max(0,pMAX-1)  );
+                                 pMAX-1 );
           }
 
         }
@@ -412,9 +406,7 @@ namespace Dune {
                                vc_m0,
                                vtu_m0_file.str(),
                                "m0_orig",
-                               inputdata.verbosity,
-                               true,
-                               std::max(0,pMAX-1)  );
+                               pMAX-1 );
 
         }
 
@@ -493,9 +485,7 @@ namespace Dune {
                              vc_m1_m0,
                              vtu_m1m0_file.str(),
                              "m1_orig",
-                             inputdata.verbosity,
-                             true,
-                             std::max(0,pMAX-1)  );
+                             pMAX-1 );
 
         std::vector<REAL> vm0;
         General::copy_to_std( vc_m0, vm0 );
@@ -520,9 +510,7 @@ namespace Dune {
                              vc_MeanArrivalTime,
                              vtu_mat_file.str(),
                              "MeanArrivalTime",
-                             inputdata.verbosity,
-                             true,
-                             std::max(0,pMAX-1)
+                             pMAX-1
                              );
 
 #endif // TEST_M1
@@ -620,16 +608,6 @@ namespace Dune {
                                          vtu_m0_eta_file.str(),
                                          "eta"
                                          );
-          /*
-            VTKPlot::output2vtu( p0gfs,
-            eta,
-            vtu_m0_eta_file.str(),
-            "eta",
-            inputdata.verbosity
-            //, true
-            //, 0
-            );
-          */
         }
 
 #endif // Compute_Error_Estimate
@@ -824,9 +802,7 @@ namespace Dune {
                                *(pSol[ii]),
                                vtu_m0_file.str(),
                                "m0_orig",
-                               inputdata.verbosity,
-                               true,
-                               std::max(0,pMAX-1)  );
+                               pMAX-1 );
         }
 
 
@@ -884,9 +860,7 @@ namespace Dune {
                            vc_m0,
                            vtu_m0_mirror.str(),
                            "m0_mirror",
-                           inputdata.verbosity,
-                           true,
-                           std::max(0,pMAX-1)  );
+                           pMAX-1 );
 
 #if defined L2ProjectionOfM0
       //typedef Dune::PDELab::Q22DLocalFiniteElementMap<CTYPE,REAL> FEMCG;
@@ -918,9 +892,7 @@ namespace Dune {
                            vc_m0_cg,
                            vtu_m0_mirror.str()+"_cg",
                            "vc_m0_cg",
-                           inputdata.verbosity,
-                           true,
-                           0 );
+                           -1 );
 
 #endif
 

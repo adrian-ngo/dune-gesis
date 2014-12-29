@@ -24,7 +24,6 @@ namespace Dune {
              typename GFS_CG,
              typename DIR,
              typename IDT,
-             //typename SDT,
              typename MEASLIST,
              //typename FieldWrapperType
              typename YFG
@@ -89,9 +88,11 @@ namespace Dune {
   
       //std::cout << "DEBUG: nMeas = " << nMeas << std::endl;
 
+      typedef Dune::Gesis::FieldData FD;
+      const FD fielddata( inputdata );
       // HERE: field generator is used to import data only!
       // typedef FFTFieldGenerator<IDT,REAL,dim> YFG;
-      YFG Yfieldgenerator_try( inputdata,dir, helper.getCommunicator() );  
+      YFG Yfieldgenerator_try( fielddata, dir, helper.getCommunicator() );  
   
       Vector<REAL> local_Y_old;
       Vector<UINT> local_count,local_offset;
@@ -105,7 +106,7 @@ namespace Dune {
                               , "/YField"
                               , local_offset
                               , local_count
-                              , inputdata
+                              , fielddata
                               );
       }else{
         HDF5Tools::h5g_pRead( gv_0
@@ -114,7 +115,7 @@ namespace Dune {
                               , "/YField"
                               , local_offset
                               , local_count
-                              , inputdata
+                              , fielddata
                               );
       }
 
@@ -125,8 +126,7 @@ namespace Dune {
                                , local_Y_old
                                , dir.Y_est_h5file
                                , "/YField"
-                               , inputdata
-                               , inputdata.domain_data.nCells
+                               , fielddata
                                , 1
                                , FEMType::DG
                                , 0
@@ -144,7 +144,7 @@ namespace Dune {
       inputdata.loglistOfAllWellCenters();
 
       logger << "Call setWellConductivities() for Y_try" << std::endl;
-      Yfieldgenerator_try.setWellConductivities( gv_0 /* gv_gw */ );
+      Yfieldgenerator_try.setWellConductivities( gv_0, inputdata );
 
 
 
@@ -153,7 +153,7 @@ namespace Dune {
         vtu_Y_try << dir.Y_try_vtu 
                   << "_i"<< it_counter 
                   << "_w"<< wCounter;
-        Yfieldgenerator_try.plot2vtu( gv_0, vtu_Y_try.str(), "Y_try" );
+        Yfieldgenerator_try.plot2vtu( gv_0, vtu_Y_try.str(), "Y_try", 0 );
       }
 
 
@@ -235,10 +235,7 @@ namespace Dune {
                                  vchead_try, 
                                  vtu_head_try.str(), 
                                  "h_try", 
-                                 inputdata.verbosity, 
-                                 true, 
-                                 0
-                                 );
+                                 0 );
           }
 
 
@@ -250,7 +247,7 @@ namespace Dune {
           // save the head
           HDF5Tools::
             write_BackendVector_to_HDF5( gfs_gw
-                                         , inputdata
+                                         , fielddata
                                          , dir.vchead_old_h5file[iSetup]
                                          , "/vchead_old"
                                          , vchead_try
@@ -262,7 +259,7 @@ namespace Dune {
             // save the head again with preserved structure
             HDF5Tools::
               write_BackendVector_to_HDF5( gfs_gw
-                                           , inputdata
+                                           , fielddata
                                            , dir.vchead_est_h5file[iSetup]
                                            , "/vchead_old"
                                            , vchead_try
@@ -370,10 +367,7 @@ namespace Dune {
                                  vcM0_try_cg, 
                                  vtu_M0_try.str(), 
                                  "m0_try_cg", 
-                                 inputdata.verbosity, 
-                                 true, 
-                                 0 
-                                 );
+                                 -1 );
           }
 
 
@@ -384,7 +378,7 @@ namespace Dune {
             // save the m0
             HDF5Tools::
               write_BackendVector_to_HDF5( gfs_cg
-                                           , inputdata
+                                           , fielddata
                                            , dir.vcM0_old_h5file[iSetup]
                                            , "/vcM0_old"
                                            , vcM0_try_cg
@@ -397,7 +391,7 @@ namespace Dune {
               // save m0 again in structured mode
               HDF5Tools::
                 write_BackendVector_to_HDF5( gfs_cg
-                                             , inputdata
+                                             , fielddata
                                              , dir.vcM0_est_h5file[iSetup]
                                              , "/vcM0_old"
                                              , vcM0_try_cg
@@ -439,10 +433,7 @@ namespace Dune {
                                    vcM1_try_cg, 
                                    vtu_M1_try.str(), 
                                    "m1_try_cg", 
-                                   inputdata.verbosity, 
-                                   true, 
-                                   0 
-                                   );
+                                   -1 );
           }
               
               if(measurements.nMeasPerSetupPerType(iSetup,3))
@@ -450,7 +441,7 @@ namespace Dune {
               // save the m0
               HDF5Tools::
                 write_BackendVector_to_HDF5( gfs_cg
-                                             , inputdata
+                                             , fielddata
                                              , dir.vcM1_old_h5file[iSetup]
                                              , "/vcM1_old"
                                              , vcM1_try_cg
@@ -462,7 +453,7 @@ namespace Dune {
                 // save m0 again in structured mode
                 HDF5Tools::
                   write_BackendVector_to_HDF5( gfs_cg
-                                               , inputdata
+                                               , fielddata
                                                , dir.vcM1_est_h5file[iSetup]
                                                , "/vcM1_old"
                                                , vcM1_try_cg
@@ -487,7 +478,7 @@ namespace Dune {
                   // load the phi0 values
                   HDF5Tools::
                     read_BackendVector_from_HDF5( gfs_gw,
-                                                  inputdata,
+                                                  fielddata,
                                                   dir.vcphi0_orig_h5file[iSetup][iconfig],
                                                   "/vcphi0_orig",
                                                   vcphi0
@@ -514,7 +505,7 @@ namespace Dune {
 
                   HDF5Tools::
                     write_BackendVector_to_HDF5( gfs_gw
-                                                 , inputdata
+                                                 , fielddata
                                                  , dir.vcM0phi_old_h5file[iSetup][iconfig]
                                                  , "/vcM0phi_old"
                                                  , vcM0phi_try
@@ -524,7 +515,7 @@ namespace Dune {
 
                   HDF5Tools::
                     write_BackendVector_to_HDF5( gfs_gw
-                                                 , inputdata
+                                                 , fielddata
                                                  , dir.vcM1phi_old_h5file[iSetup][iconfig]
                                                  , "/vcM1phi_old"
                                                  , vcM1phi_try
@@ -571,10 +562,7 @@ namespace Dune {
                                    vcheatM0_try_cg, 
                                    vtu_heatM0_try.str(), 
                                    "heatm0_try", 
-                                   inputdata.verbosity, 
-                                   true, 
-                                   0
-                                   );
+                                   -1 );
 
               std::stringstream vtu_heatM1_try;
               vtu_heatM1_try << dir.vtudir << "/heatM1_try"
@@ -585,10 +573,7 @@ namespace Dune {
                                    vcheatM1_try_cg, 
                                    vtu_heatM1_try.str(), 
                                    "heatm1_try", 
-                                   inputdata.verbosity, 
-                                   true, 
-                                   0
-                                   );
+                                   -1 );
             }
 
 
@@ -598,7 +583,7 @@ namespace Dune {
 
             // save the m0
             HDF5Tools::write_BackendVector_to_HDF5( gfs_cg
-                                                    , inputdata
+                                                    , fielddata
                                                     , dir.vcheatM0_old_h5file[iSetup]
                                                     , "/vcheatM0_old"
                                                     , vcheatM0_try_cg
@@ -607,7 +592,7 @@ namespace Dune {
                                                     );
 
             HDF5Tools::write_BackendVector_to_HDF5( gfs_cg
-                                                    , inputdata
+                                                    , fielddata
                                                     , dir.vcheatM1_old_h5file[iSetup]
                                                     , "/vcheatM1_old"
                                                     , vcheatM1_try_cg

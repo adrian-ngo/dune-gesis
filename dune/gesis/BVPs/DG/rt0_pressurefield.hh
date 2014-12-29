@@ -540,7 +540,7 @@ namespace Dune{
                ; it != gv_tp.template end<0,Dune::All_Partition> (); ++it) {
           int index = indexset.index(*it);
 
-          Dune::FieldVector<REAL,dim> xglobal = it->geometry().center();
+          //Dune::FieldVector<REAL,dim> xglobal = it->geometry().center();
 
           Dune::FieldVector<REAL,1> head(0);
 
@@ -555,9 +555,7 @@ namespace Dune{
                                                     hydraulic_head,
                                                     filename,
                                                     "head on leafView",
-                                                    0,
-                                                    true,
-                                                    0
+                                                    1
                                                     );
 
 

@@ -43,12 +43,16 @@ extern CLogfile logger;
 namespace Dune {
   namespace Gesis {
 
-    template<typename IDT,typename YFG,typename DIR,int dim>
+    template<typename IDT,
+             typename YFG,
+             typename DIR,
+             int dim>
     REAL driver( IDT& inputdata,   // must be non-const because of well-calibration
                  YFG& yfg_orig,
                  DIR& dir,
                  const Dune::MPIHelper& helper )
     {
+
       if( helper.rank()==0 && inputdata.verbosity>0 )
         std::cout << "driver(...)" << std::endl;
 
@@ -66,6 +70,11 @@ namespace Dune {
 
 
       Dune::Timer watch;
+
+
+
+      typedef Dune::Gesis::FieldData FD;
+      const FD fielddata(inputdata);
 
 
       // Total number of all cells required to resolve the parameter field
@@ -278,8 +287,8 @@ namespace Dune {
 
       // Get conductivity field: parallel fetching of random field data
       Vector<REAL> local_Yfield_vector;
-      Vector<UINT> local_count;
       Vector<UINT> local_offset;
+      Vector<UINT> local_count;
 
 
 #ifdef PARALLEL
@@ -295,11 +304,11 @@ namespace Dune {
 
         HDF5Tools::h5g_pRead( gv_gw
                               , local_Yfield_vector
-                              , dir.kfield_h5file
+                              , dir.yfield_h5file
                               , "/YField"
                               , local_offset
                               , local_count
-                              , inputdata
+                              , fielddata
                               , 1 // P0 blocksize
                               , FEMType::DG // P0
                               , 0 // YField is on grid level 0.
@@ -316,71 +325,44 @@ namespace Dune {
         std::cout << "yfg_orig.localSize() = " << yfg_orig.localSize() << std::endl;
       }
 
-      yfg_orig.setWellConductivities( gv_gw );
+      yfg_orig.setWellConductivities( gv_gw, inputdata );
 
-
-      /*
-        if( helper.size()>1 ){
-        yfg_orig.parallel_add_wells_to_hdf5( gv_gw,
-        "/YField",
-        inputdata.domain_data.nCells,
-        inputdata.domain_data.virtual_gridsizes,
-        dir.kfield_Well_h5file );
-        }
-      */
 
       if( inputdata.plot_options.vtk_plot_yfield ){
-        yfg_orig.plot2vtu( gv_gw, dir.Y_orig_vtu, "YField", baselevel );
+        yfg_orig.plot2vtu( gv_gw, dir.Y_orig_vtu, "YField", 0, inputdata.plot_options.vtk_plot_wells );
       }
 
 
-
-
-      // Dimensions of extended field per zone:
-      std::vector< Vector<UINT> > nCellsExt;
-      yfg_orig.export_nCellsExt( nCellsExt );
 
       // smooth plot of original field:
       //{
 
       // WARNING: assume we have only one zone here!
-      CovarianceMatrix<IDT> C_YY( inputdata.domain_data.nCells,
-                                  nCellsExt[0],
-                                  helper.getCommunicator(),
-                                  inputdata );
+      CovarianceMatrix<FD> C_YY( fielddata,
+                                 helper.getCommunicator()
+                                 );
 
       local_offset.resize(dim);
       local_count.resize(dim);
 
-      C_YY.prepare( 0, local_offset, local_count, true );
-
-      logger << "DEBUG: Read extended field " << std::endl;
-      logger << "DEBUG: nCellsExt[0] = " << nCellsExt[0];
-      logger << "DEBUG: local_offset = " << local_offset;
-      logger << "DEBUG: local_count  = " << local_count;
+      C_YY.prepare( local_offset, local_count, true );
 
       Vector<REAL> Lambdas;
       HDF5Tools::h5_pRead( Lambdas,
                            dir.EV_h5file[0],
                            "/FFT_R_YY",
-                           inputdata,
                            local_offset,
                            local_count,
                            helper.getCommunicator()
                            );
 
 
-      C_YY.prepare( 0, local_offset, local_count, false );
-
-      logger << "DEBUG: Read embedded field " << std::endl;
-      logger << "DEBUG: local_offset = " << local_offset;
-      logger << "DEBUG: local_count  = " << local_count;
+      C_YY.prepare( local_offset, local_count, false );
 
       Vector<REAL> orig_YField(1,0);
       HDF5Tools::h5_pRead( orig_YField,
-                           dir.kfield_h5file,
+                           dir.yfield_h5file,
                            "/YField",
-                           inputdata,
                            local_offset,
                            local_count,
                            helper.getCommunicator()
@@ -408,9 +390,8 @@ namespace Dune {
       logger << "Parallel write to hdf5: smoothed_orig_YField." << std::endl;
 
       HDF5Tools::h5_pWrite( smoothed_orig_YField,
-                            dir.kfield_h5file + "_smoothed",
+                            dir.yfield_h5file + "_smoothed",
                             "/YFieldSmoothed",
-                            inputdata,
                             inputdata.domain_data.nCells,
                             local_offset,
                             local_count,
@@ -423,11 +404,11 @@ namespace Dune {
 
       HDF5Tools::h5g_pRead( gv_gw
                             , smoothed_orig_YField
-                            , dir.kfield_h5file + "_smoothed"
+                            , dir.yfield_h5file + "_smoothed"
                             , "/YFieldSmoothed"
                             , local_offset
                             , local_count
-                            , inputdata
+                            , fielddata
                             , 1 // P0 blocksize
                             , FEMType::DG // P0
                             , 0 // structure is on grid level 0
@@ -436,7 +417,7 @@ namespace Dune {
 
 
       if( inputdata.plot_options.vtk_plot_y_smooth ) {
-        YFG yfg_smoothed_Yorig(inputdata,dir,helper.getCommunicator());
+        YFG yfg_smoothed_Yorig( fielddata, dir, helper.getCommunicator() );
         if( helper.size() > 1 )
           yfg_smoothed_Yorig.parallel_import_from_local_vector( smoothed_orig_YField, local_offset, local_count );
         else
@@ -445,7 +426,7 @@ namespace Dune {
         yfg_smoothed_Yorig.plot2vtu( gv_gw,
                                      dir.Y_orig_vtu + "_smoothed",
                                      "YField",
-                                     baselevel );
+                                     0 );
       }
 
 
@@ -570,12 +551,15 @@ namespace Dune {
 
         Vector<REAL> EstimatedVariances;
 
-        estimation_variance( gv_0, inputdata, dir,
+        estimation_variance( gv_0,
+                             inputdata,
+                             fielddata,
+                             dir,
                              EstimatedVariances );
 
         General::log_elapsed_time( watch.elapsed(),
                                    gv_0.comm(),
-                                   inputdata.verbosity,
+                                   General::verbosity,
                                    "UQ",
                                    "estimation_variance: total time computing sigma2"
                                    );
@@ -672,8 +656,8 @@ namespace Dune {
 
       //orig_measurements.write_to_logger("measurements for inversion");
 
-      YFG log_electricalConductivity(inputdata,dir,helper.getCommunicator());
-      YFG log_kappafield(inputdata,dir,helper.getCommunicator());
+      YFG log_electricalConductivity(fielddata,dir,helper.getCommunicator());
+      YFG log_kappafield(fielddata,dir,helper.getCommunicator());
 
       if( inputdata.problem_types.synthetic
           && ( inputdata.problem_types.head_forward ||
@@ -700,7 +684,7 @@ namespace Dune {
                                 , "/logsigma0"
                                 , local_offset
                                 , local_count
-                                , inputdata
+                                , fielddata
                                 , 1 // P0 blocksize
                                 , FEMType::DG // P0
                                 , 0 // structure is on grid level 0
@@ -724,7 +708,7 @@ namespace Dune {
                                 , "/logkappa"
                                 , local_offset
                                 , local_count
-                                , inputdata
+                                , fielddata
                                 , 1 // P0 blocksize
                                 , FEMType::DG // P0
                                 , 0 // structure is on grid level 0
@@ -792,27 +776,26 @@ namespace Dune {
             fwd_sim.head_simulation( vchead_orig );
 
             // store result in hdf5
-            HDF5Tools::write_BackendVector_to_HDF5<GFS_GW>( gfs_gw
-                                                            , inputdata
-                                                            , dir.vchead_orig_h5file[iSetup]
-                                                            , "/vchead_orig"
-                                                            , vchead_orig
-                                                            , true // PRESERVE_STRUCTURE
-                                                            );
+            HDF5Tools::write_BackendVector_to_HDF5( gfs_gw
+                                                    , fielddata
+                                                    , dir.vchead_orig_h5file[iSetup]
+                                                    , "/vchead_orig"
+                                                    , vchead_orig
+                                                    , true // PRESERVE_STRUCTURE
+                                                    );
 
 
           }
           else{
 
             // read result from hdf5
-            HDF5Tools
-              ::read_BackendVector_from_HDF5<GFS_GW>( gfs_gw
-                                                      , inputdata
-                                                      , dir.vchead_orig_h5file[iSetup]
-                                                      , "/vchead_orig"
-                                                      , vchead_orig
-                                                      , true // preserve_structure!
-                                                      );
+            HDF5Tools::read_BackendVector_from_HDF5( gfs_gw
+                                                     , fielddata
+                                                     , dir.vchead_orig_h5file[iSetup]
+                                                     , "/vchead_orig"
+                                                     , vchead_orig
+                                                     , true // preserve_structure!
+                                                     );
           }
 
           if( inputdata.problem_types.head_forward ||
@@ -875,10 +858,7 @@ namespace Dune {
                                  vchead_orig,
                                  dir.head_orig_vtu[iSetup],
                                  "h_orig",
-                                 inputdata.verbosity,
-                                 true,
-                                 0
-                                 );
+                                 0 );
           }
 
 
@@ -894,9 +874,7 @@ namespace Dune {
                                         darcyflux_dgf.exportDGF(),
                                         dir.q_orig_vtu[iSetup],
                                         "q_orig",
-                                        inputdata.verbosity,
-                                        true,
-                                        0 );
+                                        1 );
           }
 
 
@@ -1014,24 +992,22 @@ namespace Dune {
                                              vcM0_orig,
                                              vcM0_cg );
 
-                HDF5Tools
-                  ::write_BackendVector_to_HDF5<GFS_CG>( gfs_cg
-                                                         , inputdata
+                HDF5Tools::write_BackendVector_to_HDF5<GFS_CG>( gfs_cg
+                                                                , fielddata
+                                                                , dir.vcM0_cg_orig_h5file[iSetup]
+                                                                , "/vcM0_cg"
+                                                                , vcM0_cg
+                                                                , true // preserve_structure!
+                                                                );
+                
+              }else{
+                HDF5Tools::read_BackendVector_from_HDF5( gfs_cg
+                                                         , fielddata
                                                          , dir.vcM0_cg_orig_h5file[iSetup]
                                                          , "/vcM0_cg"
                                                          , vcM0_cg
                                                          , true // preserve_structure!
                                                          );
-
-              }else{
-                HDF5Tools
-                  ::read_BackendVector_from_HDF5<GFS_CG>( gfs_cg
-                                                          , inputdata
-                                                          , dir.vcM0_cg_orig_h5file[iSetup]
-                                                          , "/vcM0_cg"
-                                                          , vcM0_cg
-                                                          , true // preserve_structure!
-                                                          );
               }
 
               if(inputdata.plot_options.vtk_plot_m0 ){
@@ -1039,17 +1015,12 @@ namespace Dune {
                                      vcM0_cg,
                                      dir.m0_orig_vtu[iSetup] + "_cg",
                                      "m0_orig_cg",
-                                     inputdata.verbosity,
-                                     true,
-                                     0 );
-
+                                     -1 );
                 VTKPlot::output2vtu( gfs_tp,
                                      vcM0_orig,
                                      dir.m0_orig_vtu[iSetup],
                                      "m0_orig",
-                                     inputdata.verbosity,
-                                     true,
-                                     std::max(0,pMAX-1) );
+                                     pMAX-1 );
               }
 
 
@@ -1159,21 +1130,20 @@ namespace Dune {
 
                   HDF5Tools
                     ::write_BackendVector_to_HDF5<GFS_CG>( gfs_cg
-                                                           , inputdata
+                                                           , fielddata
                                                            , dir.vcM1_cg_orig_h5file[iSetup]
                                                            , "/vcM1_cg"
                                                            , vcM1_cg
                                                            , true // preserve_structure!
                                                            );
                 }else{
-                  HDF5Tools
-                    ::read_BackendVector_from_HDF5<GFS_CG>( gfs_cg
-                                                            , inputdata
-                                                            , dir.vcM1_cg_orig_h5file[iSetup]
-                                                            , "/vcM1_cg"
-                                                            , vcM1_cg
-                                                            , true // preserve_structure!
-                                                            );
+                  HDF5Tools::read_BackendVector_from_HDF5( gfs_cg
+                                                           , fielddata
+                                                           , dir.vcM1_cg_orig_h5file[iSetup]
+                                                           , "/vcM1_cg"
+                                                           , vcM1_cg
+                                                           , true // preserve_structure!
+                                                           );
                 }
 
 
@@ -1182,17 +1152,13 @@ namespace Dune {
                                        vcM1_cg,
                                        dir.m1_orig_vtu[iSetup] + "_cg",
                                        "m1_orig_cg",
-                                       inputdata.verbosity,
-                                       true,
-                                       0 );
+                                       -1 );
 
                   VTKPlot::output2vtu( gfs_tp,
                                        vcM1_orig,
                                        dir.m1_orig_vtu[iSetup],
                                        "m1_orig",
-                                       inputdata.verbosity,
-                                       true,
-                                       std::max(0,pMAX-1) );
+                                       pMAX-1 );
                 }
 
                 REAL m1dg_negMass(0), m1dg_posMass(0), m1dg_totMass(0);
@@ -1280,25 +1246,25 @@ namespace Dune {
                   }
 
                   HDF5Tools::write_BackendVector_to_HDF5<GFS_GW>( gfs_gw
-                                                                  , inputdata
+                                                                  , fielddata
                                                                   , dir.vcphi0_orig_h5file[iSetup][iconfig]
                                                                   , "/vcphi0_orig"
                                                                   , vcphi0_orig
                                                                   );
                   HDF5Tools::write_BackendVector_to_HDF5<GFS_GW>( gfs_gw,
-                                                                  inputdata,
+                                                                  fielddata,
                                                                   dir.vcM0phi_orig_h5file[iSetup][iconfig],
                                                                   "/vcM0phi_orig",
                                                                   vcM0phi_orig
                                                                   );
                   HDF5Tools::write_BackendVector_to_HDF5<GFS_GW>( gfs_gw,
-                                                                  inputdata,
+                                                                  fielddata,
                                                                   dir.vcM1phi_orig_h5file[iSetup][iconfig],
                                                                   "/vcM1phi_orig",
                                                                   vcM1phi_orig
                                                                   );
                   HDF5Tools::write_BackendVector_to_HDF5<GFS_GW>( gfs_gw,
-                                                                  inputdata,
+                                                                  fielddata,
                                                                   dir.vcATphi_orig_h5file[iSetup][iconfig],
                                                                   "/vcATphi_orig",
                                                                   vcATphi_orig
@@ -1310,29 +1276,21 @@ namespace Dune {
                                          vcphi0_orig,
                                          dir.phi0_orig_vtu[iSetup][iconfig],
                                          "phi0_orig",
-                                         inputdata.verbosity,
-                                         true,
                                          0 );
                     VTKPlot::output2vtu( gfs_gw,
                                          vcM0phi_orig,
                                          dir.M0phi_orig_vtu[iSetup][iconfig],
                                          "M0phi_orig",
-                                         inputdata.verbosity,
-                                         true,
                                          0 );
                     VTKPlot::output2vtu( gfs_gw,
                                          vcM1phi_orig,
                                          dir.M1phi_orig_vtu[iSetup][iconfig],
                                          "M1phi_orig",
-                                         inputdata.verbosity,
-                                         true,
                                          0 );
                     VTKPlot::output2vtu( gfs_gw,
                                          vcATphi_orig,
                                          dir.ATphi_orig_vtu[iSetup][iconfig],
                                          "ATphi_orig",
-                                         inputdata.verbosity,
-                                         true,
                                          0 );
                   }
 
@@ -1413,7 +1371,7 @@ namespace Dune {
 
               HDF5Tools
                 ::write_BackendVector_to_HDF5<GFS_CG>( gfs_cg
-                                                       , inputdata
+                                                       , fielddata
                                                        , dir.vcheatM0_cg_orig_h5file[iSetup]
                                                        , "/vcheatM0_cg"
                                                        , vcheatM0_cg
@@ -1421,7 +1379,7 @@ namespace Dune {
 
               HDF5Tools
                 ::write_BackendVector_to_HDF5<GFS_CG>( gfs_cg
-                                                       , inputdata
+                                                       , fielddata
                                                        , dir.vcheatM1_cg_orig_h5file[iSetup]
                                                        , "/vcheatM1_cg"
                                                        , vcheatM1_cg
@@ -1430,35 +1388,32 @@ namespace Dune {
 
               HDF5Tools
                 ::write_BackendVector_to_HDF5<GFS_CG>( gfs_cg
-                                                       , inputdata
+                                                       , fielddata
                                                        , dir.vcheatArrival_Time_orig_h5file[iSetup]
                                                        , "/vcheatArrival_Time_orig"
                                                        , vcheatAT_orig
                                                        );
 
             }else{
-              HDF5Tools
-                ::read_BackendVector_from_HDF5<GFS_CG>( gfs_cg
-                                                        , inputdata
-                                                        , dir.vcheatM0_cg_orig_h5file[iSetup]
-                                                        , "/vcheatM0_cg"
-                                                        , vcheatM0_cg
-                                                        );
+              HDF5Tools::read_BackendVector_from_HDF5( gfs_cg
+                                                       , fielddata
+                                                       , dir.vcheatM0_cg_orig_h5file[iSetup]
+                                                       , "/vcheatM0_cg"
+                                                       , vcheatM0_cg
+                                                       );
 
-              HDF5Tools
-                ::read_BackendVector_from_HDF5<GFS_CG>( gfs_cg
-                                                        , inputdata
-                                                        , dir.vcheatM1_cg_orig_h5file[iSetup]
-                                                        , "/vcheatM1_cg"
-                                                        , vcheatM1_cg
-                                                        );
-              HDF5Tools
-                ::read_BackendVector_from_HDF5<GFS_CG>( gfs_cg
-                                                        , inputdata
-                                                        , dir.vcheatArrival_Time_orig_h5file[iSetup]
-                                                        , "/vcheatArrival_Time_orig"
-                                                        , vcheatAT_orig
-                                                        );
+              HDF5Tools::read_BackendVector_from_HDF5( gfs_cg
+                                                       , fielddata
+                                                       , dir.vcheatM1_cg_orig_h5file[iSetup]
+                                                       , "/vcheatM1_cg"
+                                                       , vcheatM1_cg
+                                                       );
+              HDF5Tools::read_BackendVector_from_HDF5( gfs_cg
+                                                       , fielddata
+                                                       , dir.vcheatArrival_Time_orig_h5file[iSetup]
+                                                       , "/vcheatArrival_Time_orig"
+                                                       , vcheatAT_orig
+                                                       );
             }
 
 
@@ -1491,19 +1446,19 @@ namespace Dune {
             if( inputdata.plot_options.vtk_plot_heat ){
               VTKPlot::output2vtu( gfs_tp, vcheatM0_orig, dir.heatM0_orig_vtu[iSetup],
                                    "heatM0",
-                                   inputdata.verbosity, true, std::max(0,pMAX-1) );
+                                   pMAX-1 );
 
               VTKPlot::output2vtu( gfs_cg, vcheatM0_cg, dir.heatM0_orig_vtu[iSetup] + "_cg",
                                    "heatM0_cg",
-                                   inputdata.verbosity, true, 0 );
+                                   -1 );
 
               VTKPlot::output2vtu( gfs_cg, vcheatM1_cg, dir.heatM1_orig_vtu[iSetup] + "_cg",
                                    "heatM1_cg",
-                                   inputdata.verbosity, true, 0 );
+                                   -1 );
 
               VTKPlot::output2vtu( gfs_cg, vcheatAT_orig, dir.heatArrival_Time_orig_vtu[iSetup] + "_cg",
                                    "heat_arrival_time_orig",
-                                   inputdata.verbosity, true, 0 );
+                                   -1 );
             }
 
           } // END: if(inputdata.problem_types.heat_forward || inputdata.problem_types.heat_mean_arrival_time_inversion)
@@ -1533,7 +1488,7 @@ namespace Dune {
                                   , "/logsigma0"
                                   , local_offset
                                   , local_count
-                                  , inputdata
+                                  , fielddata
                                   , 1 // P0 blocksize
                                   , FEMType::DG // P0
                                   , 0 // structure is on grid level 0
@@ -1556,7 +1511,7 @@ namespace Dune {
                                   , "/logkappa"
                                   , local_offset
                                   , local_count
-                                  , inputdata
+                                  , fielddata
                                   , 1 // P0 blocksize
                                   , FEMType::DG // P0
                                   , 0 // structure is on grid level 0
@@ -1605,7 +1560,7 @@ namespace Dune {
                 fwd_sim.GE_phi0_simulation( iconfig,
                                             vcphi0_orig );
                 HDF5Tools::write_BackendVector_to_HDF5<GFS_GW>( gfs_gw
-                                                                , inputdata
+                                                                , fielddata
                                                                 , dir.vcphi0_orig_h5file[iSetup][iconfig]
                                                                 , "/vcphi0_orig"
                                                                 , vcphi0_orig
@@ -1615,8 +1570,6 @@ namespace Dune {
                                        vcphi0_orig,
                                        dir.phi0_orig_vtu[iSetup][iconfig],
                                        "phi0_orig",
-                                       inputdata.verbosity,
-                                       true,
                                        0 );
                 }
               }
@@ -1661,7 +1614,6 @@ namespace Dune {
                         MEASLIST,
                         DIR,
                         IDT,
-                        //SDT,
                         YFG
                         >
               ( grid,
@@ -1670,8 +1622,6 @@ namespace Dune {
                 inputdata,
                 yfg_orig,
                 orig_measurements,
-                //ACHTUNG ÄNDERUNG ZONES
-                nCellsExt,
                 dir,
                 log_electricalConductivity,
                 log_kappafield,
@@ -1723,8 +1673,6 @@ namespace Dune {
                   gfs_gw,
                   inputdata,
                   orig_measurements,
-                  //ACHTUNG ÄNDERUNG ZONES
-                  nCellsExt,
                   dir,
                   log_electricalConductivity,
                   log_kappafield,

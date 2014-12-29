@@ -111,6 +111,7 @@
 // purposes:
 // ************************************************
 //#define DEBUG_LOG         // activate more debug logging inside logger output
+//#define DEBUG_PLOT
 //#define OUTPUT_TO_MATLAB  // Use dune-istl function to store the sparse stiffness matrix in matlab format.
 
 

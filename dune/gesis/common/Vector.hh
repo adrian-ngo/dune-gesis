@@ -220,6 +220,26 @@ namespace Dune {
         return *this;
       }
 
+      // x = x + alpha * y
+      Vector & umv(const ComponentType alpha, const Vector & y) {
+        assert( this->size() == y.size());
+
+        Vector & self = *this;
+        for (size_t i = 0; i < this->size(); ++i)
+          self[i] += alpha * y[i];
+        return *this;
+      }
+
+      // x = alpha * y
+      Vector & mv(const ComponentType alpha, const Vector & y) {
+        assert( this->size() == y.size());
+
+        Vector & self = *this;
+        for (size_t i = 0; i < this->size(); ++i)
+          self[i] = alpha * y[i];
+        return *this;
+      }
+
       // x = alpha * x + y
 
       Vector & a_times_x_plus_y(const ComponentType alpha, const Vector & y) {

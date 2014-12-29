@@ -22,10 +22,9 @@
 namespace Dune{
   namespace Gesis{
 
-    template<typename IDT, typename DIR>
-    void cross_covariance_JQ( const IDT& inputdata,                           // inputdata
-                              const std::vector< Vector<UINT> >& nCellsExt,  // size of the extended domain per zone
-                              const std::vector< Vector<REAL> >& Lambdas,    // eigenvalues of the spatial covariance matrix R_YY per zone, IMPORTANT: size and order need to fit to the parallel data distribution of the FFT
+    template<typename FD, typename DIR>
+    void cross_covariance_JQ( const FD& fielddata, 
+                              const Vector<REAL>& Lambdas,    // eigenvalues of the spatial covariance matrix R_YY per zone, IMPORTANT: size and order need to fit to the parallel data distribution of the FFT
                               const std::string& sensitivity_filename,       // name where the needed sensitivity is stored
                               const std::string& JQ_filename,                // name where the calculated product is stored
                               const MPI_Comm& communicator, // MPI communicator on which the calculation will be performed
@@ -40,124 +39,67 @@ namespace Dune{
         return;
       }
 
+      const UINT dim = fielddata.dim; // domain dimension
 
 
-      const UINT dim = inputdata.dim; // domain dimension
-      const UINT nzones = nCellsExt.size(); // total number of zones
+      CovarianceMatrix<FD> C_YY( fielddata, communicator);
 
-      std::vector<UINT>nCells_zones(nzones,0); // zone thickness: How many cells is the zone thick?
+      Vector<REAL> SensitivityFieldJ;   // variable storing the k-th sensitivity field == k-th column of the sensitivity matrix J^T
 
-      // This is the same code as in the constructor of "FFTFieldGenerator.hh":
-      for (UINT ii =0; ii<nzones;ii++){
-        if(nzones>1){
-	  if(ii==0)
-	    nCells_zones[ii] = floor( inputdata.yfield_properties.zones[ii].bottom / inputdata.domain_data.virtual_gridsizes[dim-1] );
-	  else if (ii==nzones-1)
-	    nCells_zones[ii] = inputdata.domain_data.nCells[ dim-1 ] 
-              - floor( inputdata.yfield_properties.zones[ii-1].bottom / inputdata.domain_data.virtual_gridsizes[dim-1] );
-	  else
-	    nCells_zones[ii] = floor( inputdata.yfield_properties.zones[ii].bottom / inputdata.domain_data.virtual_gridsizes[dim-1] ) 
-              - floor( inputdata.yfield_properties.zones[ii-1].bottom / inputdata.domain_data.virtual_gridsizes[dim-1] );
-	} else
-          nCells_zones[ii] = inputdata.domain_data.nCells[ dim-1 ];
-      }
-
-      UINT zone_offset = 0; // This number gets incremented by the zone thickness inside the coming loop.
-      // loop over zones:
-      for( UINT ii=0; ii<nzones; ii++ ){
+      Vector<UINT> local_offset(dim,0);
+      Vector<UINT> local_count(dim,0);
+      C_YY.prepare( local_offset, local_count );
 
 
-        Vector<UINT> dims(dim);     // zone in embedded domain
-        Vector<UINT> dimsExt(dim);  // zone in embedding domain
-        dims[0] = inputdata.domain_data.nCells[0];
-        dimsExt[0] = nCellsExt[ii][0];
-        dimsExt[1] = nCellsExt[ii][1];
-#ifdef DIMENSION3
-        dims[1] = inputdata.domain_data.nCells[1];
-        dims[2] = nCells_zones[ii];
-        dimsExt[2] = nCellsExt[ii][2];
-#else
-        dims[1] = nCells_zones[ii];
-#endif
+      //logger << "DEBUG: cross_covariance_JQ: local_offset " << local_offset;
+      //logger << "DEBUG: cross_covariance_JQ: local_count " << local_count;
 
-        CovarianceMatrix<IDT> C_YY( dims, dimsExt, communicator, inputdata );
+      // read the sensitivities
+      HDF5Tools::h5_pRead( SensitivityFieldJ,
+                           sensitivity_filename,
+                           "/Sensitivity",
+                           local_offset,
+                           local_count,
+                           communicator
+                           );
+        
+      // Important note: 
+      // SensitivityFieldJ cannot be plottet on the grid view
+      // because local_count and local_offset are based on the 
+      // FFT parallelization on the extended field!
+        
 
-        Vector<REAL> SensitivityFieldJ;   // variable storing the k-th sensitivity field == k-th column of the sensitivity matrix J^T
+      Vector<REAL> JQ_needed( SensitivityFieldJ.size() );
+      C_YY.mv( Lambdas, SensitivityFieldJ, JQ_needed );
 
-        Vector<UINT> local_offset(dim,0);
-        Vector<UINT> local_count(dim,0);
-        C_YY.prepare( zone_offset, local_offset, local_count );
+      //write the data to HDF5
 
+      /*
+        Important note: 
+        FFT parallelization happens on the extended field:
+        The gridview must not be used here. It has a different
+        parallel decomposition.
+        I.e. h5g_pWrite( gv ,...) must not be used here.
+      */
+      logger << "cross_covariance_JQ: h5_pWrite for JQ ..." << std::endl;
 
-        //logger << "DEBUG: cross_covariance_JQ: local_offset " << local_offset;
-        //logger << "DEBUG: cross_covariance_JQ: local_count " << local_count;
-
-        // read the sensitivities
-        HDF5Tools::h5_pRead( SensitivityFieldJ,
-                             sensitivity_filename,
-                             "/Sensitivity",
-                             inputdata, 
-                             local_offset,
-                             local_count,
-                             communicator
+      HDF5Tools::h5_pWrite( JQ_needed,
+                            JQ_filename,
+                            "/JQ",
+                            fielddata.nCells,
+                            local_offset,
+                            local_count,
+                            communicator
                             );
-        
-        // Important note: 
-        // SensitivityFieldJ cannot be plottet on the grid view
-        // because local_count and local_offset are based on the 
-        // FFT parallelization on the extended field!
-        
 
-        Vector<REAL> JQ_needed( SensitivityFieldJ.size() );
-        C_YY.mv( Lambdas[ii], SensitivityFieldJ, JQ_needed );
+      logger << "cross_covariance_JQ: h5_pWrite for JQ done." << std::endl;
 
-        //write the data to HDF5
-        if(ii>0){
 
-          Vector<UINT> local_count;   // Adrian: Ist das nicht zuviel?
-          Vector<UINT> local_offset;
 
-          logger << "cross_covariance_JQ: Append JQ of new zone." << std::endl;
-          HDF5Tools::h5_pAppend( JQ_needed,
-                                 JQ_filename,
-                                 "/JQ",
-                                 local_count,
-                                 local_offset,
-                                 communicator
-                                 );
-        }
-        else {
-
-          /*
-            Important note: 
-            FFT parallelization happens on the extended field:
-            The gridview must not be used here. It has a different
-            parallel decomposition.
-            I.e. h5g_pWrite( gv ,...) must not be used here.
-           */
-          logger << "cross_covariance_JQ: h5_pWrite for JQ ..." << std::endl;
-
-          HDF5Tools::h5_pWrite( JQ_needed,
-                                JQ_filename,
-                                "/JQ",
-                                inputdata,
-                                inputdata.domain_data.nCells,
-                                local_offset,
-                                local_count,
-                                communicator
-                                );
-
-          logger << "cross_covariance_JQ: h5_pWrite for JQ done." << std::endl;
-
-        }
-
-        //offset correction for the next zone!
-        zone_offset += nCells_zones[ii];
-
-      }
     }
 
   } // namespace Gesis
+
 } // namespace Dune
 
 #endif // DUNE_GESIS_CROSS_COVARIANCE_JQ_HH

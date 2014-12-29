@@ -31,7 +31,6 @@ namespace Dune {
       , typename YFG
       , typename DIR
       , typename IDT
-      //, typename SDT
       >
     class SensitivityClass{
 
@@ -53,18 +52,20 @@ namespace Dune {
       typedef typename GFS_CG::Traits::ConstraintsType CON_CG;
       typedef typename Dune::PDELab::BackendVectorSelector<GFS_CG,REAL>::Type VCType_CG;
 
+      typedef Dune::Gesis::FieldData FD;
+
+
       //typedef typename POOL_GRID::LevelGridView POOL_GV_GW;
 
       const PGV pRootGridView;
       const IDT& inputdata;
+      const FD fielddata;
 
 
-      const std::vector< Vector<UINT> >& nCellsExt;
       DIR& dir;
 
 
       UINT nSetups;
-      UINT nzones;
 
       MEASLIST& orig_measurements;
       UINT nMeas;
@@ -100,8 +101,8 @@ namespace Dune {
         std::vector<Dune::shared_ptr<GFS_CG>> pool_gfs_cg;
       */
 
-      std::vector<std::vector< Vector<REAL> > > pool_Lambdas;
-      std::vector<std::vector< Vector<REAL> > > pool_X; // zonation matrix
+      std::vector< Vector<REAL> > pool_Lambdas;
+      std::vector< Vector<REAL> > pool_X; // zonation matrix
 
       std::vector<YFG*> YfieldGenerator_old;
 
@@ -109,7 +110,7 @@ namespace Dune {
       std::vector<Dune::shared_ptr<YFG>> log_electricalConductivity_pool;
       std::vector<Dune::shared_ptr<YFG>> log_kappafield_pool;
 
-      std::vector< Vector<REAL> > JX;
+      Vector<REAL> JX;
       std::vector< Vector<REAL> > JQJ;
       Vector<REAL> J_times_Y_old;
 
@@ -148,20 +149,18 @@ namespace Dune {
        YFG,
        DIR,
        IDT
-       //, SDT
        >
       (
        POOL_GRID & theGrid,
        const PGV pRootGridView_,
        const IDT& inputdata_,
-       const std::vector< Vector<UINT> >& nCellsExt_, // related to Lambdas
        DIR& dir_,
        MEASLIST& orig_measurements_,
        const Dune::MPIHelper& helper_
        )
       : pRootGridView(pRootGridView_),
         inputdata(inputdata_),
-        nCellsExt(nCellsExt_),
+        fielddata(inputdata_),
         dir(dir_),
         orig_measurements(orig_measurements_),
         nMeas(orig_measurements_.nMeasurements()),
@@ -175,10 +174,7 @@ namespace Dune {
 
         // Total number of all cells required to resolve the parameter field
         // const UINT nAllCells = inputdata.domain_data.nCells.componentsproduct();
-        // number of zones
 
-        nzones = inputdata.yfield_properties.nz;
-        //std::cout << "DEBUG: nzones = " << nzones << std::endl;
 
         nSetups=inputdata.setups.size();
 
@@ -462,9 +458,17 @@ namespace Dune {
 
         pool_Lambdas.resize(number_of_MPIPools);
         pool_X.resize(number_of_MPIPools); // zonation matrix
-        Vector<UINT> local_count,local_offset;
-        std::vector<ptrdiff_t> alloc_local(nzones),local_n0(nzones), local_0_start(nzones);
-        std::vector<UINT> local_FFT_size(nzones),local_1D_size(nzones),local_1D_start(nzones);
+
+        Vector<UINT> local_offset;
+        Vector<UINT> local_count;
+
+        ptrdiff_t alloc_local;
+        ptrdiff_t local_n0;
+        ptrdiff_t local_0_start;
+
+        //UINT local_FFT_size;
+        UINT local_1D_size;
+        UINT local_1D_start;
 
         //loop over the needed communicator pool(s)
         for (UINT iPool=0; iPool<number_of_MPIPools; iPool++){
@@ -693,10 +697,12 @@ namespace Dune {
                                           , "/logsigma0"
                                           , local_offset
                                           , local_count
-                                          , inputdata
+                                          , fielddata
                                           );
                     if(CommunicatorPool[iPool][ii].get_size()>1)
-                      log_electricalConductivity_pool[iPool]->parallel_import_from_local_vector(logsigma0, local_offset, local_count );
+                      log_electricalConductivity_pool[iPool]->parallel_import_from_local_vector( logsigma0, 
+                                                                                                 local_offset,
+                                                                                                 local_count );
                     else
                       log_electricalConductivity_pool[iPool]->import_from_vector( logsigma0 );
 
@@ -708,7 +714,7 @@ namespace Dune {
                                          , "/logkappa"
                                          , local_offset
                                          , local_count
-                                         , inputdata
+                                         , fielddata
                                          );
 
 
@@ -721,76 +727,66 @@ namespace Dune {
               }
 
               //get the parameters how the FFT distributes the data
-              for(UINT jj=0; jj<nzones; jj++){
-#ifdef DIMENSION3
-                alloc_local[jj] = fftw_mpi_local_size_3d( nCellsExt[jj][2],
-                                                          nCellsExt[jj][1],
-                                                          nCellsExt[jj][0],
-                                                          CommunicatorPool[iPool][ii].get_comm(),
-                                                          &(local_n0[jj]),
-                                                          &(local_0_start[jj]) );
-#else
-                alloc_local[jj] = fftw_mpi_local_size_2d( nCellsExt[jj][1],
-                                                          nCellsExt[jj][0],
-                                                          CommunicatorPool[iPool][ii].get_comm(),
-                                                          &(local_n0[jj]),
-                                                          &(local_0_start[jj]) );
-#endif
 
-              }
+#ifdef DIMENSION3
+              alloc_local = fftw_mpi_local_size_3d( fielddata.nCellsExt[2],
+                                                    fielddata.nCellsExt[1],
+                                                    fielddata.nCellsExt[0],
+                                                    CommunicatorPool[iPool][ii].get_comm(),
+                                                    &local_n0,
+                                                    &local_0_start );
+#else
+              alloc_local = fftw_mpi_local_size_2d( fielddata.nCellsExt[1],
+                                                    fielddata.nCellsExt[0],
+                                                    CommunicatorPool[iPool][ii].get_comm(),
+                                                    &local_n0,
+                                                    &local_0_start );
+#endif
+              logger << "SensitivityClass: FFTW alloc_local = " << alloc_local << std::endl;
 
             } // END: if(CommunicatorPool[iPool][ii].I_am_in()){
 
           }// END:  for(UINT ii=0;ii<final_pool_size[iPool];ii++)
 
           // save this value into UINT variables!
-          for(UINT ii=0; ii<nzones; ii++){
-            local_FFT_size[ii]=(UINT)alloc_local[ii];
-            local_1D_size[ii]=(UINT)local_n0[ii];
-            local_1D_start[ii]=(UINT)local_0_start[ii];
-          }
+          //local_FFT_size = (UINT) alloc_local;
+          local_1D_size  = (UINT) local_n0;
+          local_1D_start = (UINT) local_0_start;
 
-          for(UINT jj=0; jj<nzones; jj++){
-            //setting parameter for the HDF5 read of the eigenvalues "Lambdas"
-            local_count.resize(0);
-            local_offset.resize(0);
-            local_count.resize(dim,0);
-            local_offset.resize(dim,0);
+
+          //setting parameter for the HDF5 read of the eigenvalues "Lambdas"
+
+          local_offset.resize(dim,0);
+          local_count.resize(dim,0);
 
 #ifdef DIMENSION3
-            local_count[0]=nCellsExt[jj][0];
-            local_count[1]=nCellsExt[jj][1];
-            local_count[2]=local_1D_size[jj];
-            local_offset[2]=local_1D_start[jj];
+          local_offset[2] = local_1D_start;
+          local_count[0]  = fielddata.nCellsExt[0];
+          local_count[1]  = fielddata.nCellsExt[1];
+          local_count[2]  = local_1D_size;
 #else
-            local_count[0]=nCellsExt[jj][0];
-            local_count[1]=local_1D_size[jj];
-            local_offset[1]=local_1D_start[jj];
+          local_offset[1] = local_1D_start;
+          local_count[0]  = fielddata.nCellsExt[0];
+          local_count[1]  = local_1D_size;
 #endif
-            pool_Lambdas[iPool].resize(nzones);
-            // read the needed data from the HDF5 file -> and again for the different MPI Pools
-            for(UINT ii=0; ii<final_pool_size[iPool];ii++){
-              if(CommunicatorPool[iPool][ii].I_am_in()){
-                HDF5Tools::h5_pRead( pool_Lambdas[iPool][jj],
-                                     dir.EV_h5file[jj],
-                                     "/FFT_R_YY",
-                                     inputdata,
-                                     local_offset,
-                                     local_count,
-                                     CommunicatorPool[iPool][ii].get_comm()
-                                    );
+          // read the needed data from the HDF5 file -> and again for the different MPI Pools
+          for(UINT ii=0; ii<final_pool_size[iPool];ii++){
+            if(CommunicatorPool[iPool][ii].I_am_in()){
+              HDF5Tools::h5_pRead( pool_Lambdas[iPool],
+                                   dir.EV_h5file[0],
+                                   "/FFT_R_YY",
+                                   local_offset,
+                                   local_count,
+                                   CommunicatorPool[iPool][ii].get_comm()
+                                   );
 
-                // read zones on pool leader
-                if(CommunicatorPool[iPool][ii].get_rank()==0){
-                  pool_X[iPool].resize(nzones);
-                  for(UINT jj=0; jj<nzones; jj++)
-                    HDF5Tools::h5_Read( pool_X[iPool][jj],
-                                        dir.zonation_matrix[jj],
-                                        "/X" );
-                }
+              // read zones on pool leader
+              if(CommunicatorPool[iPool][ii].get_rank()==0){
+                HDF5Tools::h5_Read( pool_X[iPool],
+                                    dir.zonation_matrix[0],
+                                    "/X" );
               }
             }
-
           }
         } // END: for(UINT iPool=0; iPool<number_of_MPIPools; iPool++)
 
@@ -821,7 +817,8 @@ namespace Dune {
 
         Vector<REAL> local_Y_old;
         //Vector<REAL> local_Y_old_Well;
-        Vector<UINT> local_count,local_offset;
+        Vector<UINT> local_offset;
+        Vector<UINT> local_count;
         /*
          * load the YfieldGenerator_old for all communicator pool(s) (also loaded for the lnK pool (little overhead))
          * idea for a speed up: load here also the old head, m0, m1 and so on!
@@ -834,34 +831,20 @@ namespace Dune {
 
               delete(YfieldGenerator_old[iPool]);
 
-              YfieldGenerator_old[iPool] = new YFG( inputdata,
+              YfieldGenerator_old[iPool] = new YFG( fielddata,
                                                     dir,
                                                     CommunicatorPool[iPool][ii].get_comm() );
 
               // read the data of Y_old ->parallel on each MPI pool
               //logger << "read the old Y-field " << dir.Y_old_h5file << std::endl;
-              HDF5Tools::h5g_pRead(
-                                   pool_gv_gw[iPool]
-                                   , local_Y_old
-                                   , dir.Y_old_h5file
-                                   , "/YField"
-                                   , local_offset
-                                   , local_count
-                                   , inputdata
-                                   );
-              /*
-                HDF5Tools::
-                h5g_pRead(
-                *(pool_gv_gw[iPool])
-                , inputdata
-                , local_Y_old_Well
-                , "/YField"
-                , local_count
-                , local_offset
-                , dir.Y_old_Well_h5file
-                );
-              */
-
+              HDF5Tools::h5g_pRead( pool_gv_gw[iPool]
+                                    , local_Y_old
+                                    , dir.Y_old_h5file
+                                    , "/YField"
+                                    , local_offset
+                                    , local_count
+                                    , fielddata
+                                    );
 
               if(CommunicatorPool[iPool][ii].get_size()>1)
                 YfieldGenerator_old[iPool]->parallel_import_from_local_vector( local_Y_old,
@@ -870,25 +853,14 @@ namespace Dune {
                                                                                );
               else {
                 YfieldGenerator_old[iPool]->import_from_vector( local_Y_old);
-                //inputdata.loglistOfAllWellCenters();
-                //YfieldGenerator_old[iPool]->setWellConductivities();
               }
 
               logger << "SensitivityClass: " << std::endl;
               inputdata.loglistOfAllWellCenters();
-              YfieldGenerator_old[iPool]->setWellConductivities( pool_gv_gw[iPool] );
+              YfieldGenerator_old[iPool]->setWellConductivities( pool_gv_gw[iPool], inputdata );
 
 
               if( inputdata.plot_options.vtk_plot_y_try ){
-#ifdef USE_YASP
-                int baselevel = inputdata.domain_data.yasp_baselevel;
-#endif
-#ifdef USE_UG
-                int baselevel = inputdata.domain_data.ug_baselevel;
-#endif
-#ifdef USE_ALUGRID
-                int baselevel = inputdata.domain_data.alugrid_baselevel;
-#endif
                 std::stringstream file_YoldWell;
                 file_YoldWell << dir.vtudir
                               << "/Y_old_" << it_counter
@@ -896,7 +868,8 @@ namespace Dune {
                 YfieldGenerator_old[iPool]->plot2vtu( pool_gv_gw[iPool],
                                                       file_YoldWell.str(),
                                                       "Y_try",
-                                                      baselevel );
+                                                      0
+                                                      );
               }
 
 
@@ -942,7 +915,8 @@ namespace Dune {
          */
         // update the new Y_old
         //read Y_old for all processor pool leaders(LOCAL P0)!
-        Vector<UINT> local_count,local_offset;
+        Vector<UINT> local_offset;
+        Vector<UINT> local_count;
         //P0 (global) has the data already!
         if(helper.rank()!=0){
           for (UINT iPool=0; iPool<number_of_MPIPools; iPool++){
@@ -955,7 +929,6 @@ namespace Dune {
                                        , "/YField"
                                        , local_offset
                                        , local_count
-                                       , inputdata
                                        );
                 }
                 if(Y_u.size()==0 && CR>-1){
@@ -964,7 +937,6 @@ namespace Dune {
                                        , "/YField"
                                        , local_offset
                                        , local_count
-                                       , inputdata
                                        );
                 }
               } // END: if(CommunicatorPool[iPool][ii].get_rank()==0)
@@ -977,16 +949,12 @@ namespace Dune {
                                  , "/YField"
                                  , local_offset
                                  , local_count
-                                 , inputdata
                                  );
           }
         }// END: if(helper.rank()!=0)
         for(UINT ii=0; ii<Y_u.size(); ii++){
           Y_old[ii]-=Y_u[ii];
         }
-
-        JX.resize(0);
-        J_times_Y_old.resize(0);
 
 
         std::vector< Dune::shared_ptr<GV_TP> > pool_gv_tp(number_of_MPIPools);
@@ -995,39 +963,12 @@ namespace Dune {
         std::vector< Dune::shared_ptr<CON_CG> > pool_con_cg(number_of_MPIPools);
         std::vector< Dune::shared_ptr<GFS_CG> > pool_gfs_cg(number_of_MPIPools);
 
-        /*
-        //loop over the needed communicator pool(s)
-        for (UINT iPool=0; iPool<number_of_MPIPools; iPool++){
-        // loop over all MPI pools to set the values of pool_grid, pool_gv, and,pool_gfs
-        for(UINT ii=0;ii<final_pool_size[iPool];ii++){
-        // do only something if the processor belongs to the considered group,
-        if(CommunicatorPool[iPool][ii].I_am_in()){
 
-        Dune::shared_ptr<GV_TP> pgv_tp = Dune::make_shared<GV_TP>( pool_grid[iPool]->leafView());
-        Dune::shared_ptr<CON_TP> pcon_tp = Dune::make_shared<CON_TP>();
-        Dune::shared_ptr<GFS_TP> pgfs_tp = Dune::make_shared<GFS_TP>( *pgv_tp,
-        *pfem_hyper,
-        *pcon_tp );
+        JX.clear();
+        JX.resize(nMeas,0.0);
 
-        Dune::shared_ptr<CON_CG> pcon_cg = Dune::make_shared<CON_CG>();
-        Dune::shared_ptr<GFS_CG> pgfs_cg = Dune::make_shared<GFS_CG>( *pgv_tp,
-        *pfem_cg,
-        *pcon_cg );
-
-
-
-        }
-        }
-        }
-
-        */
-
-        //std::cout << "DEBUG: nzones = " << nzones << std::endl;
-
-        JX.resize(nMeas);
-        for(UINT ii=0; ii<nMeas; ii++)
-          JX[ii].resize(nzones,0.0);
-        J_times_Y_old.resize(nMeas);
+        J_times_Y_old.clear();
+        J_times_Y_old.resize(nMeas,0.0);
 
         enum{ dim=GV_GW::dimension };
         Dune::Timer watch;
@@ -1064,7 +1005,7 @@ namespace Dune {
                 HDF5Tools::
                   read_BackendVector_from_HDF5(
                                                *(pool_gfs_gw[pool_lookup[iSetup][t_meas]])
-                                               , inputdata
+                                               , fielddata
                                                , dir.vchead_old_h5file[iSetup] // important: read from the right file. To get the head for the solute transport setup!
                                                , "/vchead_old"
                                                , *(head_old[pool_lookup[iSetup][t_meas]])
@@ -1083,8 +1024,6 @@ namespace Dune {
                                        *(head_old[pool_lookup[iSetup][t_meas]]),
                                        vtu_h_old.str(),
                                        "h_old",
-                                       inputdata.verbosity,
-                                       true,
                                        0
                                        );
                 }
@@ -1199,7 +1138,7 @@ namespace Dune {
                 HDF5Tools::
                   read_BackendVector_from_HDF5(
                                                *(pool_gfs_cg[pool_lookup[iSetup][t_meas]])
-                                               , inputdata
+                                               , fielddata
                                                , dir.vcM0_old_h5file[iSetup]
                                                , "/vcM0_old"
                                                , *(soluteM0_old[pool_lookup[iSetup][t_meas]])
@@ -1218,9 +1157,7 @@ namespace Dune {
                                        *(soluteM0_old[pool_lookup[iSetup][t_meas]]),
                                        vtu_m0_old.str(),
                                        "M0_old",
-                                       inputdata.verbosity,
-                                       true,
-                                       0
+                                       -1
                                        );
                 }
 
@@ -1245,7 +1182,7 @@ namespace Dune {
                 HDF5Tools::
                   read_BackendVector_from_HDF5(
                                                *(pool_gfs_cg[pool_lookup[iSetup][t_meas]])
-                                               , inputdata
+                                               , fielddata
                                                , dir.vcM1_old_h5file[iSetup]
                                                , "/vcM1_old"
                                                , *(soluteM1_old[pool_lookup[iSetup][t_meas]])
@@ -1299,8 +1236,6 @@ namespace Dune {
           // lnK SENSITIVITIES!
           if(orig_measurements.nMeasPerSetupPerType(iSetup,0)){
 
-            //std::cout << "outside: " << nCellsExt[0][1] << std::endl;
-
             // important to use the pool_lookup vector to get the right pool_gv
             lnK_sensitivities<GV_GW,
                               DIR,
@@ -1312,7 +1247,6 @@ namespace Dune {
                                  iSetup,
                                  it_counter,
                                  orig_measurements,
-                                 nCellsExt,
                                  pool_Lambdas[ pool_lookup[iSetup][0] ],
                                  pool_X[ pool_lookup[iSetup][0] ],
                                  Y_old,
@@ -1347,7 +1281,6 @@ namespace Dune {
                 orig_measurements,
                 inputdata,
                 setupdata,
-                nCellsExt,
                 pool_Lambdas[pool_lookup[iSetup][1]],
                 pool_X[pool_lookup[iSetup][1]],
                 Y_old,
@@ -1367,7 +1300,6 @@ namespace Dune {
 
 
           // M0 sensitivities
-
           if(orig_measurements.nMeasPerSetupPerType(iSetup,2)){
 
             // important to use the pool_lookup vector to get the right pool gridfunction space
@@ -1396,7 +1328,6 @@ namespace Dune {
                orig_measurements,
                measurements,
 
-               nCellsExt,
                pool_Lambdas[ pool_lookup[iSetup][2] ], // important to use the pool_lookup vector to get the right Lambdas
                pool_X[ pool_lookup[iSetup][2] ],
 
@@ -1447,7 +1378,6 @@ namespace Dune {
                orig_measurements,
                measurements,
 
-               nCellsExt,
                pool_Lambdas[pool_lookup[iSetup][3]], // important to use the pool_lookup vector to get the right Lambdas
                pool_X[pool_lookup[iSetup][3]],
 
@@ -1499,7 +1429,6 @@ namespace Dune {
                orig_measurements,
                measurements,
 
-               nCellsExt,
                pool_Lambdas[pool_lookup[iSetup][4]], // important to use the pool_lookup vector to get the right Lambdas
                pool_X[pool_lookup[iSetup][4]],
 
@@ -1551,7 +1480,6 @@ namespace Dune {
                 orig_measurements,
                 measurements,
 
-                nCellsExt,
                 pool_Lambdas[pool_lookup[iSetup][5]], // important to use the pool_lookup vector to get the right Lambdas
                 pool_X[pool_lookup[iSetup][5]],
 
@@ -1602,21 +1530,19 @@ namespace Dune {
                                  , "/YField"
                                  , local_offset
                                  , local_count
-                                 , inputdata
                                  );
           }
 
         }// END: for(UINT iSetup=0; iSetup<nSetups; iSetup++)
 
+
         //collect JX and J_times_Y_old on P0
         REAL tmp;
         for(UINT ii=0;ii<nMeas;ii++){
-          for(UINT jj=0; jj<nzones; jj++){
-            tmp=0.0;
-            MPI_Reduce(&(JX[ii][jj]),&(tmp),1,MPI_DOUBLE,MPI_SUM,0,helper.getCommunicator());
-            if(helper.rank()==0)
-              JX[ii][jj]=tmp;
-          }
+          tmp=0.0;
+          MPI_Reduce(&(JX[ii]),&(tmp),1,MPI_DOUBLE,MPI_SUM,0,helper.getCommunicator());
+          if(helper.rank()==0)
+            JX[ii]=tmp;
           tmp=0.0;
           MPI_Reduce(&(J_times_Y_old[ii]),&(tmp),1,MPI_DOUBLE,MPI_SUM,0,helper.getCommunicator());
           if(helper.rank()==0)
@@ -1624,13 +1550,15 @@ namespace Dune {
         }
 
 
+#ifdef DEBUG_LOG
         logger << "DEBUG:" << std::endl;
         for(UINT ii=0;ii<nMeas;ii++){
           logger << "J_times_Y_old[" << ii << "] = " << J_times_Y_old[ii] << std::endl;
         }
         for(UINT ii=0;ii<nMeas;ii++){
-          logger << "JX[" << ii << "][0] = " << JX[ii][0] << std::endl;
+          logger << "JX[" << ii << "] = " << JX[ii] << std::endl;
         }
+#endif // DEBUG_LOG
 
         //wait until all sensitivities are calculated! VERY VERY VERY IMPORTANT
         if(helper.size()>1)
@@ -1648,7 +1576,8 @@ namespace Dune {
         //parallel calculation of JQJ (parallel on MPI_COMM_WORLD)
         Dune::Timer watch;
 
-        Vector<UINT> local_count,local_offset;
+        Vector<UINT> local_offset;
+        Vector<UINT> local_count;
         Vector<REAL> vecSensitivity;
         Vector<REAL> vecJQ;
 
@@ -1690,7 +1619,6 @@ namespace Dune {
                                    , "/JQ"
                                    , local_offset
                                    , local_count
-                                   , inputdata
                                    , iParts
                                    , inputdata.parallel_fine_tuning.JQJ_slices
                                    );
@@ -1715,7 +1643,6 @@ namespace Dune {
                                      , "/Sensitivity"
                                      , local_offset
                                      , local_count
-                                     , inputdata
                                      , iParts
                                      , inputdata.parallel_fine_tuning.JQJ_slices
                                      , bSwitchTimerON
@@ -1793,8 +1720,8 @@ namespace Dune {
 
 
 
-      REAL get_JX(UINT ii, UINT jj){
-        return JX[ii][jj];
+      REAL get_JX(UINT ii){
+        return JX[ii];
       }
 
 
@@ -1855,10 +1782,10 @@ namespace Dune {
             for( UINT jPoint=0; jPoint < nMeas; jPoint++ ){
               Gyy_NEW(jPoint,iPoint) = JQJ[ jPoint ][ iPoint ];
 
-              for(UINT ii=0; ii<nzones; ii++) {
-                REAL R_bb=inputdata.yfield_properties.zones[ii].qbb_y;
-                Gyy_NEW( jPoint , iPoint ) += R_bb * JX[ iPoint ][ii] * JX[ jPoint ][ii];
-              }
+
+              REAL R_bb=inputdata.yfield_properties.zones[0].qbb_y;
+              Gyy_NEW( jPoint , iPoint ) += R_bb * JX[ iPoint ] * JX[ jPoint ];
+
               sum1 += ksi_try[ jPoint ] * Gyy_NEW( jPoint , iPoint );
             }
 
@@ -1891,7 +1818,8 @@ namespace Dune {
 
       template<typename GV>
       void vtu_sensitivity(const GV& gv_0, UINT it_counter){
-        Vector<UINT> local_count,local_offset;
+        Vector<UINT> local_offset;
+        Vector<UINT> local_count;
         for(UINT ii=0; ii<nMeas; ii++){
           if(helper.size()>1)
             MPI_Barrier(helper.getCommunicator());
@@ -1899,9 +1827,9 @@ namespace Dune {
           std::stringstream vtu_file;
           vtu_file << dir.Sensitivity_vtu_prefix << "_m" << ii << "_i" << it_counter;
 
-          YFG yfg_Sensitivity( inputdata, dir, helper.getCommunicator() );
+          YFG yfg_Sensitivity( fielddata, dir, helper.getCommunicator() );
           VTKPlot::output_hdf5data_to_gridview( gv_0,
-                                                inputdata,
+                                                fielddata,
                                                 vtu_file.str(),
                                                 dir.Sensitivity_h5file[ii],
                                                 "/Sensitivity",
@@ -1916,7 +1844,8 @@ namespace Dune {
 
       template<typename GV>
       void vtu_JQ(const GV& gv_0,UINT it_counter){
-        Vector<UINT> local_count,local_offset;
+        Vector<UINT> local_offset;
+        Vector<UINT> local_count;
         for(UINT ii=0; ii<nMeas; ii++){
 
           if(helper.size()>1)
@@ -1925,9 +1854,9 @@ namespace Dune {
           std::stringstream vtu_file;
           vtu_file << dir.JQ_vtu_prefix << "_m" << ii << "_i" << it_counter;
 
-          YFG yfg_JQ( inputdata, dir, helper.getCommunicator() );
+          YFG yfg_JQ( fielddata, dir, helper.getCommunicator() );
           VTKPlot::output_hdf5data_to_gridview( gv_0,
-                                                inputdata,
+                                                fielddata,
                                                 vtu_file.str(),
                                                 dir.JQ_h5file[ii],
                                                 "/JQ",

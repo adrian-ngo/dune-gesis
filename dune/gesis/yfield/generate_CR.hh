@@ -25,12 +25,14 @@ namespace Dune {
                       const IDT& inputdata,
                       const YFG& yfg_orig,
                       MEASLIST& orig_measurements,
-                      const std::vector< Vector<UINT> >& nCellsExt,
                       DIR& dir,
                       const YFG& log_electricalConductivity,
                       const YFG& log_kappafield,
                       const Dune::MPIHelper& helper
                       ){
+
+      typedef Dune::Gesis::FieldData FD;
+      const FD fielddata( inputdata );
 
       logger<<"Generate "<<inputdata.CR_parameters.total<<" conditional realizations!!!"<<std::endl;
       Dune::Timer watch_total;
@@ -118,11 +120,7 @@ namespace Dune {
          *
          */
 
-#ifdef DIMENSION3
-        YField_unconditional.generate3d( false, true );
-#else
-        YField_unconditional.generate2d( false, true  );
-#endif
+        YField_unconditional.generateY( false, true );
 
 
 
@@ -132,7 +130,7 @@ namespace Dune {
          */
 
         L[iCR-inputdata.CR_parameters.start]
-          =inversionkernel<GRID,
+          = inversionkernel<GRID,
                            PGV,
                            GFS_GW,
                            GFS_TP,
@@ -140,7 +138,6 @@ namespace Dune {
                            MEASLIST,
                            DIR,
                            IDT,
-                           //SDT,
                            YFG
                            >
           ( theGrid,
@@ -148,8 +145,6 @@ namespace Dune {
             gfs_gw,
             inputdata,
             orig_measurements,
-            //ACHTUNG ÄNDERUNG ZONES
-            nCellsExt,
             dir,
             log_electricalConductivity,
             log_kappafield,

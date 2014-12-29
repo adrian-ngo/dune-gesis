@@ -1,596 +1,579 @@
-/*
+/* 
  * File:   FFTFieldGenerator.hh
- * Author: A. Ngo (2010-2014)
+ * Author: A. Ngo (10/2014)
+ *
+ * Implementation of the FFT-based random field generator by Dietrich and Newsam
+ * 
+ * Article: "Fast and exact simulation of stationary Gaussian processes through circulant embedding of the covariance matrix" by Dietrich, C. R. and Newsam, G. N. (1997), SIAM J. Sci. Comp. vol 18(4), http://dx.doi.org/10.1137/S1064827592240555
+ *
  *
  */
 
-#ifndef DUNE_GESIS_FFT_FIELD_GENERATOR_HH
-#define	DUNE_GESIS_FFT_FIELD_GENERATOR_HH
+#ifndef FFT_FIELD_GENERATOR_HH
+#define	FFT_FIELD_GENERATOR_HH
 
-/***
-    FFTW was written by Matteo Frigo and Steven G. Johnson. 
-    * Copyright (c) 2003, 2007-14 Matteo Frigo
-    * Copyright (c) 2003, 2007-14 Massachusetts Institute of Technology
-    URL: http://www.fftw.org/
- ***/
-#include <fftw3.h>
+#include <random>      // C++11 random number generator
+#include <fftw3.h>     // Fastest Fourier Transform in the West (www.fftw.org)
 #include <fftw3-mpi.h>
 
-#include <time.h>      // define time()
-#include <random>      // C++11 random number generator (This works with g++-4.8.)
+#include <time.h>                      // define time()
 
-#include <dune/gesis/common/io/HDF5Tools.hh>
 
-extern CLogfile logger;
+#include "FieldData.hh"
+#include "dune/gesis/common/io/HDF5Tools.hh"
 
 
 namespace Dune {
   namespace Gesis {
 
-    template<typename IDT,typename REAL,int dim>
+
+    template<typename FD,typename DIR,int dim>
     class FFTFieldGenerator {
 
     private:
 
-      UINT nzones;
-      const IDT &inputdata;
-      const IO_Locations &dir;
+      const FD &fielddata;
+      const DIR &dir;
+  
+      // MPI communicator and information about rank and size
+      // const Dune::MPIHelper &helper;
+
       const MPI_Comm &comm;
       int my_rank,comm_size;
 
-      std::vector< Vector<UINT> > nCells_ExtendedDomain;
-
       // Note:
       // Always remeber that Y=log(K) where log is the natural logarithm.
-      // We store the Y field inside the HDF5 files, because the Y field is
-      // being computed by the random field generator and by the inversion
-      // scheme.
-      // This means that we need to compute K=std::exp(Y) each time we read from
-      // such a HDF5 file! This is done once during
+      // We store only the Y-field inside the HDF5 files.
+      // We compute K=std::exp(Y) each time we read from such a HDF5 file.
+      // This is done once in
       // parallel_import_from_local_vector(...)
-      // and
-      // each time after h5g_Read(...)
       //
-      //
-      Vector<REAL> YFieldVector;
+
+
+      // The following variables are the data containers.
+
+      Vector<REAL> YFieldVector;   // used for the sequential case only
+      Vector<REAL> KFieldVector;   // used for the sequential case only
       Vector<REAL> YFieldVector_Well;
-      Vector<REAL> KFieldVector;
       Vector<REAL> KFieldVector_Well;
-
-      Vector<UINT> nCells_zones;
-
-      Vector<REAL>  LocalKFieldVector;
+    
+      Vector<REAL>  LocalKFieldVector;  // used for the parallel case only
+      Vector<REAL>  LocalYFieldVector;  // used for the parallel case only
       Vector<REAL>  LocalKFieldVector_Well;
-      Vector<REAL>  LocalYFieldVector;
       Vector<REAL>  LocalYFieldVector_Well;
 
-      Vector<UINT>  LocalCount;
-      Vector<UINT>  LocalOffset;
-
+      Vector<UINT>  LocalCount;  // used for the parallel case only
+      Vector<UINT>  LocalOffset; // used for the parallel case only
+  
     public:
-
+  
       UINT size(){
         return KFieldVector.size();
       };
+        
       UINT localSize(){
         return LocalKFieldVector.size();
       };
 
-      // first constructor:
-      FFTFieldGenerator( const IDT &inputdata_
-                         , const IO_Locations &dir_
-                         )
-        :
-        inputdata(inputdata_),dir(dir_)
-      {
-        nzones=inputdata.yfield_properties.nz;
-        //dim=inputdata.dim;
 
-        nCells_ExtendedDomain.resize(nzones);
-        for( UINT i=0; i<nzones; ++i ){
-          nCells_ExtendedDomain[i].resize(dim);
-        }
-
-        nCells_zones.resize(nzones);
-
-        for (UINT ii =0; ii<nzones;ii++){
-          nCells_ExtendedDomain[ii].resize(dim);
-          if(nzones>1){
-            if(ii==0)
-              nCells_zones[ii]=floor(inputdata.yfield_properties.zones[ii].bottom/inputdata.domain_data.gridsizes[dim-1]);
-            else if (ii==nzones-1)
-              nCells_zones[ii]=inputdata.domain_data.nCells[ dim-1 ]-floor(inputdata.yfield_properties.zones[ii-1].bottom/inputdata.domain_data.gridsizes[dim-1]);
-            else
-              nCells_zones[ii]=floor(inputdata.yfield_properties.zones[ii].bottom/inputdata.domain_data.gridsizes[dim-1])-floor(inputdata.yfield_properties.zones[ii-1].bottom/inputdata.domain_data.gridsizes[dim-1]);
-          }else
-            nCells_zones[ii] = inputdata.domain_data.nCells[ dim-1 ];
-        }
-
-
-        if( my_rank==0 && inputdata.verbosity >= VERBOSITY_DEBUG_LEVEL ){
-          std::cout << "Zonation:" << std::endl;
-          for (UINT ii =0; ii<nzones;ii++){
-            std::cout << "nCells_zones[" << ii <<"] = " << nCells_zones[ii] << std::endl;
-          }
-        }
-
-#ifdef FFT_THREADS
-        //initialization for the multi-threaded fft
-        fftw_init_threads();
-#endif
-      };
-
-
-      // second constructor:
-      FFTFieldGenerator( const IDT &inputdata_
-                         , const IO_Locations &dir_
-                         , const MPI_Comm &comm_
-                         )
-        :
-        inputdata( inputdata_ )
-        , dir(dir_)
-        , comm(comm_)
-      {
+      // The constructor:
+      FFTFieldGenerator( const FD& fielddata_,
+                         const DIR& dir_,
+                         const MPI_Comm &comm_ 
+                         ) 
+        : fielddata(fielddata_),
+          dir(dir_),
+          comm(comm_) {
         //setting my_rank  (rank within the stored communicator)
         MPI_Comm_rank(comm,&my_rank);
-
+	
         //setting comm_size (size of the stored communicator)
         MPI_Comm_size(comm,&comm_size);
 
-        nzones=inputdata.yfield_properties.nz;
-        //dim=inputdata.dim;
-
-        nCells_ExtendedDomain.resize(nzones);
-        for( UINT i=0; i<nzones; ++i ){
-          nCells_ExtendedDomain[i].resize(dim);
-        }
-
-        nCells_zones.resize(nzones);
-	for (UINT ii =0; ii<nzones;ii++){
-          if(nzones>1){
-            if(ii==0)
-              nCells_zones[ii]=floor(inputdata.yfield_properties.zones[ii].bottom/inputdata.domain_data.virtual_gridsizes[dim-1]);
-            else if (ii==nzones-1)
-              nCells_zones[ii]=inputdata.domain_data.nCells[ dim-1 ]-floor(inputdata.yfield_properties.zones[ii-1].bottom/inputdata.domain_data.virtual_gridsizes[dim-1]);
-            else
-              nCells_zones[ii]=floor(inputdata.yfield_properties.zones[ii].bottom/inputdata.domain_data.virtual_gridsizes[dim-1])-floor(inputdata.yfield_properties.zones[ii-1].bottom/inputdata.domain_data.virtual_gridsizes[dim-1]);
-          }else
-            nCells_zones[ii] = inputdata.domain_data.nCells[ dim-1 ];
-        }
-
-
-        if( my_rank==0 && inputdata.verbosity >= VERBOSITY_DEBUG_LEVEL ){
-          std::cout << "Zonation:" << std::endl;
-          for (UINT ii =0; ii<nzones;ii++){
-            std::cout << "nCells_zones[" << ii <<"] = " << nCells_zones[ii] << std::endl;
-          }
-        }
-
-#ifdef FFT_THREADS
         //initialization for the multi-threaded fft
-        fftw_init_threads();
-#endif
+        //fftw_init_threads(); 
       };
-
-
-
-      // This function can be used for dim=2 or dim=3
-      // compute the size of the extended domain required for circulant embedding
-      void extend_domain()
-      {
-        for(UINT ii=0;ii<nzones;ii++){
-          for (UINT i = 0; i < dim; i++) {
-            REAL b = 0;
-            if(i==dim-1 && nzones>1){
-              b = nCells_zones[ii] * inputdata.domain_data.virtual_gridsizes[i];
-            } else {
-              b = inputdata.domain_data.extensions[i];
-            }
-            REAL a = 2.0 * b;
-            REAL f = inputdata.yfield_properties.zones[ii].embedding_factor;
-            REAL c = inputdata.yfield_properties.zones[ii].correlation_lambda[i];
-            REAL d = inputdata.domain_data.virtual_gridsizes[i];
-
-            nCells_ExtendedDomain[ii][i] = std::ceil( std::max( a , b + f * c ) / d );
-
-            logger << "Extended domain for zone #"<<ii+1<<" has " << nCells_ExtendedDomain[ii][i] << " elements in direction " << i << std::endl;
-            //std::cout << "Extended domain for zone #"<<ii+1<<" has " << nCells_ExtendedDomain[ii][i] << " elements in direction " << i << std::endl;
-
-          }
-        }
-      };
-
-
-      void export_nCellsExt( std::vector< Vector<UINT> >& nCellsExt ) const
-      {
-
-        nCellsExt.resize( nzones );
-        for(UINT ii=0;ii<nzones;ii++){
-          nCellsExt[ii].resize(dim);
-          for( UINT i=0; i<dim; i++ )
-            nCellsExt[ii][i] = nCells_ExtendedDomain[ii][i];
-        }
-      }
 
 
 
       // This function can be used for dim=3 only!
-      void generate_eigenvalues_3d( ) {
-
+      void generate_eigenvalues( ) {
+    
         Dune::Timer watch;
+        // i=2: number of cells in z-direction = #levels
+        // i=1: number of cells in y-direction = #rows
+        // i=0: number of cells in x-direction = #columns
 
-        for(UINT ii=0;ii<nzones;ii++){
+        Vector<UINT> nExt( fielddata.nCellsExt );
 
-          const UINT Nz = nCells_ExtendedDomain[ii][2]; // number of cells in z-direction = #levels
-          const UINT Ny = nCells_ExtendedDomain[ii][1]; // number of cells in y-direction = #rows
-          const UINT Nx = nCells_ExtendedDomain[ii][0]; // number of cells in x-direction = #columns
+        // indices:
+        // 0 <= iz <= (Nz-1)
+        // 0 <= iy <= (Ny-1)
+        // 0 <= ix <= (Nx-1)
 
-          // indices:
-          // 0 <= iz <= (Nz-1)
-          // 0 <= iy <= (Ny-1)
-          // 0 <= ix <= (Nx-1)
+        // Always remember this and you will be on the safe side of life!
+        // ix (most inner loop) runs faster than iy (inner loop) which runs faster than iz (most outer loop)
+        // iz belongs to Nz
+        // iy belongs to Ny
+        // ix belongs to Nx
 
-          // Always remember this and you will be on the safe side of life!
-          // ix (most inner loop) runs faster than iy (inner loop) which runs faster than iz (most outer loop)
-          // iz belongs to Nz
-          // iy belongs to Ny
-          // ix belongs to Nx
+        // Nz - Ny - Nx  or ( iz, iy, ix) is the index order you must always keep in mind
 
-          // Nz - Ny - Nx  or ( iz, iy, ix) is the index order you must always keep in mind
+        Vector<REAL> delta(dim,0.0);
+        for(int i=0;i<dim;++i)
+          delta[i] = fielddata.gridsizes[i];
+    
+        //bool bWisdomFileExists = false;
 
-          const REAL dx = inputdata.domain_data.virtual_gridsizes[0];
-          const REAL dy = inputdata.domain_data.virtual_gridsizes[1];
-          const REAL dz = inputdata.domain_data.virtual_gridsizes[2];
+        /*
+         * Definition of the block on each processor for the parallel FFT
+         *   Idea: Maybe later another data distribution. "fftw_mpi_local_size_many" is a more general routine
+         *         BUT: don't forget to load also the Lambdas in the right format
+         */
+        ptrdiff_t alloc_local, local_n0, local_0_start;
+  
+        // get FFTW data
+        if(dim==3) {
+          alloc_local = fftw_mpi_local_size_3d( nExt[2],
+                                                nExt[1],
+                                                nExt[0],
+                                                comm,
+                                                &local_n0,
+                                                &local_0_start );
+        } else {
+          alloc_local = fftw_mpi_local_size_2d( nExt[1],
+                                                nExt[0],
+                                                comm,
+                                                &local_n0, 
+                                                &local_0_start);
+        }
+        
+        std::vector<REAL> R_YY(alloc_local);
 
-          //bool bWisdomFileExists = false;
+        Vector<REAL> X( dim, 0.0 );
+        Vector<REAL> Lambda( fielddata.correlations );
+        UINT l;
 
-          /*
-           * Definition of the block on each processor for the parallel FFT
-           *   Idea: Maybe later another data distribution. "fftw_mpi_local_size_many" is a more general routine
-           *         BUT: don't forget to load also the Lambdas in the right format
-           */
-          ptrdiff_t alloc_local, local_n0, local_0_start;
+        // build up R_YY
+        // writing of the R_YY in HDF5
+        Vector<UINT> local_count(dim,0);
+        Vector<UINT> local_offset(dim,0);
 
-          // get FFTW data
-          alloc_local = fftw_mpi_local_size_3d(Nz,Ny,Nx, comm,
-                                               &local_n0, &local_0_start);
+        if( dim==3 ){
 
-
-          std::vector<REAL> R_YY(alloc_local);
-
-          Vector<REAL> X( dim, 0.0 );
-          Vector<REAL> Lambda( inputdata.yfield_properties.zones[ii].correlation_lambda );
-          UINT l;
-
-          // build up R_YY
           for (UINT iz = 0; iz < (UINT)local_n0; iz++) {
-            for (UINT iy = 0; iy < Ny; iy++) {
-              for (UINT ix = 0; ix < Nx; ix++) {
+            for (UINT iy = 0; iy < nExt[1]; iy++) {
+              for (UINT ix = 0; ix < nExt[0]; ix++) {
 
-                X[0] = std::min( (REAL) ix, (REAL) (Nx-ix) ) * dx;
-                X[1] = std::min( (REAL) iy, (REAL) (Ny-iy) ) * dy;
-                X[2] = std::min( (REAL) (iz+local_0_start), (REAL) (Nz-(iz+local_0_start)) ) * dz;
-
-                l = General::indexconversion_3d_to_1d( iz, iy, ix, local_n0, Ny, Nx );
-                R_YY[ l ] = General::autocovariancefunction(
-                                                            inputdata.yfield_properties.zones[ii].variance
-                                                            , X
-                                                            , Lambda
-                                                            , inputdata.yfield_properties.zones[ii].model
-                                                            );
+                X[2] = std::min( REAL(iz+local_0_start), REAL(nExt[2]-(iz+local_0_start)) ) * delta[2];
+                X[1] = std::min( REAL(iy), REAL(nExt[1]-iy) ) * delta[1];
+                X[0] = std::min( REAL(ix), REAL(nExt[0]-ix) ) * delta[0];
+                l = General::indexconversion_3d_to_1d( iz, iy, ix, UINT(local_n0), nExt[1], nExt[0] );
+                R_YY[ l ] = autocovariancefunction( fielddata.fieldVariance
+                                                    , X
+                                                    , Lambda
+                                                    , fielddata.variogramModel
+                                                    );
               }
             }
           }
+          local_count[0] = fielddata.nCellsExt[0];
+          local_count[1] = fielddata.nCellsExt[1];
+          local_count[2] = UINT(local_n0);
+          local_offset[2] = UINT(local_0_start);
 
-          // writing of the R_YY in HDF5
-          Vector<UINT> local_count(3,0), local_offset(3,0);
-          local_count[0]=nCells_ExtendedDomain[ii][0];
-          local_count[1]=nCells_ExtendedDomain[ii][1];
-          local_count[2]=local_n0;
+        } else {
 
-          local_offset[2]=local_0_start;
+          for (UINT iy = 0; iy < (UINT)local_n0; iy++) {
+            for (UINT ix = 0; ix < nExt[0]; ix++) {
 
-          General::log_elapsed_time( watch.elapsed(),
-                                     comm,
-                                     inputdata.verbosity,
-                                     "EVAL",
-                                     "generate_eigenvalues_3d() - part 1" );
+              X[1] = std::min( REAL(iy+local_0_start), REAL(nExt[1]-(iy+local_0_start)) ) * delta[1];
+              X[0] = std::min( REAL(ix), REAL(nExt[0]-ix) ) * delta[0];
+              l = General::indexconversion_2d_to_1d( iy, ix, UINT(local_n0), nExt[0] );
 
-          HDF5Tools::h5_pWrite( R_YY
-                                , dir.R_YY_h5file[ii]
-                                , "/R_YY"
-                                , inputdata
-                                , nCells_ExtendedDomain[ii]
-                                , local_offset
-                                , local_count
-                                , comm );
+              if(l>R_YY.size()){
+                std::cout << "ERROR: P" << my_rank << ": l=" << l 
+                          << " iy = " << iy
+                          << " ix = " << ix
+                          << " local_n0 = " << UINT(local_n0)
+                          << " nExt[0] = " << nExt[0]
+                          << std::endl;
+              }
 
-          watch.reset();
+              R_YY[ l ] = autocovariancefunction( fielddata.fieldVariance
+                                                  , X
+                                                  , Lambda
+                                                  , fielddata.variogramModel
+                                                  );
+            }
+          }
 
-          //logger << "Use FFTW_FORWARD( 3d ) to generate eigenvalues... allocate fftw_complex vector of size "
-          //	   << Nz * Ny * Nx << std::endl;
+          local_count[0] = fielddata.nCellsExt[0];
+          local_count[1] = UINT(local_n0);
+          local_offset[1] = UINT(local_0_start);
 
-          fftw_complex *Eigenvalues;
-          Eigenvalues = (fftw_complex*) fftw_malloc( (alloc_local ) * sizeof (fftw_complex) );
+        }
 
+
+        HDF5Tools::h5_pWrite( R_YY
+                              , dir.R_YY_h5file[0]
+                              , "/R_YY"
+                              , fielddata.nCellsExt
+                              , local_offset
+                              , local_count
+                              ,  comm
+                              );
+    
+
+        fftw_complex *Eigenvalues;
+        Eigenvalues = (fftw_complex*) fftw_malloc( (alloc_local ) * sizeof (fftw_complex) );
+
+        if(dim==3) {
           for( UINT iz = 0; iz < (UINT)local_n0; iz++ ) {
-            for( UINT iy = 0; iy < Ny; iy++ ) {
-              for( UINT ix = 0; ix < Nx; ix++ ) {
-
-                UINT l = General::indexconversion_3d_to_1d( iz, iy, ix, local_n0, Ny, Nx );
+            for( UINT iy = 0; iy < nExt[1]; iy++ ) {
+              for( UINT ix = 0; ix < nExt[0]; ix++ ) {
+                UINT l = General::indexconversion_3d_to_1d( iz, iy, ix, UINT(local_n0), nExt[1], nExt[0] );
                 Eigenvalues[ l ][0] = R_YY[ l ];                  // real part
                 Eigenvalues[ l ][1] = 0.0;                        // imaginary part
-
               }
             }
           }
-
-
-#ifdef FFT_THREADS
-          fftw_plan_with_nthreads(FFT_THREADS); // tell the FFT routine how many threads should be used
-#endif
-          fftw_plan plan_forward;
-          //logger << "FFTW_FORWARD(3d): Create 3d forward plan using FFTW_ESTIMATE flag..." << std::endl;
-          plan_forward = fftw_mpi_plan_dft_3d( Nz, Ny, Nx, Eigenvalues, Eigenvalues, comm, FFTW_FORWARD, FFTW_ESTIMATE );
-          //logger << "FFTW_FORWARD(3d): executing plan..." << std::endl;
-
-          fftw_execute(plan_forward);
-          fftw_destroy_plan(plan_forward);
-
-
-          //save the FFT of the R_YY
-          Vector<REAL> tmp_vec;
-
-          // Count positive eigenvalues.
-          int nPositive=0; // Eigenvalue > 1E-6
-          int nNegative=0; // Eigenvalue < -1E-6
-          int nNearZero=0; // -1E-6 <= Eigenvalue <= 1E6
-
-          //extract the FFT result in the vector which should be saved!
-          tmp_vec.resize(alloc_local);
-          for(UINT i=0; i<(UINT)alloc_local;i++){
-            tmp_vec[i] = (double)Eigenvalues[i][0]; // real part
-            if( tmp_vec[i] > 1E-6 )
-              nPositive++;
-            else if( tmp_vec[i] < -1E-6 )
-              nNegative++;
-            else
-              nNearZero++;
-          }
-
-          if( inputdata.verbosity >= VERBOSITY_DEBUG_LEVEL ){
-            std::cout << "Properties of Syy: " << std::endl;
-            std::cout << alloc_local << " eigenvalues" << std::endl;
-            std::cout << nPositive << " eigenvalues > 1E-6" << std::endl;
-            std::cout << nNegative << " eigenvalues < -1E-6" << std::endl;
-            std::cout << nNearZero << " eigenvalues near zero" << std::endl;
-          }
-
-          General::log_elapsed_time( watch.elapsed(),
-                                     comm,
-                                     inputdata.verbosity,
-                                     "FFTW",
-                                     "generate_eigenvalues_3d() - part 2" );
-
-          // save FFT of R_YY!
-          HDF5Tools::h5_pWrite( tmp_vec
-                                , dir.EV_h5file[ii]
-                                , "/FFT_R_YY"
-                                , inputdata
-                                , nCells_ExtendedDomain[ii]
-                                , local_offset
-                                , local_count
-                                , comm );
-
-          fftw_free(Eigenvalues);
-
-        } // END: for-loop over the zones
-
-        if(my_rank==0)
-          General::save_kfield_properties(
-                                          dir.kfield_properties_file
-                                          , dim
-                                          , inputdata.domain_data.extensions
-                                          , inputdata.domain_data.nCells
-                                          , inputdata.yfield_properties );
-
-      }; // End of generate_eigenvalues_3d()
-
-
-
-      void generate3d( const bool bNewEigenvalues,
-                       const bool bNewField,
-                       const bool CR=false )
-      {
-
-        if( bNewEigenvalues
-            ||
-            ( !bNewEigenvalues
-              &&
-              !General::load_kfield_properties(
-                                               dir.kfield_properties_file
-                                               , dim
-                                               , inputdata.domain_data.extensions
-                                               , inputdata.domain_data.nCells
-                                               , inputdata.yfield_properties
-                                               , my_rank
-                                               )
-              )
-            )
-          {
-            generate_eigenvalues_3d();
-          }
-        else
-          logger << "Found suitable Y-Field characteristics!." << std::endl;
-
-
-        if( !bNewField ){
-          if( my_rank == 0 ){
-            std::cout << "Warning: New Y-field will be generated due to changed Y-field characteristics." << std::endl;
+        }
+        else {
+          for( UINT iy = 0; iy < (UINT)local_n0; iy++ ) {
+            for( UINT ix = 0; ix < nExt[0]; ix++ ) {
+              UINT l = General::indexconversion_2d_to_1d( iy, ix, UINT(local_n0), nExt[0] );
+              Eigenvalues[ l ][0] = R_YY[ l ];                  // real part
+              Eigenvalues[ l ][1] = 0.0;                        // imaginary part
+            }
           }
         }
 
-        for(UINT ii=0;ii<nzones;ii++){
+        General::log_elapsed_time( watch.elapsed(),
+                                   comm,
+                                   General::verbosity,
+                                   "EVAL",
+                                   "generate_eigenvalues()" );
+        watch.reset();
 
-          // size of the extended domain
-          const UINT Nz = nCells_ExtendedDomain[ii][2];
-          const UINT Ny = nCells_ExtendedDomain[ii][1];
-          const UINT Nx = nCells_ExtendedDomain[ii][0];
+        //fftw_plan_with_nthreads(FFT_THREADS); // tell the FFT routine how many threads should be used
+    
+        fftw_plan plan_forward;
+        //logger << "FFTW_FORWARD(3d): Create 3d forward plan using FFTW_ESTIMATE flag..." << std::endl;
+        if(dim ==  3){
+          plan_forward = fftw_mpi_plan_dft_3d( nExt[2],
+                                               nExt[1],
+                                               nExt[0],
+                                               Eigenvalues,
+                                               Eigenvalues,
+                                               comm,
+                                               FFTW_FORWARD,
+                                               FFTW_ESTIMATE );
+        } else {
+          plan_forward = fftw_mpi_plan_dft_2d( nExt[1],
+                                               nExt[0],
+                                               Eigenvalues,
+                                               Eigenvalues,
+                                               comm,
+                                               FFTW_FORWARD,
+                                               FFTW_ESTIMATE );
+        }
+        //logger << "FFTW_FORWARD(3d): executing plan..." << std::endl;
 
-          REAL scalingfactor = REAL( Nz * Ny * Nx );
+        fftw_execute(plan_forward);
+        fftw_destroy_plan(plan_forward);
 
-          /*
-           * Definition of the block on each processor for the parallel FFT
-           *   Idea: Maybe later another data distribution. "fftw_mpi_local_size_many" is a more general routine
-           *         BUT: don't forget to load also the Lambdas in the right format
-           */
-          ptrdiff_t alloc_local, local_n0, local_0_start;
+        General::log_elapsed_time( watch.elapsed(),
+                                   comm,
+                                   General::verbosity,
+                                   "FFTW",
+                                   "generate_eigenvalues()" );
+        watch.reset();
 
-          // get the FFT data
-          alloc_local = fftw_mpi_local_size_3d(Nz ,Ny,Nx, comm,
-                                               &local_n0, &local_0_start);
+        //save the FFT of the R_YY
+        Vector<REAL> tmp_vec;
+	
+        // Count positive eigenvalues.
+        int nPositive=0; // Eigenvalue > 1E-6
+        int nNegative=0; // Eigenvalue < -1E-6
+        int nNearZero=0; // -1E-6 <= Eigenvalue <= 1E6
+
+        //extract the FFT result in the vector which should be saved!
+        tmp_vec.resize(alloc_local);
+        for(UINT i=0; i<(UINT)alloc_local;i++){
+          tmp_vec[i] = (double)Eigenvalues[i][0]; // real part
+          if( tmp_vec[i] > 1E-6 )
+            nPositive++;
+          else if( tmp_vec[i] < -1E-6 )
+            nNegative++;
+          else
+            nNearZero++;
+        }
+
+        if( fielddata.showEV ){
+          std::cout << "Properties of Syy: " << std::endl;
+          std::cout << alloc_local << " eigenvalues" << std::endl;          
+          std::cout << nPositive << " eigenvalues > 1E-6" << std::endl;
+          std::cout << nNegative << " eigenvalues < -1E-6" << std::endl;
+          std::cout << nNearZero << " eigenvalues near zero" << std::endl;
+        }
+
+        
+        General::log_elapsed_time( watch.elapsed(),
+                                   comm,
+                                   General::verbosity,
+                                   "EVAL",
+                                   "generate_eigenvalues(): count negative Eigenvalues" );
+
+        // save FFT of R_YY!
+        HDF5Tools::h5_pWrite( tmp_vec
+                              , dir.EV_h5file[0]
+                              , "/FFT_R_YY"
+                              , fielddata.nCellsExt
+                              , local_offset
+                              , local_count
+                              , comm
+                              );
+
+        fftw_free(Eigenvalues);
+	
+	
+        if(my_rank==0)
+          save_yfield_properties( dir.yfield_properties_file );
+	
+      }; // End of generate_eigenvalues()
+
+    
+
+      void generateY( const bool bNewEigenvalues,
+                      const bool bNewField,
+                      const bool CR=false )
+      {
+        Dune::Timer watch;
+        
+        if( bNewEigenvalues 
+            ||
+            !load_yfield_properties( dir.yfield_properties_file, my_rank )
+            ) {
+          std::cout << "New geostatistical data: compute eigenvalues of the circulant matrix." << std::endl;
+          generate_eigenvalues();        
+        }
+        else
+          std::cout << "Given geostatistical data match existing field." << std::endl;
 
 
-          //loading in HDF5
-          Vector<REAL> tmp_vec; // temporary vector for the loaded eigenvalues
-
-          Vector<UINT> local_count(3,0), local_offset(3,0);
-          local_count[0]=nCells_ExtendedDomain[ii][0];
-          local_count[1]=nCells_ExtendedDomain[ii][1];
-          local_count[2]=local_n0;
-
-          local_offset[2]=local_0_start;
-
-          HDF5Tools::h5_pRead( tmp_vec
-                               , dir.EV_h5file[ii]
-                               , "/FFT_R_YY"
-                               , inputdata
-                               , local_offset
-                               , local_count
-                               , comm
-                               );
-
-          Dune::Timer watch;
-          watch.reset();
-
-
-          // initialize pseudo-random generator
-          std::random_device rd;
-          std::mt19937_64 gen; // 64-bit Mersenne Twister
-          std::normal_distribution<> ndist(0,1); // mean = 0, sigma = 1
-
-          int seed = inputdata.yfield_properties.random_seed;
-          if( seed == 0 ){
-            seed = rd();
+        if( my_rank == 0 ){
+          if( !bNewField ){
+            std::cout << "New field will be generated due to changed geostatistical data." << std::endl;
+          } else {
+            std::cout << "New field will be generated (user's choice)." << std::endl;
           }
-          // different seed for different processors -> very IMPORTANT to obtain the right result!
-          seed += my_rank;
+        }
+        
+        Vector<UINT> nExt( fielddata.nCellsExt );
+          
+        REAL scalingfactor = REAL( nExt.componentsproduct() );
+	
+        /*
+         * Definition of the block on each processor for the parallel FFT
+         *   Idea: Maybe later another data distribution. "fftw_mpi_local_size_many" is a more general routine
+         *         BUT: don't forget to load also the Lambdas in the right format
+         */
+        ptrdiff_t alloc_local, local_n0, local_0_start;
+  
+        // get the FFT data
 
-          gen.seed( seed );
+        Vector<UINT> local_count(dim,0);
+        Vector<UINT> local_offset(dim,0);
+        if(dim==3){
+          alloc_local = fftw_mpi_local_size_3d( nExt[2],
+                                                nExt[1],
+                                                nExt[0],
+                                                comm,
+                                                &local_n0,
+                                                &local_0_start );
+          local_count[2] = UINT(local_n0);
+          local_count[1] = fielddata.nCellsExt[1];
+          local_count[0] = fielddata.nCellsExt[0];
+          local_offset[2] = UINT(local_0_start);
+        }
+        else {
+          alloc_local = fftw_mpi_local_size_2d( nExt[1],
+                                                nExt[0],
+                                                comm,
+                                                &local_n0,
+                                                &local_0_start );
+          local_count[1] = UINT(local_n0);
+          local_count[0] = fielddata.nCellsExt[0];
+          local_offset[1] = UINT(local_0_start);
+        }
+
+
+        //loading in HDF5
+        Vector<REAL> tmp_vec; // temporary vector for the loaded eigenvalues
+        HDF5Tools::h5_pRead( tmp_vec
+                             , dir.EV_h5file[0]
+                             , "/FFT_R_YY"
+                             , local_offset
+                             , local_count
+                             , comm
+                             );
+
+        watch.reset();
+
+        // initialize pseudo-random generator
+        std::random_device rd;
+        std::mt19937_64 gen; // 64-bit Mersenne Twister
+        std::normal_distribution<> ndist(0,1); // mean = 0, sigma = 1
+
+        int seed = fielddata.seed;
+        if( seed == 0 ){
+          seed = rd();
+        }
+        // different seed for different processors -> very IMPORTANT to obtain the right result!
+        seed += my_rank;
+
+        gen.seed( seed );
             
-          if(my_rank==0)
-            std::cout << "seed = " << seed << std::endl;
+        if(my_rank==0)
+          std::cout << "seed = " << seed << std::endl;
 
 	
-          fftw_complex *KField;
-          KField = (fftw_complex*) fftw_malloc( ( alloc_local ) * sizeof (fftw_complex) );
+        fftw_complex *KField;
+        KField = (fftw_complex*) fftw_malloc( ( alloc_local ) * sizeof (fftw_complex) );
+	
+        fftw_complex random_epsilon;
+	
+        // add randomness into the variation of each field element
+        //  important to loop over tmp_vec.size() not over all alloc_local, because tmp_vec.size() <= alloc_local
+        for (UINT jj = 0; jj < tmp_vec.size() ; jj++) {
 
-          fftw_complex random_epsilon;
+          // normal distribution with mean 0 and standard deviation 1
+          random_epsilon[0] = ndist(gen);
+          random_epsilon[1] = ndist(gen);
 
-          // add randomness into the variation of each field element
-          //  important to loop over tmp_vec.size() not over all alloc_local, because tmp_vec.size() <= alloc_local
-          for (UINT jj = 0; jj < tmp_vec.size() ; jj++) {
+          REAL lambda = tmp_vec[ jj ] / scalingfactor;
 
+          if (lambda > 0.0) {
+            KField[ jj ][0] = sqrt( lambda ) * random_epsilon[0];
+            KField[ jj ][1] = sqrt( lambda ) * random_epsilon[1];
+          } 
+          else {
+            KField[ jj ][0] = 0.0; // sqrt( -lambda ) * random_epsilon[0];
+            KField[ jj ][1] = 0.0; // sqrt( -lambda ) * random_epsilon[1];
+          }
+        }
+        
+        tmp_vec.resize(0);
+	
+        General::log_elapsed_time( watch.elapsed(),
+                                   comm,
+                                   General::verbosity,
+                                   "EVAL",
+                                   "generateY() - part 1" );
+        watch.reset();
 
-            // normal distribution with mean 0 and standard deviation 1
-            random_epsilon[0] = ndist(gen);
-            random_epsilon[1] = ndist(gen);
+        // fftw_plan_with_nthreads(1); // tell the FFT routine how many threads should be used
 
-            REAL lambda = tmp_vec[ jj ] / scalingfactor;
+        fftw_plan plan_forward;
+            
+        if(dim==3)
+          plan_forward = fftw_mpi_plan_dft_3d( nExt[2], 
+                                               nExt[1], 
+                                               nExt[0], 
+                                               KField,
+                                               KField,
+                                               comm,
+                                               FFTW_FORWARD,
+                                               FFTW_ESTIMATE );
+        else
+          plan_forward = fftw_mpi_plan_dft_2d( nExt[1], 
+                                               nExt[0], 
+                                               KField,
+                                               KField,
+                                               comm,
+                                               FFTW_FORWARD,
+                                               FFTW_ESTIMATE );
 
-            if (lambda > 0.0) {
-              KField[ jj ][0] = sqrt( lambda ) * random_epsilon[0];
-              KField[ jj ][1] = sqrt( lambda ) * random_epsilon[1];
-            }
-            else {
+        //std::cout << "FFTW_FORWARD(3d): execute forward plan..." << std::endl;
+        fftw_execute( plan_forward );  
+        fftw_destroy_plan( plan_forward );
 
-              KField[ jj ][0] = 0.0; // sqrt( -lambda ) * random_epsilon[0];
-              KField[ jj ][1] = 0.0; // sqrt( -lambda ) * random_epsilon[1];
-            }
+        General::log_elapsed_time( watch.elapsed(),
+                                   comm,
+                                   General::verbosity,
+                                   "FFTW3",
+                                   "generateY() - part 2" );
+        watch.reset();
+
+        REAL beta_mean=0.0;  
+
+        if(my_rank==0){
+          beta_mean = fielddata.beta;
+        }
+            
+        MPI_Bcast(&(beta_mean),1,MPI_DOUBLE,0,comm);
+
+        
+        if(my_rank==0)
+          std::cout << "FFTFieldGenerator(3d): beta_mean = " << beta_mean << std::endl;
+
+        UINT nz = fielddata.nCells[ 2 ];
+        UINT ny = fielddata.nCells[ 1 ];
+        UINT nx = fielddata.nCells[ 0 ];
+
+        local_count[0] = nx;
+        local_count[1] = ny;
+        local_count[2] = nz;
+	
+        //local_count correction!
+        UINT local_nField = 0;
+
+        if( dim==3 ){
+
+          if( (UINT)local_0_start < nz ){
+            local_offset[2] = local_0_start;
+            if( (UINT)local_n0 + (UINT)local_0_start <= nz ){ 
+              local_count[2] = UINT(local_n0);
+              local_nField = UINT(local_n0);
+            } else {
+              local_count[2] = nz - UINT(local_0_start);
+              local_nField = nz - UINT(local_0_start);
+            } 
+          } else {
+            // Actually, this case should not occur!
+            local_count[2] = 0;
           }
 
-          tmp_vec.resize(0);
+        }
+        else{
 
-#ifdef FFT_THREADS
-          fftw_plan_with_nthreads(FFT_THREADS); // tell the FFT routine how many threads should be used
-#endif
-          fftw_plan plan_backward;
-
-          //logger << "FFTW_BACKWARD(3d): create backward plan using FFTW_ESTIMATE..." << std::endl;
-          plan_backward = fftw_mpi_plan_dft_3d( Nz, Ny, Nx, KField, KField, comm, FFTW_BACKWARD, FFTW_ESTIMATE );
-
-          //logger << "FFTW_BACKWARD(3d): execute backward plan..." << std::endl;
-          fftw_execute( plan_backward );
-          fftw_destroy_plan( plan_backward );
-
-
-          REAL beta_mean=0.0;
-
-          if(!CR){
-            if(my_rank==0){
-              if(inputdata.yfield_properties.zones[ii].qbb_y>0.0){
-                REAL rv = ndist(gen);
-                beta_mean = inputdata.yfield_properties.zones[ii].beta + rv * std::sqrt( inputdata.yfield_properties.zones[ii].qbb_y );
-              }
-              else
-                beta_mean= inputdata.yfield_properties.zones[ii].beta;
-            }
+          if( (UINT)local_0_start < ny ){
+            local_offset[1] = local_0_start;
+            if( (UINT)local_n0 + (UINT)local_0_start <= ny ){ 
+              local_count[1] = UINT(local_n0);
+              local_nField = UINT(local_n0);
+            } else {
+              local_count[1] = ny - UINT(local_0_start);
+              local_nField = ny - UINT(local_0_start);
+            } 
+          } else {
+            // Actually, this case should not occur!
+            local_count[1] = 0;
           }
 
+        }
+	
+        UINT L,l;
+        Vector<REAL> tmp( local_count.componentsproduct() );
 
+        if(dim==3){
 
-          MPI_Bcast(&(beta_mean),1,MPI_DOUBLE,0,comm);
-
-          logger << "FFTFieldGenerator(3d): beta_mean = " << beta_mean << std::endl;
-
-          //correction du to previous zones
-          UINT zone_offset=0;
-          for(UINT jj=0; jj<ii; jj++)
-            zone_offset+=nCells_zones[jj];
-
-          UINT nz = nCells_zones[ii];
-          UINT ny = inputdata.domain_data.nCells[ 1 ];
-          UINT nx = inputdata.domain_data.nCells[ 0 ];
-
-          // extract the zone with the original domain size:
-
-          local_count[0]=nx;
-          local_count[1]=ny;
-          local_count[2]=nz;
-
-          //local_count correction!
-          UINT local_nField=0;
-          if((UINT)local_0_start<nz){
-            local_offset[2]=local_0_start+zone_offset;
-            if((UINT)local_n0+(UINT)local_0_start<=nz){
-              local_count[2]=local_n0;
-              local_nField=local_n0;
-            }else{
-              local_count[2]=nz-local_0_start;
-              local_nField=nz-local_0_start;
-            }
-          }else{
-            // the sensitivities have dimension of the grid and not the extended grid. So one some processors nothing needes to be read!!!
-            local_count[2]=0;
-          }
-
-          UINT L,l;
-          Vector<REAL> tmp(local_count[0]*local_count[1]*local_count[2]);
-          for (UINT iz = 0; iz < (UINT) local_n0; iz++) {
-            for (UINT iy = 0; iy < Ny; iy++) {
-              for (UINT ix = 0; ix < Nx; ix++) {
-                L = General::indexconversion_3d_to_1d( iz, iy, ix, local_n0, Ny, Nx );
-                l = General::indexconversion_3d_to_1d( iz, iy, ix, local_nField, ny, nx );
+          for (UINT iz = 0; iz < UINT(local_n0); iz++) {
+            for (UINT iy = 0; iy < nExt[1]; iy++) {
+              for (UINT ix = 0; ix < nExt[0]; ix++) {
+                L = General::indexconversion_3d_to_1d( iz, iy, ix, UINT(local_n0), nExt[1], nExt[0] );
+                l = General::indexconversion_3d_to_1d( iz, iy, ix, UINT(local_nField), ny, nx );
                 if( (iz+local_0_start < nz) && (iy < ny) && (ix < nx) ){
                   tmp[ l ] = KField[ L ][0] + beta_mean;
                 }
@@ -598,677 +581,106 @@ namespace Dune {
             }
           }
 
-          fftw_free( KField );
-
-          General::log_elapsed_time( watch.elapsed(),
-                                     comm,
-                                     inputdata.verbosity,
-                                     "FFTW",
-                                     "generate_3d()" );
-
-          // save the field to disc
-          if(CR){
-            if(ii>0)
-              HDF5Tools::h5_pAppend( tmp,
-                                     dir.unconditionalField_h5file,
-                                     "/YField",
-                                     local_count,
-                                     local_offset,
-                                     comm );
-            else
-              HDF5Tools::h5_pWrite( tmp,
-                                    dir.unconditionalField_h5file,
-                                    "/YField",
-                                    inputdata,
-                                    inputdata.domain_data.nCells,
-                                    local_offset,
-                                    local_count,
-                                    comm );
-          }else{
-            if(ii>0)
-              HDF5Tools::h5_pAppend( tmp,
-                                     dir.kfield_h5file,
-                                     "/YField",
-                                     local_count,
-                                     local_offset,
-                                     comm );
-            else
-              HDF5Tools::h5_pWrite( tmp,
-                                    dir.kfield_h5file,
-                                    "/YField",
-                                    inputdata,
-                                    inputdata.domain_data.nCells,
-                                    local_offset,
-                                    local_count,
-                                    comm );
-          }
-
-          // set zonation matrix right!
-          //if( !General::bFileExists( dir.zonation_matrix[ii] ) ){
-          l=tmp.size();
-          tmp.resize(0);
-          tmp.resize(l,1.0);
-          HDF5Tools::h5_pWrite( tmp,
-                                dir.zonation_matrix[ii],
-                                "/X",
-                                inputdata,
-                                inputdata.domain_data.nCells,
-                                local_offset,
-                                local_count,
-                                comm );
-          //}
-
-        }// END loop over zones
-
-        if(comm_size==1){
-          Vector<UINT> local_count,local_offset;
-          HDF5Tools::h5g_Read( YFieldVector,
-                               dir.kfield_h5file,
-                               "/YField",
-                               local_offset,
-                               local_count,
-                               inputdata
-                               );
-
-          Dune::Timer watch;
-
-          UINT N = YFieldVector.size();
-          //YFieldVector_Well.resize( N );
-          YFieldVector_Well = YFieldVector;
-
-          KFieldVector.resize( N );
-          for( UINT i=0; i<N; ++i ){
-            KFieldVector[i] = std::exp( YFieldVector[i] );
-          }
-          KFieldVector_Well = KFieldVector;
-
-          General::log_elapsed_time( watch.elapsed(),
-                                     inputdata.verbosity,
-                                     "EVAL",
-                                     "Evaluate KFieldVector once at the beginning." );
-
         }
-
-      }; // End of void generate_3d()
-
-
-
-      // This function can be used for dim=2 only!
-
-      void generate_eigenvalues_2d()
-      {
-
-        Dune::Timer watch;
-        watch.reset();
-
-        for(UINT ii=0;ii<nzones;ii++){
-          //size of the extended domain
-          const UINT Ny = nCells_ExtendedDomain[ii][1]; // number of cells in y-direction = #rows
-          const UINT Nx = nCells_ExtendedDomain[ii][0]; // number of cells in x-direction = #columns
-
-          // Very important:
-          // The indices iy and ix follow this rule:
-          // 0 <= iy <= (Ny-1)
-          // 0 <= ix <= (Nx-1)
-          //
-          // Always remember this and you will be on the safe side of life!
-          // ix (inner loop) runs faster than iy (outer loop)
-          // iy belongs to Ny
-          // ix belongs to Nx
-
-          // get the grid size
-          const REAL dx = inputdata.domain_data.virtual_gridsizes[0];
-          const REAL dy = inputdata.domain_data.virtual_gridsizes[1];
-
-
-          /*
-           * Definition of the block on each processor for the parallel FFT
-           *   Idea: Maybe later another data distribution. "fftw_mpi_local_size_many" is a more general routine
-           *         BUT: don't forget to load also the Lambdas in the right format
-           */
-          ptrdiff_t alloc_local, local_n0, local_0_start;
-
-          // get FFTW data
-          alloc_local = fftw_mpi_local_size_2d(Ny,Nx, comm,
-                                               &local_n0, &local_0_start);
-
-          bool bWisdomFileExists = false;
-
-          Vector<REAL> R_YY(alloc_local);
-
-          Vector<REAL> X(dim, 0.0);
-          Vector<REAL> Lambda(inputdata.yfield_properties.zones[ii].correlation_lambda);
-
-
-
-          // build up R_YY
-          UINT l;
-          for( UINT iy = 0; iy < (UINT)local_n0; iy++ ){
-            for( UINT ix = 0; ix < Nx; ix++ ) {
-              X[0]=std::min( (REAL) ix, (REAL) (Nx-ix) ) * dx;
-              X[1]=std::min( (REAL) iy+local_0_start, (REAL) (Ny-(iy+local_0_start)) ) * dy;
-              l = General::indexconversion_2d_to_1d( iy, ix, local_n0, Nx );
-              R_YY[l]=General::autocovariancefunction(
-                                                      inputdata.yfield_properties.zones[ii].variance
-                                                      , X
-                                                      , Lambda
-                                                      , inputdata.yfield_properties.zones[ii].model
-                                                      );
-            }
-          }
-
-          // save the R_YY in HDF5
-          Vector<REAL> tmp_vec;
-
-          Vector<UINT> local_count(2,0), local_offset(2,0);
-          local_count[0]=nCells_ExtendedDomain[ii][0];
-          local_count[1]=local_n0;
-
-          local_offset[1]=local_0_start;
-
-          General::log_elapsed_time( watch.elapsed(),
-                                     comm,
-                                     inputdata.verbosity,
-                                     "EVAL",
-                                     "generate_eigenvalues_2d() - part 1" );
-
-          HDF5Tools::h5_pWrite( R_YY
-                                , dir.R_YY_h5file[ii]
-                                , "/R_YY"
-                                , inputdata
-                                , nCells_ExtendedDomain[ii]
-                                , local_offset
-                                , local_count
-                                , comm );
-
-          watch.reset();
-
-
-          //logger << "Use FFTW_FORWARD(2d) to generate eigenvalues..." << std::endl;
-          /*
-           *
-           * calculate the FFT of R_YY in the extended domain!!!
-           *
-           */
-
-          fftw_complex *Eigenvalues;
-          Eigenvalues = (fftw_complex*) fftw_malloc((/*Ny * Nx*/alloc_local) * sizeof (fftw_complex));
-
-          for (UINT iy = 0; iy < /*Ny*/(UINT)local_n0; iy++) {
-            for (UINT ix = 0; ix < Nx; ix++) {
-              UINT l = General::indexconversion_2d_to_1d( iy, ix, local_n0, Nx );
-              Eigenvalues[l][0] = R_YY[ l ];
-              Eigenvalues[l][1] = 0.0;
-            }
-          }
-
-#ifdef FFT_THREADS
-          fftw_plan_with_nthreads(FFT_THREADS); // tell the FFT routine how many threads should be used
-#endif
-          fftw_plan plan_forward_2d;
-          if (!bWisdomFileExists) {
-            plan_forward_2d = fftw_mpi_plan_dft_2d( Ny, Nx, Eigenvalues, Eigenvalues, comm, FFTW_FORWARD, FFTW_ESTIMATE);
-            //logger << "FFTW_FORWARD(2d): create forward plan using FFTW_ESTIMATE" << std::endl;
-          } else {
-            plan_forward_2d = fftw_mpi_plan_dft_2d( Ny, Nx, Eigenvalues, Eigenvalues, comm, FFTW_FORWARD, FFTW_MEASURE);
-            //logger << "FFTW_FORWARD(2d): create forward plan using FFTW_MEASURE" << std::endl;
-          }
-
-          fftw_execute(plan_forward_2d);
-          fftw_destroy_plan(plan_forward_2d);
-
-
-          // Count positive eigenvalues.
-          int nPositive=0; // Eigenvalue > 1E-6
-          int nNegative=0; // Eigenvalue < -1E-6
-          int nNearZero=0; // -1E-6 <= Eigenvalue <= 1E6
-          tmp_vec.resize(alloc_local);
-          for(UINT i=0;i<(UINT)alloc_local;i++){
-            tmp_vec[i] = (double)Eigenvalues[i][0];
-            if( tmp_vec[i] > 1E-6 )
-              nPositive++;
-            else if( tmp_vec[i] < -1E-6 )
-              nNegative++;
-            else
-              nNearZero++;
-          }
-
-          if( inputdata.verbosity >= VERBOSITY_DEBUG_LEVEL ){
-            std::cout << "Properties of Syy: " << std::endl;
-            std::cout << alloc_local << " eigenvalues" << std::endl;
-            std::cout << nPositive << " eigenvalues > 1E-6" << std::endl;
-            std::cout << nNegative << " eigenvalues < -1E-6" << std::endl;
-            std::cout << nNearZero << " eigenvalues near zero" << std::endl;
-          }
-
-          General::log_elapsed_time( watch.elapsed(),
-                                     comm,
-                                     inputdata.verbosity,
-                                     "FFTW",
-                                     "generate_eigenvalues_2d() - part 2" );
-
-          // Save eigenvalues of Syy (= FFT of its first row) in HDF5.
-          HDF5Tools::h5_pWrite( tmp_vec
-                                , dir.EV_h5file[ii]
-                                , "/FFT_R_YY"
-                                , inputdata
-                                , nCells_ExtendedDomain[ii]
-                                , local_offset
-                                , local_count
-                                , comm );
-
-
-          fftw_free(Eigenvalues);
-          //fftw_free(R_YY_complex);
-        } //end for-loop of zones
-
-
-        // save the Y-Field properties in text format
-        if(my_rank==0)
-          General::save_kfield_properties(
-                                          dir.kfield_properties_file
-                                          , dim
-                                          , inputdata.domain_data.extensions
-                                          , inputdata.domain_data.nCells
-                                          , inputdata.yfield_properties);
-
-      }; // End of void generate_eigenvalues_2d()
-
-
-
-      void generate2d( const bool bNewEigenvalues,
-                       const bool bNewField,
-                       const bool CR=false
-                       )
-      {
-        if( bNewEigenvalues
-            ||
-            ( !bNewEigenvalues
-              &&
-              !General::load_kfield_properties(
-                                               dir.kfield_properties_file
-                                               , dim
-                                               , inputdata.domain_data.extensions
-                                               , inputdata.domain_data.nCells
-                                               , inputdata.yfield_properties
-                                               , my_rank
-                                               )
-              )
-            ) {
-          // generate new eigenvalues
-          generate_eigenvalues_2d();
-        }
-        else {
-          logger << "Found suitable Y-field characteristics!" << std::endl;
-        }
-
-        if( !bNewField ){
-          if( my_rank == 0 ){
-            std::cout << "Warning: New Y-field will be generated due changed Y-field characteristics." << std::endl;
-          }
-        }
-
-        for(UINT ii=0;ii<nzones;ii++){
-
-          // size of the extended domain
-          const UINT Ny = nCells_ExtendedDomain[ii][1];
-          const UINT Nx = nCells_ExtendedDomain[ii][0];
-
-          //logger<<"Ny : "<<Ny<<std::endl;
-          //logger<<"Nx : "<<Nx<<std::endl;
-
-          REAL scalingfactor = REAL( Ny * Nx );
-
-          bool bWisdomFileExists = false;
-
-          /*
-           * Definition of the block on each processor for the parallel FFT
-           *   Idea: Maybe later another data distribution. "fftw_mpi_local_size_many" is a more general routine
-           *         BUT: don't forget to load also the Lambdas in the right format
-           */
-          ptrdiff_t alloc_local, local_n0, local_0_start;
-
-          // get the FFT data
-          alloc_local = fftw_mpi_local_size_2d(Ny,Nx, comm,
-                                               &local_n0, &local_0_start);
-
-
-          // load the eigenvalues from HDF5 file
-          Vector<REAL> tmp_vec;
-
-          Vector<UINT> local_count(2,0), local_offset(2,0);
-          local_count[0]=nCells_ExtendedDomain[ii][0];
-          local_count[1]=local_n0;
-
-          local_offset[1]=local_0_start;
-
-          HDF5Tools::h5_pRead( tmp_vec
-                               , dir.EV_h5file[ii]
-                               , "/FFT_R_YY"
-                               , inputdata
-                               , local_offset
-                               , local_count
-                               , comm
-                               );
-
-          Dune::Timer watch;
-          watch.reset();
-
-          // initialize pseudo-random generator
-          std::random_device rd;
-          std::mt19937_64 gen; // 64-bit Mersenne Twister
-          std::normal_distribution<> ndist(0,1); // mean = 0, sigma = 1
-
-          int seed = inputdata.yfield_properties.random_seed;
-          if( seed == 0 ){
-            seed = rd();
-          }
-          // different seed for different processors -> very IMPORTANT to obtain the right result!
-          seed += my_rank +ii;
-
-          gen.seed( seed );
-            
-          if(my_rank==0)
-            std::cout << "seed = " << seed << std::endl;
-
-
-          fftw_complex *KField;
-          KField = (fftw_complex*) fftw_malloc(( /*Ny * Nx*/alloc_local ) * sizeof (fftw_complex));
-
-          fftw_complex random_epsilon;
-
-
-          REAL lambda=0.0;
-          // add some rendomness
-          //  important to loop over tmp_vec.size() not over all alloc_local, because tmp_vec.size() <= alloc_local
-
-          int countNegativeValues = 0;
-          REAL lambda_min = 1e+12;
-
-          for (UINT jj = 0; jj < tmp_vec.size(); jj++) {
-
-            random_epsilon[0] = ndist(gen);
-            random_epsilon[1] = ndist(gen);
-      
-            lambda = tmp_vec[ jj ] / scalingfactor;
-
-            lambda_min = std::min( lambda_min, lambda );
-
-            if (lambda > 1e-12) {
-
-              KField[ jj ][0] = sqrt(lambda) * random_epsilon[0];
-              KField[ jj ][1] = sqrt(lambda) * random_epsilon[1];
-
-            }
-            else {
-
-              countNegativeValues++;
-              //std::cout << "2D-case ---------> WARNING: negative eigenvalue lambda = "
-              //          << lambda
-              //          << " Choose 0."
-              //          << std::endl;
-              KField[ jj ][0] = 0.0; // sqrt(-lambda) * random_epsilon[0];
-              KField[ jj ][1] = 0.0; // sqrt(-lambda) * random_epsilon[1];
-
-            }
-          }
-
-
-          if( inputdata.verbosity >= VERBOSITY_DEBUG_LEVEL ){
-            std::cout << "2D-case ---------> countNegativeValues = "
-                      << countNegativeValues
-                      << std::endl;
-            std::cout << "2D-case ---------> lambda_min = "
-                      << lambda_min
-                      << std::endl;
-          }
-
-
-          tmp_vec.resize(0);
-
-#ifdef FFT_THREADS
-          fftw_plan_with_nthreads(FFT_THREADS); // tell the FFT routine how many threads should be used
-#endif
-          fftw_plan plan_backward_2d;
-
-          if (!bWisdomFileExists) {
-            //logger << "FFTW(2d): create backward plan using FFTW_ESTIMATE" << std::endl;
-            plan_backward_2d = fftw_mpi_plan_dft_2d( Ny, Nx, KField, KField, comm,
-                                                     FFTW_FORWARD, // FFTW_BACKWARD,
-                                                     FFTW_ESTIMATE );
-          } else {
-            //logger << "FFTW(2d): create backward plan using FFTW_MEASURE" << std::endl;
-            plan_backward_2d = fftw_mpi_plan_dft_2d( Ny, Nx, KField, KField, comm,
-                                                     FFTW_FORWARD, // FFTW_BACKWARD,
-                                                     FFTW_MEASURE );
-          }
-
-          //fftw_execute_dft(plan_backward_2d, EigenvaluesRandomized, KField);
-          fftw_execute(plan_backward_2d);
-          fftw_destroy_plan(plan_backward_2d);
-
-
-          /*
-           * VERY IMPORTANT: beta_mean needs to be the same on all Prozesses. So a MPI_Bcast is needed!
-           */
-          REAL beta_mean=0.0;
-          if(!CR){
-            if(my_rank==0){
-              if(inputdata.yfield_properties.zones[ii].qbb_y>0.0)
-                {
-                  REAL rv = ndist(gen);
-                  beta_mean = inputdata.yfield_properties.zones[ii].beta + rv * std::sqrt( inputdata.yfield_properties.zones[ii].qbb_y );
-                }
-              else
-                beta_mean = inputdata.yfield_properties.zones[ii].beta;
-            }
-            MPI_Bcast(&(beta_mean),1,MPI_DOUBLE,0,comm);
-          }
-          logger << "FFTFieldGenerator(2d): beta_mean = " << beta_mean << std::endl;
-
-
-          //correction due to previous zones
-          UINT zone_offset=0;
-          for(UINT jj=0; jj<ii; jj++)
-            zone_offset+=nCells_zones[jj];
-
-          UINT nx = inputdata.domain_data.nCells[0];
-
-          UINT ny = nCells_zones[ii];
-
-          // extract the zone with the original domain size:
-
-          local_count[0]=nx;
-          local_count[1]=ny;
-
-          //local_count correction!
-          UINT local_nField=0;
-          if((UINT)local_0_start<ny){
-            local_offset[1]=local_0_start+zone_offset;
-            if((UINT)local_n0+(UINT)local_0_start<=ny){
-              local_count[1]=local_n0;
-              local_nField=local_n0;
-            }else{
-              local_count[1]=ny-local_0_start;
-              local_nField=ny-local_0_start;
-            }
-          }else{
-            // the sensitivities have dimension of the grid and not the extended grid. So one some processors nothing needes to be read!!!
-            local_count[1]=0;
-          }
-
-
-          Vector<REAL> tmp(local_count[0]*(local_count[1]));
-          Vector<REAL> extended_tmp(Nx*(UINT)local_n0);
-          UINT L,l;
-          //logger<<" l for zone #"<<ii<<", local_n0 = "<<local_n0<<std::endl;
-          for( UINT iy=0; iy < (UINT)local_n0; iy++ ){
-            for( UINT ix = 0; ix < Nx; ix++ ){
-              L = General::indexconversion_2d_to_1d( iy, ix, local_n0, Nx );
-              l = General::indexconversion_2d_to_1d( iy, ix, local_nField , nx );
+        else{
+          for (UINT iy = 0; iy < (UINT) local_n0; iy++) {
+            for (UINT ix = 0; ix < nExt[0]; ix++) {
+              L = General::indexconversion_2d_to_1d( iy, ix, UINT(local_n0), nExt[0] );
+              l = General::indexconversion_2d_to_1d( iy, ix, local_nField, nx );
               if( (iy+local_0_start < ny) && (ix < nx) ){
-                //if(zone_offset)
-                //    logger<<"l : "<<l<<beta_mean<<std::endl;
-
                 tmp[ l ] = KField[ L ][0] + beta_mean;
               }
-
-              extended_tmp[L] = KField[ L ][0] + beta_mean;
-
             }
           }
+        }
+            
+        fftw_free( KField );
 
-          fftw_free( KField );
+        General::log_elapsed_time( watch.elapsed(),
+                                   comm,
+                                   General::verbosity,
+                                   "EVAL",
+                                   "generateY() - part 3" );
 
-          General::log_elapsed_time( watch.elapsed(),
-                                     comm,
-                                     inputdata.verbosity,
-                                     "FFTW",
-                                     "generate_2d()" );
+        // save the field to disc
+        HDF5Tools::h5_pWrite( tmp,
+                              dir.yfield_h5file,
+                              "/YField",
+                              fielddata.nCells,
+                              local_offset,
+                              local_count,
+                              comm );
 
-          /*
-            logger<<"Zone #"<<ii<<":"<<std::endl;
-            logger<<"nCells :"<<inputdata.domain_data.nCells[0]<<", "<<inputdata.domain_data.nCells[1]<<std::endl;
-            logger<<"KFieldVector[ii].size() :"<<KFieldVector[ii].size()<<std::endl;
-            logger<<"local_count :"<<local_count[0]<<", "<<local_count[1]<<std::endl;
-            logger<<"local_offset :"<<local_offset[0]<<", "<<local_offset[1]<<std::endl;
-            logger<<"kfield_filename : "<<kfield_filename<<std::endl;
-            logger<<"zone_offset : "<<zone_offset<<std::endl;
-          */
-          // save the field to disc
-          if(CR){
-            if(ii>0)
-              HDF5Tools::h5_pAppend( tmp,
-                                     dir.unconditionalField_h5file,
-                                     "/YField",
-                                     local_count,
-                                     local_offset,
-                                     comm );
-            else
-              HDF5Tools::h5_pWrite( tmp,
-                                    dir.unconditionalField_h5file,
-                                    "/YField",
-                                    inputdata,
-                                    inputdata.domain_data.nCells,
-                                    local_offset,
-                                    local_count,
-                                    comm );
-          }else{
-            if(ii>0)
-              HDF5Tools::h5_pAppend( tmp,
-                                     dir.kfield_h5file,
-                                     "/YField",
-                                     local_count,
-                                     local_offset,
-                                     comm );
-            else {
-              HDF5Tools::h5_pWrite( tmp,
-                                    dir.kfield_h5file,
-                                    "/YField",
-                                    inputdata,
-                                    inputdata.domain_data.nCells,
-                                    local_offset,
-                                    local_count,
-                                    comm );
-
-              Vector<UINT> extended_local_count(2,0), extended_local_offset(2,0);
-              extended_local_count[0] = nCells_ExtendedDomain[ii][0];
-              extended_local_count[1] = local_n0;
-              extended_local_offset[1] = local_0_start;
-              HDF5Tools::h5_pWrite( extended_tmp,
-                                    dir.extended_yfield_h5file,
-                                    "/YField",
-                                    inputdata,
-                                    nCells_ExtendedDomain[ii],
-                                    extended_local_offset,
-                                    extended_local_count,
-                                    comm );
-            }
-          }
-
-          // set zonation matrix right!
-          // if( !General::bFileExists( dir.zonation_matrix[ii] ) ) {
-          l=tmp.size();
-          tmp.resize(0);
-          tmp.resize(l,1.0);
-          HDF5Tools::h5_pWrite( tmp
-                                , dir.zonation_matrix[ii]
-                                , "/X"
-                                , inputdata
-                                , inputdata.domain_data.nCells
-                                , local_offset
-                                , local_count
-                                ,  comm );
-          //}
-
-        }// END for-loop over zones!
+        // set zonation matrix right!
+        l = tmp.size();
+        tmp.resize(0);
+        tmp.resize(l,1.0);
+        HDF5Tools::h5_pWrite( tmp,
+                              dir.zonation_matrix[0],
+                              "/X",
+                              fielddata.nCells,
+                              local_offset,
+                              local_count,
+                              comm );
 
         if(comm_size==1){
-          Vector<UINT> local_count,local_offset;
-          HDF5Tools::h5g_Read( YFieldVector,
-                               dir.kfield_h5file,
-                               "/YField",
-                               local_offset,
-                               local_count,
-                               inputdata
-                               );
+          HDF5Tools::h5_Read( YFieldVector,
+                              dir.yfield_h5file,
+                              "/YField" );
+          
+          Dune::Timer watch;
           UINT N = YFieldVector.size();
-          //YFieldVector_Well.resize( N );
           YFieldVector_Well = YFieldVector;
-
+          
           KFieldVector.resize( N );
           for( UINT i=0; i<N; ++i ){
             KFieldVector[i] = std::exp( YFieldVector[i] );
           }
           KFieldVector_Well = KFieldVector;
+          General::log_elapsed_time( watch.elapsed(),
+                                     General::verbosity,
+                                     "EVAL",
+                                     "Evaluate K-Field once at the beginning." );
+
         }
 
-      }; // End of void generate2d()
+      }; // End of void generateY()
 
 
 
-      bool load_from_file()
-      {
-        if( !General::load_kfield_properties(
-                                             dir.kfield_properties_file
-                                             , dim
-                                             , inputdata.domain_data.extensions
-                                             , inputdata.domain_data.nCells
-                                             , inputdata.yfield_properties
-                                             , my_rank
-                                             )
+
+
+
+
+      // If fielddata.newEV==false and fielddata.newField==false,
+      // we try to load an existing field.
+      bool load_from_file() {
+        if( !load_yfield_properties( dir.yfield_properties_file, my_rank )
             )
           {
             return false;
           }
         else
-          {
-
-            if( !General::bFileExists( dir.kfield_h5file ) )
+          {          
+	  
+            if( !General::bFileExists( fielddata.location + "/YField.h5" ) )
               {
-                std::cout << "Warning: File is missing: "
-                          <<  dir.kfield_h5file
+                std::cout << "Warning: File is missing: YField.h5" 
                           << std::endl;
                 return false;
               }
-
-            logger << "Found suitable Y-Field characteristics! Load the kfield from "
-                   <<  dir.kfield_h5file
-                   << std::endl;
-
+        
+            std::cout << "Found suitable Y-Field characteristics! Load the field from YField.dat" 
+                      << std::endl;
+	       
             if(comm_size==1){
-              Vector<UINT> local_count,local_offset;
-              HDF5Tools::h5g_Read( YFieldVector,
-                                   dir.kfield_h5file,
-                                   "/YField",
-                                   local_offset,
-                                   local_count,
-                                   inputdata
-                                   );
+              HDF5Tools::h5_Read( YFieldVector,
+                                  dir.yfield_h5file,
+                                  "/YField"
+                                  );
               UINT N = YFieldVector.size();
-              //YFieldVector_Well.resize( N );
               YFieldVector_Well = YFieldVector;
-
+          
               KFieldVector.resize( N );
               for( UINT i=0; i<N; ++i ){
                 KFieldVector[i] = std::exp( YFieldVector[i] );
@@ -1282,8 +694,760 @@ namespace Dune {
 
 
 
-      template<typename GV_GW>
-      void setWellConductivities( const GV_GW& gv_gw ){
+      //
+      // Read Y-field from HDF5 file.
+      //
+      void h5_Read( const std::string& filename, const std::string& groupname ){
+        Vector<REAL> yfield_vector;
+        HDF5Tools::h5_Read( yfield_vector,
+                            filename,
+                            groupname );
+        import_from_vector( yfield_vector );
+      }
+
+
+      void import_from_vector(const Vector<REAL>& yfield_vector) {
+
+        Dune::Timer watch;
+
+        UINT VectorSize = 0;
+        if (dim == 3) {
+          const UINT L = fielddata.nCells[2];
+          const UINT M = fielddata.nCells[1];
+          const UINT N = fielddata.nCells[0];
+          VectorSize = L * M * N;
+        } 
+        else {
+          const UINT M = fielddata.nCells[1];
+          const UINT N = fielddata.nCells[0];
+          VectorSize = M * N;
+        }
+        if( yfield_vector.size() != VectorSize ){
+          std::cout << "Warning: mismatch at import_from_vector: " << std::endl;
+          std::cout << "yfield_vector.size() = " << yfield_vector.size() << std::endl;
+          std::cout << "VectorSize = " << VectorSize << std::endl;
+        }
+
+        YFieldVector      = yfield_vector;
+        YFieldVector_Well = yfield_vector;
+
+        KFieldVector.resize( VectorSize );
+        for (UINT l=0; l<VectorSize; l++)
+          KFieldVector[l] = std::exp( yfield_vector[l] );
+
+        KFieldVector_Well = KFieldVector;
+
+        General::log_elapsed_time( watch.elapsed(),
+                                   General::verbosity,
+                                   "EVAL",
+                                   "import_from_vector: Evaluate KFieldVector once at the beginning." );
+
+      };
+
+
+
+
+
+      //
+      // Read Y-field from HDF5 file in parallel mode onto the grid.
+      //
+      template<typename GV>
+      void h5g_pRead( GV gv,
+                      const std::string& filename,
+                      const std::string& groupname                      
+                      ){
+        Vector<REAL> local_Yfield_vector;
+        Vector<UINT> local_count;
+        Vector<UINT> local_offset;
+        HDF5Tools::h5g_pRead( local_Yfield_vector,
+                              filename,
+                              groupname,
+                              gv,
+                              fielddata.nCells,
+                              fielddata.gridsizes,
+                              local_offset,
+                              local_count
+                              );
+        if( my_rank==0 )
+          std::cout << "Parallel import of Yfield data from " << filename << std::endl;
+
+        parallel_import_from_local_vector( local_Yfield_vector,
+                                           local_offset,
+                                           local_count
+                                           );
+      }
+
+
+      
+      void parallel_import_from_local_vector( const Vector<REAL>& local_Yfield_vector,
+                                              const Vector<UINT>& local_offset,
+                                              const Vector<UINT>& local_count
+                                              )
+      {
+        Dune::Timer watch;
+
+        UINT Nlocal = local_Yfield_vector.size();
+
+        LocalYFieldVector.clear();
+        LocalYFieldVector_Well.clear();
+
+        LocalYFieldVector = local_Yfield_vector; // this vector contains the Y-field data from the current hyperslab        
+        LocalYFieldVector_Well = local_Yfield_vector;
+        
+        LocalKFieldVector.clear();
+        LocalKFieldVector_Well.clear();
+
+        LocalKFieldVector.resize( Nlocal );
+        for( UINT i=0; i<Nlocal; ++i )
+          LocalKFieldVector[i] = std::exp( local_Yfield_vector[i] );
+
+        LocalKFieldVector_Well = LocalKFieldVector;
+
+        LocalCount.resize(dim);
+        LocalOffset.resize(dim);
+
+        LocalCount = local_count; // this vector contains the dimensions (the number of cells per dimension) of the current hyperslab
+        LocalOffset = local_offset; // this vector describes the distance of the current hyperslab from the origin
+
+        General::log_elapsed_time( watch.elapsed(),
+                                   General::verbosity,
+                                   "EVAL",
+                                   "parallel_import_from_local_vector" );
+
+      };
+
+
+
+      void export_to_vector(Vector<REAL>& yfield_vector ) 
+      {
+        UINT VectorSize = 0;
+        if (dim == 3) 
+          {
+            const UINT L = fielddata.nCells[2];
+            const UINT M = fielddata.nCells[1];
+            const UINT N = fielddata.nCells[0];
+            VectorSize = L * M * N;
+          }
+        else 
+          {
+            const UINT M = fielddata.nCells[1];
+            const UINT N = fielddata.nCells[0];
+            VectorSize = M * N;
+          }
+	
+        yfield_vector.resize( VectorSize );
+	
+        for (UINT l = 0; l < VectorSize; l++)
+          yfield_vector[l] = YFieldVector[l];
+	
+        return;
+      };
+
+
+
+      // Given a location in space, return the appropriate
+      // index of the multi-dim. field array.
+      std::size_t getFieldIndex( const Dune::FieldVector<REAL,dim>& xglobal ) const {
+
+        std::size_t myIndex = 0;
+        Vector<UINT> global_index;
+        global_index.resize(dim);
+
+        /*
+          Translate the global coordinate 'xglobal' into its corresponding multi-dim. Yfield array index 'global_index'.
+          It requires fielddata.gridsizes.
+        */
+
+        for (UINT i=0; i<dim; i++) {
+          REAL fraction = xglobal[i] / fielddata.gridsizes[i];
+          global_index[i] = static_cast<UINT>( fraction );
+          if( std::abs( global_index[i] - fraction ) < 1E-12
+              &&
+              global_index[i] > 0 )
+            global_index[i] -= 1;
+        }
+
+        if( comm_size == 1 ) {
+          // single-processore case:
+          myIndex = General::indexconversion_to_1d( global_index, fielddata.nCells );
+        }
+        else { // multi-processore case:
+
+          // convert global index pair to processor-local-index pair
+          Vector<UINT> local_index( dim, 0 );
+
+          for( UINT i=0; i<dim; i++ ) {
+            int localindex = global_index[i] - LocalOffset[ i ];
+            if(localindex < 0)
+              localindex = 0;
+
+            local_index[i] = static_cast<UINT>( localindex );
+
+            if( local_index[i] > 100000 ){
+              std::cout << "DEBUG: local_index[" << i << "] = "
+                        << local_index[i] << std::endl;
+              std::cout << "DEBUG: global_index[" << i << "] = "
+                        << global_index[i] << std::endl;
+              std::cout << "DEBUG: LocalOffset[" << i << "] = "
+                        << LocalOffset[i] << std::endl;
+            }
+          }
+
+          myIndex = General::indexconversion_to_1d( local_index, LocalCount );
+        }
+
+        return myIndex;
+      }
+
+
+
+
+      template<typename DFV>
+      void evaluateField( const DFV& xglobal, 
+                          REAL& output,
+                          bool lnK=false ) const 
+      {
+        /* 
+           Translate the global coordinate 'xglobal' into its multi-dim. Yfield array index 'l'. 
+        */
+        UINT l = getFieldIndex( xglobal );
+
+        if( comm_size == 1 ) {
+
+          if( lnK )
+            output = YFieldVector[l];
+          else
+            output = KFieldVector[l];
+
+        }
+        else {
+
+          if( lnK )
+            output = LocalYFieldVector[l];
+          else
+            output = LocalKFieldVector[l];
+
+        }
+
+      }
+
+
+
+
+      template<typename DFV>
+      void evaluateFieldAndWell( const DFV& xglobal, 
+                                 REAL& output,
+                                 REAL& output_Well,
+                                 bool lnK=false ) const 
+      {
+        /* 
+           Translate the global coordinate 'xglobal' into its multi-dim. Yfield array index 'l'. 
+        */
+        UINT l = getFieldIndex( xglobal );
+
+        if( comm_size == 1 ) {
+          if( lnK ) {
+            output      = YFieldVector[l];
+            output_Well = YFieldVector_Well[l];
+          }
+          else{
+            output      = KFieldVector[l];
+            output_Well = KFieldVector_Well[l];
+          }
+        }
+        else {
+          if( lnK ){
+            output      = LocalYFieldVector[l];
+            output_Well = LocalYFieldVector_Well[l];
+          }
+          else{
+            output      = LocalKFieldVector[l];
+            output_Well = LocalKFieldVector_Well[l];
+          }
+        }
+
+      }
+
+
+      template<typename DFV>
+      void evaluateY( const DFV& xglobal, REAL& output ) const 
+      {
+        evaluateField( xglobal, output, true );
+      }
+
+      template<typename DFV>
+      void evaluateYW( const DFV& xglobal, REAL& output, REAL& output_well ) const 
+      {
+        evaluateFieldAndWell( xglobal, output, output_well, true );
+      }
+
+      template<typename DFV>
+      void evaluateK( const DFV& xglobal, REAL& output ) const 
+      {
+        evaluateField( xglobal, output, false );    
+      }
+
+      template<typename DFV>
+      void evaluateKW( const DFV& xglobal, REAL& output, REAL& output_well ) const 
+      {
+        evaluateFieldAndWell( xglobal, output, output_well, false );
+      }
+
+
+
+      void init()
+      {
+        if(my_rank==0)
+          std::cout << "------------------------------------\ngenerate_Yfield()" << std::endl;
+    
+        // Be aware of this: 
+        // The virtual YField grid is a structured grid (FFT requires this!)
+        // no matter what kind of grid we are using
+        // in DUNE for the solution of the PDEs.
+
+        UINT nAllCells = fielddata.nCells[0] * fielddata.nCells[1];
+        if (dim == 3)
+          nAllCells *= fielddata.nCells[2];
+
+        int generate_new=0;
+
+        if( my_rank == 0 )
+          {
+            General::createDirectory( fielddata.location );
+
+            //loading is in HDF5 or *.dat, (see FFTFieldGenerator.hh) 
+            if( !fielddata.newField 
+                && 
+                !fielddata.newEV 
+                &&
+                this->load_from_file( ) ) // loads data only if sequential program, in parallel only consistency check
+              {
+                std::cout << "Reading existing Y-field."
+                          << std::endl;		
+              }
+            else 
+              {
+                std::cout << "Generating new data ..."
+                          << std::endl;
+                generate_new = 1;
+              }
+	  
+          } // endif helper.rank() == 0
+	
+        MPI_Bcast(&(generate_new), 1, MPI_INT, 0, comm );
+
+
+        if(generate_new){
+      
+          this->generateY( fielddata.newEV,
+                           fielddata.newField
+                           );
+      
+          if( my_rank == 0 )
+            std::cout << "Generating new Y-field done." << std::endl;
+      
+        }
+    
+      }; // end of void init()
+
+
+
+
+
+      //
+      // This method maps the multi-dim. field array to a 1d vector, 
+      // following the  order of the grid cells.
+      //
+      template<typename GV>
+      void export_field_to_vector_on_grid( const GV& gv,
+                                           Vector<REAL>& log_conductivity_field,
+                                           Vector<REAL>& well_conductivity_field
+                                           ) const {
+
+        Dune::Timer watch;
+
+        // Get the conductivity field on the grid for the vtkwriter
+        typedef typename GV::Grid GRIDTYPE; // get the grid-type out of the gridview-type
+
+        typedef typename GV::template Codim<0>::template Partition<Dune::All_Partition>::Iterator ElementLeafIterator;
+
+
+        // make a mapper for codim 0 entities in the leaf grid
+        Dune::LeafMultipleCodimMultipleGeomTypeMapper<GRIDTYPE, P0Layout>
+          mapper(gv.grid()); // get the underlying hierarchical grid out ot the gridview
+
+
+        const int nGridCells = mapper.size();
+
+        //std::cout << my_rank << ": mapper.size() = " << nGridCells << std::endl;
+
+        log_conductivity_field.resize( nGridCells );
+        well_conductivity_field.resize( nGridCells );
+
+        if( my_rank == 0 )
+          std::cout << "Plot Yfield: Loop over leaf elements..." << std::endl;
+    
+        const typename GV::IndexSet& indexset = gv.indexSet();
+
+        for (ElementLeafIterator it = gv.template begin<0,Dune::All_Partition> ()
+               ; it != gv.template end<0,Dune::All_Partition> (); ++it) {
+          int index = indexset.index(*it);
+
+          //std::cout << my_rank << ": index = " << index << std::endl;
+      
+          Dune::FieldVector<REAL,dim> xglobal = it->geometry().center();
+          REAL logK = 0.0;
+          REAL logK_Well = 0.0;
+
+          this->evaluateYW(xglobal,logK,logK_Well);
+
+          log_conductivity_field[index] = logK;
+          well_conductivity_field[index] = logK_Well;
+
+        }
+
+
+        General::log_elapsed_time( watch.elapsed(),
+                                   gv.comm(),
+                                   General::verbosity,
+                                   "EVAL",
+                                   "export_field_to_vector_on_grid" );
+
+      } // end of export_field_to_vector_on_grid()
+
+
+
+
+      //
+      // This method can be used to create a VTK plot of the field.
+      //
+      template<typename GV>
+      void plot2vtu( const GV& gv
+                     , const std::string filename
+                     , const std::string title
+                     , int nSubSampling = 0
+                     , bool bWells = false
+                     ) const {
+
+        Vector<REAL> log_conductivity_field;
+        Vector<REAL> well_conductivity_field;
+
+        export_field_to_vector_on_grid( gv, 
+                                        log_conductivity_field,
+                                        well_conductivity_field );
+
+        VTKPlot::output_vector_to_vtu( gv, 
+                                       log_conductivity_field,
+                                       filename,
+                                       title,
+                                       nSubSampling
+                                       );
+
+        if( bWells )
+          VTKPlot::output_vector_to_vtu( gv, 
+                                         well_conductivity_field,
+                                         filename + "_Well",
+                                         title + "_Well",
+                                         nSubSampling
+                                         );
+
+      }
+
+
+
+
+
+      //
+      // This method implements various variogram models.
+      //
+      inline REAL autocovariancefunction( const REAL variance, 
+                                        const std::vector<REAL> x, 
+                                        const std::vector<REAL> lambda, 
+                                        const std::string model  ) {
+
+        //UINT dim = x.size();
+        if( variance == 0.0 )
+          return 0.0;
+
+        REAL C1 = 0.0;
+        REAL sum = 0.0;
+        for(UINT i=0; i<dim; i++) {
+          sum += (x[i] * x[i]) / (lambda[i] * lambda[i]);
+        }
+        if( !strcmp( model.c_str(), "spherical" ) ) {
+          REAL h_eff = sqrt( sum );
+          //std::cout << "...spherical variogram..." << std::endl;
+          REAL alpha=2.2;
+          if (h_eff > alpha)
+            C1 = 0.0;
+          else
+            C1 = variance * (1.0 - 1.5 * h_eff/alpha + 0.5 * std::pow(h_eff/alpha, 3.0));
+        }
+        else if( !strcmp( model.c_str(), "power" ) ){
+          C1 = variance * (1.0 - sum) * exp(-sum);
+        }
+        else if( !strcmp( model.c_str(), "expomodulus" ) ){
+          REAL sum_modulus = 0.0;
+          for(UINT i=0; i<dim; i++) {
+            sum_modulus += std::abs(x[i]) / lambda[i];
+          }
+          //std::cout << "...exponential exponential with modulus..." << std::endl;
+          C1 = variance * exp(- sum_modulus);
+        }
+        else if( !strcmp( model.c_str(), "exponential" ) ){
+          REAL h_eff = sqrt( sum );
+          //std::cout << "...exponential variogram..." << std::endl;
+          C1 = variance * exp(-h_eff);
+        }
+        else{ // gaussian
+              //std::cout << "...gaussian variogram..." << std::endl;
+          C1 = variance * exp(-sum);
+        }
+        return C1;
+      }
+
+
+
+      //
+      // This function stores the properties of the generated random field to a file called "YField.dat".
+      //
+      inline bool save_yfield_properties( const std::string filename )
+      {
+        std::ofstream filestr( filename.c_str(), std::ios::out );
+        if( filestr.is_open() ) {
+        
+          std::cout << "Saving Y-Field properties to "
+                    << filename
+                    << std::endl;
+
+          // DO NOT insert a blank into "dim="
+          filestr << "dim= " << dim << std::endl;
+
+          filestr << "extensions= ";
+          for(UINT i=0; i<dim; i++)
+            filestr << " " << fielddata.extensions[i];
+          filestr << std::endl;
+
+          filestr << "nCells= ";
+          for(UINT i=0; i<dim; i++)
+            filestr << " " << fielddata.nCells[i];
+          filestr << std::endl;
+
+        
+          filestr << "VM= " << fielddata.variogramModel;
+          filestr << std::endl;
+
+          filestr << "beta= " << fielddata.beta;
+          filestr << std::endl;
+
+          filestr << "variance= " << fielddata.fieldVariance;
+          filestr << std::endl;
+
+          filestr << "EF= " << fielddata.embeddingFactor;
+          filestr << std::endl;
+
+          filestr << "correlations= ";
+          for(UINT i=0; i<dim; i++)
+            filestr << " " << fielddata.correlations[i];
+          filestr << std::endl;
+
+          filestr << "seed= " << fielddata.seed;
+          filestr << std::endl;
+
+          filestr.close();
+        }
+        else
+          {
+            std::cout << "Error: Could not save Y-Field properties to file "
+                      << filename.c_str()
+                      << std::endl;
+            return false;
+          }
+
+        return 0;
+      }
+
+
+
+      //
+      // This function reads the properties of a random field generated in a previous run.
+      // The field properties are read from a file called "YField.dat".
+      //
+      inline bool load_yfield_properties( const std::string filename, const int my_rank )
+      {    
+        std::ifstream filestr( filename.c_str(), std::ios::in );
+        if( filestr.is_open() ) {
+
+          if( my_rank==0 )
+            std::cout << "Loading " << filename << std::endl;
+      
+          std::string str;
+
+          UINT read_dim;
+          filestr >> str >> read_dim;
+          if( dim != read_dim )
+            {
+              if(my_rank==0)
+                std::cout << "Drop obsolete Y-field with : dim = " << read_dim << std::endl;
+              return false;
+            }
+
+          CTYPE read_extensions[3];
+          if(dim == 3){
+            filestr >> str >> read_extensions[0] >> read_extensions[1] >> read_extensions[2];
+            if( read_extensions[0] != fielddata.extensions[0] 
+                || 
+                read_extensions[1] != fielddata.extensions[1] 
+                || 
+                read_extensions[2] != fielddata.extensions[2] )
+              {
+                if( my_rank==0 )
+                  std::cout << "New 3D random field with Lx = " << fielddata.extensions[0]
+                            << " Ly = " << fielddata.extensions[1]
+                            << " Lz = " << fielddata.extensions[2]
+                            << std::endl;
+                return false;
+              }
+          }
+          else
+            {
+              filestr >> str >> read_extensions[0] >> read_extensions[1];
+              if( read_extensions[0] != fielddata.extensions[0] || 
+                  read_extensions[1] != fielddata.extensions[1] )
+                {
+                  if( my_rank==0 )
+                    std::cout << "New 2D random field with Lx = " << fielddata.extensions[0]
+                              << " Ly = " << fielddata.extensions[1]
+                              << std::endl;
+                  return false;
+                }
+            }
+
+          UINT read_nCells[3];
+          if(dim == 3){
+            filestr >> str >> read_nCells[0] >> read_nCells[1] >> read_nCells[2];
+            if( read_nCells[0] != fielddata.nCells[0] || 
+                read_nCells[1] != fielddata.nCells[1] || 
+                read_nCells[2] != fielddata.nCells[2] )
+              {
+                if( my_rank==0 )
+                  std::cout << "New 3D random field with Nx = " << fielddata.nCells[0]
+                            << " Ny = " << fielddata.nCells[1]
+                            << " Nz = " << fielddata.nCells[2]
+                            << std::endl;
+                return false;
+              }
+          }
+          else
+            {
+              filestr >> str >> read_nCells[0] >> read_nCells[1];
+              if( read_nCells[0] != fielddata.nCells[0] || 
+                  read_nCells[1] != fielddata.nCells[1] )
+                {
+                  if( my_rank==0 )
+                    std::cout << "New 2D random field with Nx = " << fielddata.nCells[0]
+                              << " Ny = " << fielddata.nCells[1]
+                              << std::endl;
+                  return false;
+                }
+            }
+
+        
+
+
+          std::string read_model;
+          filestr >> str >> read_model;
+          if( fielddata.variogramModel != read_model ) {
+            if(my_rank==0)
+              std::cout << "Drop obsolete Y-field with : model = " << read_model.c_str() << std::endl;
+            return false;
+          }
+
+          REAL read_beta;
+          filestr >> str >> read_beta;
+          if( fielddata.beta != read_beta ) {
+            if(my_rank==0)
+              std::cout << "Drop obsolete Y-field with : beta = " << read_beta << std::endl;
+            return false;
+          }
+
+          REAL read_variance;
+          filestr >> str >> read_variance;
+          if( fielddata.fieldVariance != read_variance ) {
+            if(my_rank==0)
+              std::cout << "Drop obsolete Y-field with : variance = " << read_variance << std::endl;
+            return false;
+          }
+
+          REAL read_embedding_factor;
+          filestr >> str >> read_embedding_factor;
+          if( fielddata.embeddingFactor != read_embedding_factor ) {
+            if(my_rank==0)
+              std::cout << "Drop obsolete Y-field with : embedding_factor = " << read_embedding_factor << std::endl;
+            return false;
+          }
+
+
+          REAL read_correlation_lambda[3];
+          if(dim == 3){
+            filestr >> str >> read_correlation_lambda[0] >> read_correlation_lambda[1] >> read_correlation_lambda[2];
+            if( fielddata.correlations[0] != read_correlation_lambda[0]
+                || 
+                fielddata.correlations[1] != read_correlation_lambda[1]
+                ||
+                fielddata.correlations[2] != read_correlation_lambda[2]
+                )
+              {
+                if( my_rank==0 )
+                  std::cout << "New 3D random field with lambda_x = " << fielddata.correlations[0]
+                            << " lambda_y = " << fielddata.correlations[1]
+                            << " lambda_z = " << fielddata.correlations[2]
+                            << std::endl;
+                return false;
+              }
+          }
+          else
+            {
+              filestr >> str >> read_correlation_lambda[0] >> read_correlation_lambda[1];
+              if( fielddata.correlations[0] != read_correlation_lambda[0]
+                  || 
+                  fielddata.correlations[1] != read_correlation_lambda[1] )
+                {
+                  if( my_rank==0 )
+                    std::cout << "New 2D random field with lambda_x = " 
+                              << fielddata.correlations[0]
+                              << " lambda_y = " << fielddata.correlations[1]
+                              << std::endl;
+                  return false;
+                }
+            }
+
+          REAL read_seed;
+          filestr >> str >> read_seed;
+          if( fielddata.seed != read_seed ) {
+            if(my_rank==0)
+              std::cout << "Drop obsolete Y-field with : seed = " << read_seed << std::endl;
+            return false;
+          }
+
+          filestr.close();
+        }
+        else
+          {
+            if( my_rank == 0 ){
+              std::cout << "No existing field properties found for the given inputs! Generate new field." << std::endl;
+            }
+            return false;
+          }
+
+        return true;
+      }
+
+
+
+
+      template<typename GV_GW,typename IDT>
+      void setWellConductivities( const GV_GW& gv_gw, const IDT& inputdata ){
 
         Dune::Timer watch;
         logger << "setWellConductivities()" << std::endl;
@@ -1350,550 +1514,23 @@ namespace Dune {
 
         General::log_elapsed_time( watch.elapsed(),
                                    gv_gw.comm(),
-                                   inputdata.verbosity,
+                                   General::verbosity,
                                    "EVAL",
                                    "setWellConductivities()" );
 
-      }
-
-
-
-      void import_from_vector(const Vector<REAL>& yfield_vector) {
-
-        Dune::Timer watch;
-
-        UINT VectorSize = 0;
-        if (dim == 3) {
-          const UINT L = inputdata.domain_data.nCells[2];
-          const UINT M = inputdata.domain_data.nCells[1];
-          const UINT N = inputdata.domain_data.nCells[0];
-          VectorSize = L * M * N;
-        }
-        else {
-          const UINT M = inputdata.domain_data.nCells[1];
-          const UINT N = inputdata.domain_data.nCells[0];
-          VectorSize = M * N;
-        }
-        if( yfield_vector.size() != VectorSize ){
-          std::cout << "Warning: mismatch at import_from_vector: " << std::endl;
-          std::cout << "yfield_vector.size() = " << yfield_vector.size() << std::endl;
-          std::cout << "VectorSize = " << VectorSize << std::endl;
-        }
-
-        YFieldVector      = yfield_vector;
-        YFieldVector_Well = yfield_vector;
-
-        KFieldVector.resize( VectorSize );
-        for (UINT l=0; l<VectorSize; l++)
-          KFieldVector[l] = std::exp( yfield_vector[l] );
-
-        KFieldVector_Well = KFieldVector;
-
-        General::log_elapsed_time( watch.elapsed(),
-                                   inputdata.verbosity,
-                                   "EVAL",
-                                   "import_from_vector: Evaluate KFieldVector once at the beginning." );
-
-      };
-
-
-
-      void parallel_import_from_local_vector( const Vector<REAL>& local_Yfield_vector,
-                                              const Vector<UINT>& local_offset,
-                                              const Vector<UINT>& local_count )
-      {
-        Dune::Timer watch;
-
-        UINT Nlocal = local_Yfield_vector.size();
-        logger << "Nlocal = " << Nlocal << std::endl;
-
-        // TODO: Maybe we do not need this LocalYFieldVector anymore!
-        LocalYFieldVector.clear();
-        LocalYFieldVector_Well.clear();
-
-        LocalYFieldVector = local_Yfield_vector; // this vector contains the Y-field data from the current hyperslab
-        LocalYFieldVector_Well = local_Yfield_vector;
-        logger << "LocalYFieldVector.size() = " 
-               << LocalYFieldVector.size() << std::endl;
-        logger << "LocalYFieldVector_Well.size() = " 
-               << LocalYFieldVector_Well.size() << std::endl;
-
-        LocalKFieldVector.clear();
-        LocalKFieldVector_Well.clear();
-
-        LocalKFieldVector.resize( Nlocal );
-        for( UINT i=0; i<Nlocal; ++i )
-          LocalKFieldVector[i] = std::exp( local_Yfield_vector[i] );
-
-        LocalKFieldVector_Well = LocalKFieldVector;
-        logger << "LocalKFieldVector_Well.size() = " 
-               << LocalKFieldVector_Well.size() << std::endl;
-
-        LocalCount = local_count; // this vector contains the dimensions (the number of cells per dimension) of the current hyperslab
-        LocalOffset = local_offset; // this vector describes the distance of the current hyperslab from the origin
-
-        logger << "LocalCount = " << LocalCount << std::endl;
-        logger << "LocalOffset = " << LocalOffset << std::endl;
-
-      };
-
-
-
-      // not used now, just test-wise:
-      template<typename GV>
-      void parallel_add_wells_to_hdf5( const GV& gv,
-                                       const std::string& data_name,
-                                       const Vector<UINT> &nCells,   // nKnotsPerDim
-                                       const Vector<CTYPE> &gridsizes,
-                                       const std::string& data_filename ) {
-
-        const int blocksizePerDimension = 1;
-        HDF5Tools::h5g_pWrite( gv,
-                               LocalYFieldVector_Well,
-                               data_filename,
-                               data_name,
-                               inputdata,
-                               nCells,
-                               blocksizePerDimension
-                               , FEMType::DG  // P0
-                               );
-
-      }
-
-
-      void export_to_vector(Vector<REAL>& kfield_vector )
-      {
-        UINT VectorSize = 0;
-        if (dim == 3)
-          {
-            const UINT L = inputdata.domain_data.nCells[2];
-            const UINT M = inputdata.domain_data.nCells[1];
-            const UINT N = inputdata.domain_data.nCells[0];
-            VectorSize = L * M * N;
-          }
-        else
-          {
-            const UINT M = inputdata.domain_data.nCells[1];
-            const UINT N = inputdata.domain_data.nCells[0];
-            VectorSize = M * N;
-          }
-
-        kfield_vector.resize( VectorSize );
-
-        for (UINT l = 0; l < VectorSize; l++)
-          kfield_vector[l] = KFieldVector[l];
-
-        return;
-      };
-
-
-
-      // Given a location in space, return the appropriate
-      // index of the parameter field.
-      std::size_t getFieldIndex( const Dune::FieldVector<REAL,dim>& xglobal ) const {
-
-        std::size_t myIndex = 0;
-        Vector<UINT> global_index;
-        global_index.resize(dim);
-
-        /*
-          Translate the global coordinate 'x' into its corresponding Yfield-tensor-index 'global_index'.
-          This requires only the virtual gridsize of the virtual Yfield grid.
-          So 'global_index' is just a virtual index.
-          In the same way, 'local_index' is a virtual index that is used to access virtual grid cells values
-          stored in 'KFieldVector'.
-        */
-
-        for (UINT i=0; i<dim; i++) {
-          REAL fraction = xglobal[i] / inputdata.domain_data.virtual_gridsizes[i];
-          global_index[i] = static_cast<UINT>( fraction );
-          if( std::abs( global_index[i] - fraction ) < GEO_EPSILON
-              &&
-              global_index[i] > 0 )
-            global_index[i] -= 1;
-        }
-
-        if( comm_size == 1 ) {
-          // single-processore case:
-          myIndex = General::indexconversion_to_1d( global_index,
-                                                    inputdata.domain_data.nCells );
-        }
-        else { // multi-processore case:
-
-          // convert global index pair to processor-local-index pair
-          Vector<UINT> local_index( dim, 0 );
-
-          for( UINT i=0; i<dim; i++ ) {
-            int localindex = global_index[i] - LocalOffset[ i ];
-            if(localindex < 0)
-              localindex = 0;
-
-            local_index[i] = static_cast<UINT>( localindex );
-
-            if( local_index[i] > 100000 ){
-              std::cout << "DEBUG: local_index[" << i << "] = "
-                        << local_index[i] << std::endl;
-              std::cout << "DEBUG: global_index[" << i << "] = "
-                        << global_index[i] << std::endl;
-              std::cout << "DEBUG: LocalOffset[" << i << "] = "
-                        << LocalOffset[i] << std::endl;
-            }
-          }
-
-          myIndex = General::indexconversion_to_1d( local_index, LocalCount );
-        }
-
-        return myIndex;
-      }
-
-
-      void evaluate2d( const Dune::FieldVector<REAL,2>& xglobal,
-                       REAL& output,
-                       REAL& output_Well,
-                       bool lnK=false ) const
-      {
-
-        // Special Test Cases for 2d:
-#ifdef HOMOGEN
-        {
-          output = -6.0;
-          return;
-        }
-#endif
-
-#ifdef CENTER_SQUARE
-        {
-          // Center Square:
-          REAL a = std::abs( x[0]-5.0 );
-          REAL b = std::abs( x[1]-5.0 );
-          //if( a*a + b*b < 2500.0 )
-          if( std::max(a,b) < 3.0 )
-            output = -6.0;
-          else
-            output = -2.0;
-          return;
-        }
-#endif
-
-#ifdef CHESS_PATTERN
-        {
-          // chess board pattern:
-          int mx = (static_cast<int>( 5.0 * x[0]/500.0 ))%2;
-          int my = (static_cast<int>( 5.0 * x[1]/500.0 ))%2;
-          if ( my==0 && mx==0 ) output = -2.0; // 1.0 * 1E+9;
-          if ( my==0 && mx==1 ) output = -4.0; // 1.0 * 1E-6;
-          if ( my==1 && mx==0 ) output = -4.0; // 1.0 * 1E-2;
-          if ( my==1 && mx==1 ) output = -2.0; // 1.0 * 1E+5;
-          return;
-        }
-#endif
-
-        output_Well = output;
-
-        UINT l = getFieldIndex( xglobal );
-
-
-        if( comm_size == 1 ) // single-processore case:
-          {
-            if( lnK )
-              output_Well = YFieldVector_Well[ l ];
-            else
-              output_Well = KFieldVector_Well[ l ];
-
-            if( inputdata.yfield_properties.well_type == "cell" ){
-              output = output_Well;
-            }
-            else{
-              if( lnK )
-                output = YFieldVector[ l ];
-              else
-                output = KFieldVector[ l ];
-            }
-
-          }
-
-        else // multi-processore case:
-
-          {
-
-
-            if( lnK )
-              output_Well = LocalYFieldVector_Well[l];
-            else
-              output_Well = LocalKFieldVector_Well[l];
-
-
-            if( inputdata.yfield_properties.well_type == "cell" ){
-              output = output_Well;
-            }
-            else{
-              if( lnK )
-                output = LocalYFieldVector[l];
-              else
-                output = LocalKFieldVector[l];
-            }
-          }
-
-      }
-
-
-      void evaluate3d( Dune::FieldVector<REAL,3>& xglobal,
-                       REAL& output,
-                       REAL& output_Well,
-                       bool lnK=false ) const
-      {
-#ifdef HOMOGEN
-        {
-          output = -6.0;
-          return;
-        }
-#endif
-
-        /*
-          Translate the global coordinate 'x' into its corresponding Yfield-tensor-index 'global_index'.
-          This requires only the virtual gridsize of the virtual Yfield grid.
-          So 'global_index' is just a virtual index.
-          In the same way, 'local_index' is a virtual index that is used to access virtual grid cells values
-          stored in 'KFieldVector'.
-        */
-        UINT l = getFieldIndex( xglobal );
-
-        if( comm_size == 1 ) {
-
-          if( lnK )
-            output_Well = YFieldVector_Well[ l ];
-          else
-            output_Well = KFieldVector_Well[ l ];
-
-          if( inputdata.yfield_properties.well_type == "cell" ){
-            output = output_Well;
-          }
-          else {
-            if( lnK )
-              output = YFieldVector[l];
-            else
-              output = KFieldVector[l];
-          }
-
-        }
-        else {
-
-          if( lnK )
-            output_Well = LocalYFieldVector_Well[l];
-          else
-            output_Well = LocalKFieldVector_Well[l];
-
-          if( inputdata.yfield_properties.well_type == "cell" ){
-            output = output_Well;
-          }
-          else {
-            if( lnK )
-              output = LocalYFieldVector[l];
-            else
-              output = LocalKFieldVector[l];
-          }
-        }
-
-      }
-
-
-
-
-
-      void init()
-      {
-        logger << "------------------------------------\ngenerate_Yfield()" << std::endl;
-
-        //const int dim = inputdata.dim;
-
-        // Be aware of this:
-        // The virtual YField grid is a structured grid (FFT requires this!)
-        // no matter what kind of grid we are using
-        // in DUNE for the solution of the PDEs.
-
-        UINT nAllCells = inputdata.domain_data.nCells[0] * inputdata.domain_data.nCells[1];
-        if (dim == 3)
-          nAllCells *= inputdata.domain_data.nCells[2];
-
-        this->extend_domain();
-        //this->export_nCellsExt( nCellsExt );
-
-        Dune::Timer watch,watch2;
-        int generate_new=0;
-        // do something on P0 (sequential) only
-
-        //if( helper.rank() == 0 )
-        if( my_rank == 0 )
-          {
-            watch.reset();
-
-            //loading is in HDF5 or *.dat, (see FFTFieldGenerator.hh)
-            if( !inputdata.problem_types.new_YField
-                &&
-                !inputdata.problem_types.new_Eigenvalues
-                &&
-                this->load_from_file( ) ) // loads data only if sequential program, in parallel only consistency check
-              {
-                logger << "Reading existing Y-field took: "
-                       << watch.elapsed() << " sec."
-                       << std::endl;
-                std::cout << "Reading existing Y-field took: "
-                          << watch.elapsed() << " sec."
-                          << std::endl;
-              }
-            else
-              {
-
-                logger << "Generating new data ..." << std::endl;
-                std::cout << "Generating new data ..."
-                          << std::endl;
-
-                generate_new = 1;
-
-              }
-
-          } // endif helper.rank() == 0
-
-        MPI_Bcast(&(generate_new), 1, MPI_INT, 0, comm );
-
-
-        if(generate_new){
-
-          if( dim == 3 )
-            this->generate3d( inputdata.problem_types.new_Eigenvalues,
-                              inputdata.problem_types.new_YField
-                              );
-          else
-            this->generate2d( inputdata.problem_types.new_Eigenvalues,
-                              inputdata.problem_types.new_YField
-                              );
-
-          logger << "Generating new Y-field took: "
-                 << watch.elapsed() << " sec. (this duration includes generating/reading the eigenvalues)"
-                 << std::endl;
-
-          //if( helper.rank() == 0 )
-          if( my_rank == 0 )
-            std::cout
-              << "Generating new Y-field took:  "
-              << watch.elapsed() << " sec. (this duration includes generating/reading the eigenvalues)"
-              << std::endl;
-
-        }
-
-      }; // end of void init()
-
-
-
-
-
-      template<typename GV>
-      void export_field_to_vector_on_grid( const GV& gv,
-                                           Vector<REAL>& log_conductivity_field,
-                                           Vector<REAL>& well_conductivity_field,
-                                           const int gv_level=0
-                                           ) const {
-
-        Dune::Timer watch;
-
-        // Get the conductivity field on the grid for the vtkwriter
-        typedef typename GV::Grid GRIDTYPE; // get the grid-type out of the gridview-type
-        typedef typename GV::template Codim<0>::template Partition<Dune::All_Partition>::Iterator ElementLeafIterator;
-
-        Dune::LevelMultipleCodimMultipleGeomTypeMapper<GRIDTYPE, P0Layout>
-          mapper(gv.grid(),gv_level); // get the underlying hierarchical grid out ot the gridview
-
-
-        const int nGridCells = mapper.size();
-
-#ifdef DEBUG_LOG
-        logger << "DEBUG: mapper.size() = " << nGridCells << std::endl;
-#endif
-
-        log_conductivity_field.resize( nGridCells );
-        well_conductivity_field.resize( nGridCells );
-
-        if( my_rank == 0 && inputdata.verbosity >= VERBOSITY_DEBUG_LEVEL )
-          std::cout << "Plot Yfield: Loop over leaf elements..." << std::endl;
-
-        const typename GV::IndexSet& indexset = gv.indexSet();
-
-        for (ElementLeafIterator it = gv.template begin<0,Dune::All_Partition> ()
-               ; it != gv.template end<0,Dune::All_Partition> (); ++it) {
-          int index = indexset.index(*it);
-
-          Dune::FieldVector<REAL,dim> xglobal = it->geometry().center();
-          REAL logK = 0.0;
-          REAL logK_Well = 0.0;
-
-          bool lnK = true;
-#ifdef DIMENSION3
-          this->evaluate3d(xglobal,logK,logK_Well,lnK);
-#else
-          this->evaluate2d(xglobal,logK,logK_Well,lnK);
-#endif
-          log_conductivity_field[index] = logK;
-          well_conductivity_field[index] = logK_Well;
-        }
-
-
-        General::log_elapsed_time( watch.elapsed(),
-                                   gv.comm(),
-                                   inputdata.verbosity,
-                                   "EVAL",
-                                   "export_field_to_vector_on_grid" );
-
-      } // end of export_field_to_vector_on_grid()
-
-
-      template<typename GV>
-      void plot2vtu( const GV& gv,
-                     const std::string filename,
-                     const std::string title,
-                     const int gv_level=0
-                     ) const {
-
-        Vector<REAL> log_conductivity_field;
-        Vector<REAL> well_conductivity_field;
-
-        export_field_to_vector_on_grid( gv,
-                                        log_conductivity_field,
-                                        well_conductivity_field,
-                                        gv_level
-                                        );
-
-        VTKPlot::output_vector_to_vtu( gv,
-                                       log_conductivity_field,
-                                       filename,
-                                       title,
-                                       inputdata.verbosity,
-                                       true,
-                                       0
-                                       );
-
-        if( inputdata.plot_options.vtk_plot_wells )
-          VTKPlot::output_vector_to_vtu( gv,
-                                         well_conductivity_field,
-                                         filename + "_Wells",
-                                         title + "_Wells",
-                                         inputdata.verbosity,
-                                         true,
-                                         0
-                                         );
-
-      }
+      } // void setWellConductivities(...)
 
 
       std::string getFilename() const {
-        return dir.kfield_h5file;
+        return dir.yfield_h5file;
       }
 
 
     }; // class FFTFieldGenerator
 
-  } // namespace Gesis
-} // namespace Dune
 
+  }
+}
 
+#endif	/* FFT_FIELD_GENERATOR_HH */
 
-#endif	/* DUNE_GESIS_FFT_FIELD_GENERATOR_HH */

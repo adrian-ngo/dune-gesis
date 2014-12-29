@@ -21,7 +21,7 @@ For the solute tansport equations, the tracer is feeded through an injection wel
       vtk_plot_wells="no"
       vtk_plot_head="yes"
       vtk_plot_element_ordering="no"
-      vtk_plot_q="yes"
+      vtk_plot_q="no"
       vtk_plot_m0="yes"
       vtk_plot_m1="yes"
       vtk_plot_y_old="yes"

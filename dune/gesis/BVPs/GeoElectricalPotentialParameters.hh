@@ -90,15 +90,11 @@ namespace Dune {
         typename Traits::DomainType xg = e.geometry().global(x);
         typename Traits::RangeFieldType fieldvalue = 0.0;
 
-        typename Traits::RangeFieldType v_Well = 0.0; // dummy variable here!
 
-#ifdef DIMENSION3
-        fieldgenerator.evaluate3d(xg, fieldvalue, v_Well);
-#else
-        fieldgenerator.evaluate2d(xg, fieldvalue, v_Well);
-#endif
+        fieldgenerator.evaluateK(xg, fieldvalue);
+
         for( int i=0; i<dim; i++ )
-          K[i][i] = std::exp( fieldvalue );
+          K[i][i] = fieldvalue;
 
         return K; // conductivity coefficient
       }

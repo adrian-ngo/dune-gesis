@@ -31,7 +31,7 @@ namespace Dune {
       std::vector<std::string> R_YY_h5file;
       std::vector<std::string> EV_h5file;
       std::vector<std::string> zonation_matrix;
-      std::string kfield_h5file;
+      std::string yfield_h5file;
       std::string extended_yfield_h5file;
       //std::string kfield_Well_h5file;
 
@@ -40,7 +40,7 @@ namespace Dune {
 
 
       std::string unconditionalField_h5file;
-      std::string kfield_properties_file;
+      std::string yfield_properties_file;
       std::string Y_old_h5file;
       std::string Y_old2_h5file;  // same as Y_old, but on a finer grid
       //std::string Y_old_Well_h5file;
@@ -225,8 +225,8 @@ namespace Dune {
         measurement_file=logdir+"/measurements.txt";
 
 
-        kfield_properties_file=yfielddir+"/yfield_properties.dat";
-        kfield_h5file = yfielddir+"/YField.h5";
+        yfield_properties_file = yfielddir+"/yfield_properties.dat";
+        yfield_h5file = yfielddir+"/YField.h5";
         extended_yfield_h5file = yfielddir+"/ext_YField.h5";
         //kfield_Well_h5file=yfielddir+"/YField_Well.h5";
 

@@ -320,7 +320,8 @@ int main(int argc, char** argv) {
     }
 
 
-    Dune::Gesis::CInputData inputdata( helper );
+    typedef Dune::Gesis::CInputData IDT;
+    IDT inputdata( helper );
     if( !inputdata.readInputFileXml(dir.inputfile) )
       exit(2); // missing input-file
       
@@ -372,17 +373,19 @@ int main(int argc, char** argv) {
     if(helper.size()>1)
       MPI_Barrier(helper.getCommunicator());
 
+    typedef Dune::Gesis::FieldData FD;
+    FD fielddata(inputdata);
       
     //definitions for the Y-Field
-    typedef Dune::Gesis::FFTFieldGenerator<Dune::Gesis::CInputData,REAL,dim> YFG;
-    YFG Yfieldgenerator( inputdata,dir,helper.getCommunicator() );
+    typedef Dune::Gesis::FFTFieldGenerator<FD,DIR,dim> YFG;
+    YFG Yfieldgenerator( fielddata, dir, helper.getCommunicator() );
     //generate the Y_field
     Yfieldgenerator.init();
 
     // start the main-work-flow
     double timeCounted = 0;
 #if HAVE_UG
-    timeCounted = Dune::Gesis::driverUG<Dune::Gesis::CInputData,YFG,DIR,dim>( inputdata, Yfieldgenerator, dir, helper );
+    timeCounted = Dune::Gesis::driverUG<IDT,YFG,DIR,dim>( inputdata, Yfieldgenerator, dir, helper );
 #else
     std::cout << "The UG grid is required!" << std::endl;
 #endif

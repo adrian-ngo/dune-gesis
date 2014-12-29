@@ -52,13 +52,15 @@ namespace Dune {
                             const GFS_GW& gfs_gw,
                             const IDT& inputdata,
                             MEASLIST& orig_measurements,
-                            const std::vector< Vector<UINT> >& nCellsExt,
                             DIR& dir,
                             const YFG& log_electricalConductivity,
                             const YFG& log_kappafield,
                             const Dune::MPIHelper& helper,
                             const INT& CR=-1
                             ){
+
+      typedef Dune::Gesis::FieldData FD;
+      const FD fielddata( inputdata );
 
       typedef typename GFS_GW::Traits::GridViewType GV_GW;
 
@@ -131,7 +133,8 @@ namespace Dune {
        * variables and definitions
        */
       enum{dim=GV_GW::dimension};
-      Vector<UINT> local_count,local_offset;
+      Vector<UINT> local_offset;
+      Vector<UINT> local_count;
       Vector<REAL> Y_u(0);
       if(CR>-1){
         logger<<"Calculate conditional realization #"<<CR<<std::endl;
@@ -141,23 +144,21 @@ namespace Dune {
                                , "/YField"
                                , local_offset
                                , local_count
-                               , inputdata
-                               ); // TODO: Ask Ronnie: Why not parallel read?
-          // Answer: Becasue this field is only needed on P0. The inversion kernel is only done on P0.
-          //         Solving the kriging system and then updating the YField!
+                               ); 
+          // Why not parallel read?
+          // Becasue this field is only needed on P0. The inversion kernel is only done on P0.
+          // Solving the kriging system and then updating the YField!
         }
       }
 
       UINT nMeas=orig_measurements.nMeasurements();
-      UINT nzones=inputdata.yfield_properties.nz;
-      Vector<REAL> beta_star(nzones); // mean of the trend coefficients
-      Vector<REAL> R_bb(nzones);     // uncertainty about the mean
+
+      REAL beta_star; // mean of the trend coefficients
+      REAL R_bb;     // uncertainty about the mean
 
       // set the values from the inputdata
-      for(UINT ii=0; ii<nzones; ii++){
-        beta_star[ii] = inputdata.yfield_properties.zones[ii].beta;
-        R_bb[ii] = inputdata.yfield_properties.zones[ii].qbb_y;
-      }
+      beta_star = inputdata.yfield_properties.zones[0].beta;
+      R_bb      = inputdata.yfield_properties.zones[0].qbb_y;
 
       //initialize the measurement list for the inversion
       // it is always a synthetic measurement -> true
@@ -179,7 +180,6 @@ namespace Dune {
       SensCl sensitivity( theGrid,
                           pRootGridView,
                           inputdata,
-                          nCellsExt,
                           dir,
                           orig_measurements,
                           helper );
@@ -210,10 +210,8 @@ namespace Dune {
       Vector<REAL> Y_old(0);
       Vector<REAL> ksi_old( nMeas , 0.0 );
       REAL L_prior_ini = 1e+12;  // Let the initial value for L_prior better be very large!
-      Vector<REAL> beta_old(nzones);
-      for(UINT ii=0; ii<nzones; ii++)
-        beta_old[ii] = inputdata.yfield_properties.zones[ii].beta;
-      std::vector< Vector<REAL> >  Xzones; // zonation matrix
+      REAL beta_old = inputdata.yfield_properties.zones[0].beta;
+      Vector<REAL>  Xzones; // zonation matrix
       std::vector<REAL> L_objective;
 
       /*
@@ -223,11 +221,9 @@ namespace Dune {
       // and do something on the P0
       if(helper.rank()==0){ // PO do some work
         //read the zonation matrix on P0
-        Xzones.resize(nzones);
-        for(UINT jj=0; jj<nzones; jj++)
-          HDF5Tools::h5_Read( Xzones[jj],
-                              dir.zonation_matrix[jj],
-                              "/X" );
+        HDF5Tools::h5_Read( Xzones,
+                            dir.zonation_matrix[0],
+                            "/X" );
 
         /*
          * get the initial log K field
@@ -255,7 +251,6 @@ namespace Dune {
                                  , "/YField"
                                  , local_offset
                                  , local_count
-                                 , inputdata
                                  );
           }
           else {
@@ -271,7 +266,6 @@ namespace Dune {
                                  , "/YField"
                                  , local_offset
                                  , local_count
-                                 , inputdata
                                  );
           }
 
@@ -312,8 +306,7 @@ namespace Dune {
           HDF5Tools::h5_Read( tmp,
                               dir.beta_old_h5file,
                               "/beta_old" );
-          for(UINT ii=0; ii<nzones; ii++)
-            beta_old[ii]=tmp[ii];
+          beta_old = tmp[0];
           //std::cout << "DEBUG: beta_old read from file = " << std::endl;
           //std::cout << beta_old << std::endl;
 
@@ -339,12 +332,11 @@ namespace Dune {
 
 
           // Initial guess for K:
-          Y_old.resize(0);
+          Y_old.resize( 0 );
           Y_old.resize( nAllCells, 0.0 );
-
-          for(UINT jj=0; jj<nzones; jj++)
-            for(UINT ii=0; ii<nAllCells; ii++)
-              Y_old[ii]+=Xzones[jj][ii]*beta_old[jj];
+          Y_old.mv( beta_old, Xzones );
+          //for(UINT iCell=0; iCell<nAllCells; ++iCell)
+          //  Y_old[ iCell ] = Xzones[ iCell ] * beta_old;
 
           // write the inital guess to hdf5 (as Y_old)
           HDF5Tools::h5g_Write(
@@ -365,33 +357,33 @@ namespace Dune {
       if( inputdata.problem_types.refine_estimate ){
 
         if( General::bFileExists( dir.Y_old_h5file ) ){
-          VTKPlot::plotDataToRefinedGrid< GRID,
-                                          GV_GW,
-                                          IDT,
-                                          DIR,
-                                          YFG
-                                          >( theGrid,
-                                             gv_0,
-                                             dir.Y_old_h5file,
-                                             dir.Y_old2_h5file,
-                                             "/YField",
-                                             inputdata,
-                                             dir );
+          VTKPlot::plotDataToRefinedGrid<GRID,
+                                         GV_GW,
+                                         FD,
+                                         DIR,
+                                         YFG
+                                         >( theGrid,
+                                            gv_0,
+                                            dir.Y_old_h5file,
+                                            dir.Y_old2_h5file,
+                                            "/YField",
+                                            fielddata,
+                                            dir );
         }
 
         if( General::bFileExists( dir.estimation_variance_h5file ) ){
-          VTKPlot::plotDataToRefinedGrid< GRID,
-                                          GV_GW,
-                                          IDT,
-                                          DIR,
-                                          YFG
-                                          >( theGrid,
-                                             gv_0,
-                                             dir.estimation_variance_h5file,
-                                             dir.V_est2_h5file,
-                                             "/sigma2",
-                                             inputdata,
-                                             dir );
+          VTKPlot::plotDataToRefinedGrid<GRID,
+                                         GV_GW,
+                                         FD,
+                                         DIR,
+                                         YFG
+                                         >( theGrid,
+                                            gv_0,
+                                            dir.estimation_variance_h5file,
+                                            dir.V_est2_h5file,
+                                            "/sigma2",
+                                            fielddata,
+                                            dir );
         }
 
         if( inputdata.inversion_parameters.max_iter == 0 ){
@@ -498,17 +490,17 @@ namespace Dune {
 
 
       Vector<REAL> smoothed_orig_YField;
-      HDF5Tools::h5g_pRead<GV_GW,Dune::Interior_Partition>( gv_0
-                                                            , smoothed_orig_YField
-                                                            , dir.kfield_h5file + "_smoothed"
-                                                            , "/YFieldSmoothed"
-                                                            , local_offset
-                                                            , local_count
-                                                            , inputdata
-                                                            , 1 // P0 blocksize
-                                                            , FEMType::DG // P0
-                                                            , 0 // structure is on grid level 0
-                                                            );
+      HDF5Tools::h5g_pRead<GV_GW,FD,Dune::Interior_Partition>( gv_0
+                                                               , smoothed_orig_YField
+                                                               , dir.yfield_h5file + "_smoothed"
+                                                               , "/YFieldSmoothed"
+                                                               , local_offset
+                                                               , local_count
+                                                               , fielddata
+                                                               , 1 // P0 blocksize
+                                                               , FEMType::DG // P0
+                                                               , 0 // structure is on grid level 0
+                                                               );
 
       /*==================
        * Inversion scheme
@@ -565,7 +557,7 @@ namespace Dune {
 
         YFG yfg_Y_old( inputdata, dir, helper.getCommunicator() );
         VTKPlot::output_hdf5data_to_gridview( gv_0,
-                                              inputdata,
+                                              fielddata,
                                               vtu_Y_old.str(),
                                               dir.Y_old_h5file,
                                               "/YField",
@@ -618,7 +610,7 @@ namespace Dune {
         REAL weighting(1.0);
         Vector<REAL> Y_new;
         Vector<REAL> ksi_new(nMeas);
-        Vector<REAL> beta_new(nzones);
+        REAL beta_new;
         REAL stepsize;
 
         /*
@@ -626,8 +618,8 @@ namespace Dune {
          * for getting the new guess!
          */
         // 'Stick together' the blocks to form the cokriging matrix M:
-        DenseMatrix<REAL> CokrigingMatrixM( nMeas + nzones, nMeas + nzones, 0.0 );
-        Vector<REAL> xNew( nMeas + nzones, 0.0 );
+        DenseMatrix<REAL> CokrigingMatrixM( nMeas + 1, nMeas + 1, 0.0 );
+        Vector<REAL> xNew( nMeas + 1, 0.0 );
 
         // seqential code:
         if(helper.rank()==0){
@@ -642,27 +634,21 @@ namespace Dune {
 
           // Last lines and last columns of M
           for(UINT jPoint=0; jPoint < nMeas; jPoint++){
-            for(UINT ii=0;ii<nzones; ii++){
-              CokrigingMatrixM( nMeas+ii , jPoint ) = sensitivity.get_JX(jPoint,ii);
-              CokrigingMatrixM( jPoint, nMeas+ii )  = sensitivity.get_JX(jPoint,ii);
-            }
+            CokrigingMatrixM( nMeas, jPoint ) = sensitivity.get_JX(jPoint);
+            CokrigingMatrixM( jPoint, nMeas )  = sensitivity.get_JX(jPoint);
           }
 
           // lower-left block of M:
-          for(UINT ii=0;ii<nzones; ii++){
-            CokrigingMatrixM( nMeas+ii, nMeas+ii ) = -1.0 / R_bb[ii];
-          }
+          CokrigingMatrixM( nMeas, nMeas ) = -1.0 / R_bb;
 
-          Vector<REAL> RHS( nMeas + nzones, 0.0 );
+          Vector<REAL> RHS( nMeas + 1, 0.0 );
           for( UINT iPoint=0; iPoint<nMeas; iPoint++){
             RHS[ iPoint ] = orig_measurements[iPoint].value - sim_measurements[ iPoint ].value;
             RHS[ iPoint ] += sensitivity.get_J_times_Y_old(iPoint);
           }
 
           // Last elements of the RHS:
-          for(UINT ii=0;ii<nzones; ii++){
-            RHS[ nMeas+ii ] = -1.0 / R_bb[ii] * beta_star[ii];
-          }
+          RHS[ nMeas ] = -1.0 / R_bb * beta_star;
 
           // Now it's time to solve this equation to get the next iteration
           logger << "=== Solve cokriging system" << std::endl;
@@ -673,7 +659,7 @@ namespace Dune {
                     << std::endl;
 
           // Check if the result is good enough:
-          Vector<REAL> residual( nMeas + nzones, 0.0 );
+          Vector<REAL> residual( nMeas + 1, 0.0 );
           residual = CokrigingMatrixM * xNew;
           residual -= RHS;
           std::cout << "||Ax-b|| = " << residual.two_norm()
@@ -682,12 +668,12 @@ namespace Dune {
           if(inputdata.verbosity>18){
             // debug log for the inversion kernel!
             logger<<"Cokriging Matrix: "<<std::endl;
-            if( nMeas+nzones > 20 ){
+            if( nMeas + 1 > 20 ){
               logger<<"Larger than 20x20. Do not print."<<std::endl;
             }
             else {
-              for(UINT ii=0; ii<nMeas+nzones; ii++){
-                for(UINT jj=0; jj<nMeas+nzones; jj++){
+              for(UINT ii=0; ii<nMeas+1; ii++){
+                for(UINT jj=0; jj<nMeas+1; jj++){
                   char buffer[128];
                   sprintf(buffer, "%2.4e ", CokrigingMatrixM(ii, jj));
                   logger<<buffer;
@@ -738,14 +724,13 @@ namespace Dune {
         if(helper.rank()==0){
 
           // extract beta_new out of RHS:
-          for( UINT iZone=0; iZone < nzones; ++iZone )
-            beta_new[ iZone ] = xNew[ nMeas + iZone ];
+          beta_new = xNew[ nMeas ];
 
-          Y_new.resize(0);
+          Y_new.resize( 0 );
           Y_new.resize( nAllCells, 0.0 );
-          for(UINT iZone=0; iZone < nzones; ++iZone )
-            for(UINT iCell=0; iCell<nAllCells; ++iCell)
-              Y_new[ iCell ] = Xzones[ iZone ][ iCell ] * beta_new[ iZone ];
+          Y_new.mv( beta_new, Xzones );
+          //for(UINT iCell=0; iCell<nAllCells; ++iCell)
+          //  Y_new[ iCell ] = Xzones[ iCell ] * beta_new;
 
         }
 
@@ -766,7 +751,6 @@ namespace Dune {
                                  , "/JQ"
                                  , local_offset
                                  , local_count
-                                 , inputdata
                                  );
             JQ *= ksi_new[ iPoint ]; // multipliation by a scalar
             ksi_JQ += JQ;
@@ -799,7 +783,6 @@ namespace Dune {
                                  , "/JQ"
                                  , local_offset
                                  , local_count
-                                 , inputdata
                                  );
             for( UINT iCell=0; iCell<nAllCells; iCell++) {
               Y_new[ iCell ] += JQ[ iCell ] * ksi_new[ iPoint ];
@@ -828,8 +811,8 @@ namespace Dune {
 
           // If the step size is too big, do a line search
           REAL stepsize_limit = inputdata.inversion_parameters.lim_stepsize;
-          logger<<"stepsize( "<<it_counter<<" ) = "<<stepsize<<std::endl;
-          logger<<"stepsize_limit = "<<stepsize_limit<<std::endl;
+          std::cout <<"stepsize( "<<it_counter<<" ) = "<<stepsize<<std::endl;
+          std::cout <<"stepsize_limit = "<<stepsize_limit<<std::endl;
 
           if( stepsize > stepsize_limit ) {
             weighting = stepsize_limit / stepsize;
@@ -855,7 +838,7 @@ namespace Dune {
         REAL L_try;
         Vector<REAL> ksi_try;
         Vector<REAL> Y_try;
-        Vector<REAL> beta_try(nzones);
+        REAL beta_try;
         int weighting_loop=1;
         logger<<"Weighting loop ..."<<std::endl;
         watch.reset();
@@ -876,6 +859,7 @@ namespace Dune {
             //std::cout << "DEBUG: nAllCells = " << nAllCells << std::endl;
 
             // intermediate solution of the parameters
+            Y_try.resize( 0 );
             Y_try.resize( nAllCells, 0.0 );
             for( UINT iCell=0; iCell<nAllCells; iCell++){
               Y_try[ iCell ] = weighting * Y_new[ iCell ] + (1.0 - weighting) * Y_old[ iCell ];
@@ -888,8 +872,7 @@ namespace Dune {
             //std::cout << "DEBUG: ksi_try = " << std::endl;
             //std::cout << ksi_try << std::endl;
 
-            for( UINT iZone=0; iZone < nzones; ++iZone )
-              beta_try[ iZone ] = weighting * beta_new[ iZone ] + (1.0 - weighting) * beta_old[ iZone ];
+            beta_try = weighting * beta_new + (1.0 - weighting) * beta_old;
 
             //std::cout << "DEBUG: beta_try = " << std::endl;
             //std::cout << beta_try << std::endl;
@@ -1039,8 +1022,7 @@ namespace Dune {
               for( UINT iCell=0; iCell < nAllCells; ++iCell )
                 Y_old[ iCell ] = Y_try[ iCell ];
 
-              for( UINT iZone=0; iZone < nzones; ++iZone )
-                beta_old[ iZone ] = beta_try[ iZone ];
+              beta_old = beta_try;
 
               HDF5Tools::h5g_Write(
                                    Y_old
@@ -1074,11 +1056,11 @@ namespace Dune {
                                    dimensions
                                    );
 
-              dimensions[0]=nzones;
+              dimensions[0] = 1; // 1 zone
 
               //std::cout << "DEBUG: beta_old write file = " << std::endl;
               //std::cout << beta_old << std::endl;
-              HDF5Tools::h5_Write( beta_old,
+              HDF5Tools::h5_Write( Vector<REAL>(1,beta_old),
                                    dir.beta_old_h5file,
                                    "/beta_old",
                                    dimensions );
@@ -1114,9 +1096,9 @@ namespace Dune {
             if(CR==-1){
               std::stringstream vtu_file;
               vtu_file << dir.Y_old_vtu_prefix << it_counter;
-              YFG yfg_Y_old( inputdata, dir, helper.getCommunicator() );
+              YFG yfg_Y_old( fielddata, dir, helper.getCommunicator() );
               VTKPlot::output_hdf5data_to_gridview( gv_0,
-                                                    inputdata,
+                                                    fielddata,
                                                     vtu_file.str(),
                                                     dir.Y_old_h5file,
                                                     "/YField",
@@ -1302,17 +1284,17 @@ namespace Dune {
         // Read Y_old in parallel on gv_0 and store it to Y_current.
 
         Vector<REAL> Y_current;
-        HDF5Tools::h5g_pRead<GV_GW,Dune::Interior_Partition>( gv_0
-                                                              , Y_current
-                                                              , dir.Y_old_h5file
-                                                              , "/YField"
-                                                              , local_offset
-                                                              , local_count
-                                                              , inputdata
-                                                              , 1 // P0 blocksize
-                                                              , FEMType::DG // P0
-                                                              , 0 // structure is on grid level 0
-                                                              );
+        HDF5Tools::h5g_pRead<GV_GW,FD,Dune::Interior_Partition>( gv_0
+                                                                 , Y_current
+                                                                 , dir.Y_old_h5file
+                                                                 , "/YField"
+                                                                 , local_offset
+                                                                 , local_count
+                                                                 , fielddata
+                                                                 , 1 // P0 blocksize
+                                                                 , FEMType::DG // P0
+                                                                 , 0 // structure is on grid level 0
+                                                                 );
 
         if( smoothed_orig_YField.size() == Y_current.size() ) {
 
@@ -1358,9 +1340,9 @@ namespace Dune {
                                 );
         }
 
-        YFG yfg_Y_old( inputdata, dir, helper.getCommunicator() );
+        YFG yfg_Y_old( fielddata, dir, helper.getCommunicator() );
         VTKPlot::output_hdf5data_to_gridview( gv_0,
-                                              inputdata,
+                                              fielddata,
                                               dir.Y_cond_vtu[CR],
                                               dir.Y_old_h5file,
                                               "/YField",
@@ -1378,18 +1360,18 @@ namespace Dune {
         }
 
         if( inputdata.problem_types.refine_estimate ){
-          VTKPlot::plotDataToRefinedGrid< GRID,
-                                          GV_GW,
-                                          IDT,
-                                          DIR,
-                                          YFG
-                                          >( theGrid,
-                                             gv_0,
-                                             dir.Y_estimated_h5file,
-                                             dir.Y_estimated2_h5file,
-                                             "/YField",
-                                             inputdata,
-                                             dir );
+          VTKPlot::plotDataToRefinedGrid<GRID,
+                                         GV_GW,
+                                         FD,
+                                         DIR,
+                                         YFG
+                                         >( theGrid,
+                                            gv_0,
+                                            dir.Y_estimated_h5file,
+                                            dir.Y_estimated2_h5file,
+                                            "/YField",
+                                            fielddata,
+                                            dir );
         }
 
       }
@@ -1423,7 +1405,10 @@ namespace Dune {
         watch.reset();
 
         Vector<REAL> EstimatedVariances;
-        estimation_variance( gv_0, inputdata, dir,
+        estimation_variance( gv_0,
+                             inputdata,
+                             fielddata,
+                             dir,
                              EstimatedVariances );
 
         General::log_elapsed_time( watch.elapsed(),

@@ -376,8 +376,6 @@ namespace Dune{
         b,
         "m0_residual_0",
         "m0_residual_0",
-        1,
-        true,
         0 );
         */
 
@@ -399,8 +397,6 @@ namespace Dune{
         r,
         "m0_residual_1",
         "m0_residual_1",
-        1,
-        true,
         0 );
 
         // plot b-Az:
@@ -411,8 +407,6 @@ namespace Dune{
         b,
         "m0_residual_2",
         "m0_residual_2",
-        1,
-        true,
         0 );
         */
 

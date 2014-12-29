@@ -99,14 +99,13 @@ namespace Dune {
         REAL k_Well = 0.0;
 
 
-#ifdef DIMENSION3
-        yfieldgenerator.evaluate3d( xg, k, k_Well );
+        yfieldgenerator.evaluateKW( xg, k, k_Well );
         K[0][0] = k;
+
+#ifdef DIMENSION3
         K[1][1] = k;
         K[2][2] = k_Well;
 #else
-        yfieldgenerator.evaluate2d( xg, k, k_Well );
-        K[0][0] = k;
         K[1][1] = k_Well;
 #endif
 

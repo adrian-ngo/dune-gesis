@@ -12,7 +12,6 @@
  * inputdata:     the class holding all input information
  * dir:           information about IO Paths and file locations!
  * nAllCells:     number of all cells
- * nCellsExt:     number of all cells of the extended domain_data
  * orig_measurements: class holding information about the measuring points
  * Lambdas:       eigenvalues of the extended covariance matrix
  * Y_old:         previous Y field
@@ -66,9 +65,8 @@ namespace Dune{
                           const MEASLIST& orig_measurements,
                           const MEASLIST& measurements,
                           
-                          const std::vector< Vector<UINT> >& nCellsExt,
-                          const std::vector< Vector<REAL> >& Lambdas,
-                          const std::vector< Vector<REAL> >& Xzones,
+                          const Vector<REAL>& Lambdas,
+                          const Vector<REAL>& Xzones,
                           
                           const Vector<REAL>& Y_old,// TODO: Check whether this can be exported from YfieldGenerator_old
                           const YFG& YfieldGenerator_old,
@@ -81,10 +79,13 @@ namespace Dune{
                           const Dune::MPIHelper& helper,
                           std::vector<MyMPIComm> CommunicatorPool,
                           // output:
-                          std::vector< Vector<REAL> >& JX,
+                          Vector<REAL>& JX,
                           Vector<REAL>& J_times_Y_old
                            )
     {
+
+      typedef Dune::Gesis::FieldData FD;
+      FD fielddata(inputdata);
 
       if( helper.rank()==0 && inputdata.verbosity >= VERBOSITY_INVERSION )
 #ifdef USE_ALL_ADJOINTS
@@ -119,8 +120,7 @@ namespace Dune{
       // Total number of all cells required to resolve the parameter field
       const UINT nAllCells = inputdata.domain_data.nCells.componentsproduct();
       
-      // number of zones
-      UINT nzones=inputdata.yfield_properties.nz;
+
       UINT iSetup = setupdata.index;
 
  
@@ -136,7 +136,8 @@ namespace Dune{
   
       // some more needed variables
       Dune::FieldVector<REAL,dim> measure_location(0.0);
-      Vector<UINT> read_local_count,read_local_offset;
+      Vector<UINT> read_local_offset;
+      Vector<UINT> read_local_count;
 
       typedef GroundwaterForwardProblem<GV_GW,REAL,IDT,SDT,YFG> GWP_FWD_OLD;
       GWP_FWD_OLD gwp_fwd_old( inputdata, setupdata, YfieldGenerator_old );
@@ -346,9 +347,7 @@ namespace Dune{
                                    vc_m1adj_cg, 
                                    vtu_m1_adj.str(), 
                                    "m1_Adjoint", 
-                                   inputdata.verbosity, 
-                                   true, 
-                                   0 );
+                                   -1 );
             }
           
 #ifdef USE_ALL_ADJOINTS // m0m1.solveAdjoint
@@ -390,10 +389,7 @@ namespace Dune{
                                                 vc_m0adj_m1adj_cg,
                                                 vtu_m0adj_m1adj.str(), 
                                                 "m0adj_m1adj", 
-                                                inputdata.verbosity, 
-                                                true, 
-                                                0 
-                                                );
+                                                -1 );
             }
 
 #endif// USE_ALL_ADJOINTS // m0m1.solveAdjoint
@@ -465,10 +461,7 @@ namespace Dune{
                                                 vc_hadj_m0m1,
                                                 vtu_hadj_m0m1.str(), 
                                                 "hadj_m0m1", 
-                                                inputdata.verbosity, 
-                                                true, 
-                                                0
-                                                );
+                                                -1 );
             }
 
      
@@ -501,22 +494,12 @@ namespace Dune{
 
             // writing the sensitivity to HDF5
             // the inversion kernel will read it later
-            /*
-              HDF5Tools::h5g_pWrite( gv_0
-              , inputdata
-              , Sensitivity
-              , "/Sensitivity"
-              , inputdata.domain_data.nCells
-              , dir.aSensitivity_h5file[global_meas_id]
-              );
-            */
 
             HDF5Tools::h5g_pWrite( gv_0
                                    , iSensitivity
                                    , dir.Sensitivity_h5file[global_meas_id]
                                    , "/Sensitivity"
-                                   , inputdata
-                                   , inputdata.domain_data.nCells
+                                   , fielddata
                                    , 1
                                    , FEMType::DG
                                    , 0
@@ -529,15 +512,15 @@ namespace Dune{
                    << dir.Sensitivity_h5file[global_meas_id]
                    << std::endl;
 
-            Vector<UINT> local_count;
             Vector<UINT> local_offset;
+            Vector<UINT> local_count;
             HDF5Tools::h5g_pRead( gv_0
                                   , Sensitivity
                                   , dir.Sensitivity_h5file[global_meas_id]
                                   , "/Sensitivity"
                                   , local_offset
                                   , local_count
-                                  , inputdata
+                                  , fielddata
                                   );
           }
 
@@ -559,8 +542,7 @@ namespace Dune{
           logger<<"calculating JQ PARALLEL ...."<<std::endl;
           
           //calculate JQ!
-          cross_covariance_JQ( inputdata,
-                               nCellsExt,
+          cross_covariance_JQ( fielddata,
                                Lambdas,
                                dir.Sensitivity_h5file[global_meas_id],
                                dir.JQ_h5file[global_meas_id],
@@ -586,7 +568,6 @@ namespace Dune{
                                    , "/Sensitivity"
                                    , read_local_offset
                                    , read_local_count
-                                   , inputdata
                                    );
 
               if( gv_gw.comm().rank()==0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
@@ -599,8 +580,7 @@ namespace Dune{
         
             for(UINT iCell=0; iCell<nAllCells; iCell++)
               {
-                for(UINT ii=0; ii<nzones; ii++)
-                  JX[global_meas_id][ii] += Sensitivity[iCell] * Xzones[ii][iCell];//X[iCell][ii];//1.0; //ZonationMatrixX[ iCell ];
+                JX[global_meas_id] += Sensitivity[iCell] * Xzones[iCell];//X[iCell];//1.0; //ZonationMatrixX[ iCell ];
                 J_times_Y_old[global_meas_id] += Sensitivity[ iCell ] * Y_old[ iCell ];
               }
          

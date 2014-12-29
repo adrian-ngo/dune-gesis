@@ -109,9 +109,7 @@ public:
                                                 hydraulic_head,
                                                 filename,
                                                 "head on leafView",
-                                                0,
-                                                true,
-                                                0
+                                                1
                                                 );
 
   } // end of plot2vtu()

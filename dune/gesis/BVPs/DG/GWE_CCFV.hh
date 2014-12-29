@@ -552,54 +552,9 @@ namespace Dune {
         return ss.str();
       }
 
-
-      /*
-
-        TODO: These functions might be obsolete!?
-
-        // Overloaded function, version 1 of 2 (plot VCTYPE)
-        void plot2vtu( const VCType& xSolutionOut,
-        const std::string filename,
-        const std::string title,
-        bool subSamplingFlag,
-        int subSamplingDegree
-        ) const {
-        output2vtu( gv,
-        gfs,
-        xSolutionOut,
-        filename.c_str(),
-        title.c_str(),
-        inputdata.verbosity,
-        subSamplingFlag,
-        subSamplingDegree
-        );
-        }
-
-
-        // Overloaded function, version 2 of 2 (plot DGF)
-        template<typename GradientDGF>
-        void plot2vtu( GradientDGF gradientdgf,
-        const std::string filename,
-        const std::string title,
-        bool subSamplingFlag,
-        int subSamplingDegree
-        ) const {
-        output_dgf_to_vtu( gv,
-        gfs,
-        gradientdgf,
-        filename.c_str(),
-        title.c_str(),
-        inputdata.verbosity,
-        subSamplingFlag,
-        subSamplingDegree
-        );
-
-        }
-
-      */
-
     };
 
   }
+
 }
 #endif// DUNE_GESIS_GWE_CCFV_HH

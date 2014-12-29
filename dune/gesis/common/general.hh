@@ -134,6 +134,24 @@ namespace Dune {
 
 
 
+      //! Print vector components in comma seperated format.
+      template<typename V>
+      inline static std::string Vector2CSV( const V& v ){
+        std::stringstream output;
+        int j=0;
+        do{
+          output << v[j] << ", ";
+          ++j;
+        } while(j<v.size()-1);
+        output << v[j];
+        return output.str();
+      }
+
+
+
+
+
+
       template<typename BVEC, typename VEC>
       inline static void copy_to_std( const BVEC& backend_vector, VEC& standard_vector ){
         standard_vector.resize(0);

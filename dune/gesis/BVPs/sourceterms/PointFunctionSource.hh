@@ -87,9 +87,7 @@ namespace Dune {
                              vcPointSource, 
                              filename.c_str(), 
                              "pointsource", 
-                             inputdata.verbosity, 
-                             true, 
-                             std::max(0,pMAX-1) 
+                             pMAX-1 
                              );
 
       }

@@ -65,6 +65,9 @@ namespace Dune {
 
       Dune::Timer watch;
 
+      typedef Dune::Gesis::FieldData FD;
+      const FD fielddata(inputdata);
+
       // Total number of all cells required to resolve the parameter field
       UINT nAllCells = inputdata.domain_data.nCells[0] * inputdata.domain_data.nCells[1];
       if(dim==3)
@@ -202,8 +205,8 @@ namespace Dune {
 
       // Get conductivity field: parallel fetching of random field data
       Vector<REAL> local_Yfield_vector;
-      Vector<UINT> local_count;
       Vector<UINT> local_offset;
+      Vector<UINT> local_count;
 
 
 #ifdef PARALLEL
@@ -219,11 +222,11 @@ namespace Dune {
 
         HDF5Tools::h5g_pRead( gv_gw
                               , local_Yfield_vector
-                              , dir.kfield_h5file
+                              , dir.yfield_h5file
                               , "/YField"
                               , local_offset
                               , local_count
-                              , inputdata
+                              , fielddata
                               , 1 // P0 blocksize
                               , FEMType::DG // P0
                               , 0 // YField is on grid level 0.
@@ -241,16 +244,12 @@ namespace Dune {
         std::cout << "yfg_orig.localSize() = " << yfg_orig.localSize() << std::endl;
       }
 
-      yfg_orig.setWellConductivities( gv_gw );
+      yfg_orig.setWellConductivities( gv_gw, inputdata );
 
       if( inputdata.plot_options.vtk_plot_yfield ){
-        yfg_orig.plot2vtu( gv_gw, dir.Y_orig_vtu, "Y_orig", baselevel );
+        yfg_orig.plot2vtu( gv_gw, dir.Y_orig_vtu, "Y_orig", 0 );
       }
 
-
-      // Dimensions of extended field per zone:
-      std::vector< Vector<UINT> > nCellsExt;
-      yfg_orig.export_nCellsExt( nCellsExt );
 
       //typedef typename IDT::SDT SDT;
 

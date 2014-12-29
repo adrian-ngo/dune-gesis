@@ -4,7 +4,6 @@
 #ifndef DUNE_GESIS_ADAPTIVITY_HH
 #define DUNE_GESIS_ADAPTIVITY_HH
 
-#define DEBUG_PLOT
 
 #include<dune/common/exceptions.hh>
 
@@ -710,9 +709,13 @@ namespace Dune {
 
         // yfg must be re-loaded for the new processor distribution!
 
+
+        typedef Dune::Gesis::FieldData FD;
+        const FD fielddata(inputdata);
+        
         Vector<REAL> local_Yfield_vector;
-        Vector<UINT> local_count;
         Vector<UINT> local_offset;
+        Vector<UINT> local_count;
 
         HDF5Tools::h5g_pRead( gv_gw
                               , local_Yfield_vector
@@ -720,12 +723,15 @@ namespace Dune {
                               , "/YField"
                               , local_offset
                               , local_count
-                              , inputdata
+                              , fielddata
                               , 1
                               , FEMType::DG // P0
                               , 0 //baselevel
                               );
-        yfg.parallel_import_from_local_vector( local_Yfield_vector, local_offset, local_count );
+        yfg.parallel_import_from_local_vector( local_Yfield_vector,
+                                               local_offset,
+                                               local_count 
+                                               );
 
         logger << "adaptivity: loglistOfAllWellCenters: " << std::endl;
         inputdata.loglistOfAllWellCenters();
@@ -740,7 +746,7 @@ namespace Dune {
                  << std::endl;
         }
 
-        yfg.setWellConductivities( gv_gw );
+        yfg.setWellConductivities( gv_gw, inputdata );
 
 
 #ifdef DEBUG_PLOT
@@ -766,8 +772,6 @@ namespace Dune {
                                           vc_h,
                                           vtu_h_step.str(),
                                           "h_orig",
-                                          inputdata.verbosity,
-                                          true,
                                           0 );
 #endif // DEBUG_PLOT
       }

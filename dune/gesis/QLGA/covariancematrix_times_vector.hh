@@ -21,15 +21,13 @@
 namespace Dune{
   namespace Gesis{
 
-    template<typename IDT>
+    template<typename FD>
     class CovarianceMatrix {
 
     private:
-      const Vector<UINT>& dims;
-      const Vector<UINT>& dimsExt;
+      const FD& fielddata;
 
       MPI_Comm communicator;
-      const IDT& inputdata;
       UINT nx;
       UINT ny;
       UINT nz;
@@ -52,31 +50,26 @@ namespace Dune{
 
 
     public:
-      CovarianceMatrix( const Vector<UINT>& dims_,
-                        const Vector<UINT>& dimsExt_,
-                        MPI_Comm communicator_,
-                        const IDT& inputdata_
+      CovarianceMatrix( const FD& fielddata_,
+                        MPI_Comm communicator_
                         )
-        : dims( dims_ ),
-          dimsExt( dimsExt_ ),
-          communicator( communicator_ ),
-          inputdata( inputdata_ )
+        : fielddata( fielddata_ ),
+          communicator( communicator_ )
       {
-        dim = dims.size();
-        nx = dims[0];
-        ny = dims[1];
-        Nx = dimsExt[0];
-        Ny = dimsExt[1];
+        dim = fielddata.dim;
+        nx = fielddata.nCells[0];
+        ny = fielddata.nCells[1];
+        Nx = fielddata.nCellsExt[0];
+        Ny = fielddata.nCellsExt[1];
 #ifdef DIMENSION3
-        nz = dims[2];
-        Nz = dimsExt[2];
+        nz = fielddata.nCells[2];
+        Nz = fielddata.nCellsExt[2];
 #endif
         localn0_Sensitivity = 0;
         localN0 = 0;
       };
 
-      void prepare( UINT zone_offset,
-                    Vector<UINT>& local_offset,
+      void prepare( Vector<UINT>& local_offset,
                     Vector<UINT>& local_count,
                     const bool bBigCount = false )
       {
@@ -86,7 +79,7 @@ namespace Dune{
         local_offset.reset( dim );
         local_count.reset( dim );
 
-        UINT VectorSizeExt = dimsExt.componentsproduct();
+        UINT VectorSizeExt = fielddata.nCellsExt.componentsproduct();
         scalingfactor = REAL ( VectorSizeExt ); // normalization factor of the discrete Fourier transform
 
         /*
@@ -131,11 +124,10 @@ namespace Dune{
 
         // define the parameters to read the right hyperslap/block from the HDF5 file
         for(UINT jj=0;jj<dim;jj++){
-          //local_count[jj]     = inputdata.domain_data.nCells[jj];
           if( bBigCount )
-            local_count[jj]     = dimsExt[jj];
+            local_count[jj]     = fielddata.nCellsExt[jj];
           else
-            local_count[jj]     = dims[jj];
+            local_count[jj]     = fielddata.nCells[jj];
         }
 
         UINT nDepth = 0;
@@ -158,7 +150,7 @@ namespace Dune{
         //  because of 1-D data distribution
         if( (UINT)local_0_start < nDepth ) {
 
-          local_offset[ iDepth ] = local_0_start + zone_offset;
+          local_offset[ iDepth ] = local_0_start;
 
           if( (UINT)local_n0 + (UINT)local_0_start <= nDepth ){
             local_count[ iDepth ] = local_n0;
@@ -180,7 +172,7 @@ namespace Dune{
 
         General::log_elapsed_time( watch.elapsed(),
                                    communicator,
-                                   inputdata.verbosity,
+                                   General::verbosity,
                                    "FFTW",
                                    "covariance matrix prepare" );
 
@@ -228,8 +220,6 @@ namespace Dune{
             UINT l = General::indexconversion_2d_to_1d( iy, ix, localn0_Sensitivity, nx );
             // only at these locations the sensitivities needs to filled in
 
-            //if( (iy+local_0_start < inputdata.domain_data.nCells[1]) && (ix < inputdata.domain_data.nCells[0]) ){
-            //logger<<"zone : "<<ii<<", local_0_start : "<<local_0_start<<std::endl;
             if( (iy+local_0_start < ny) && (ix < nx) ){
               //logger<<"ix:"<<ix<<", iy :"<< iy<<", L : "<<L<<", l : "<<l<<std::endl;
               J_extended[ L ][0] = SensitivityFieldJ[ l ];
@@ -359,7 +349,7 @@ namespace Dune{
 
         General::log_elapsed_time( watch.elapsed(),
                                    communicator,
-                                   inputdata.verbosity,
+                                   General::verbosity,
                                    "FFTW",
                                    "covariance matrix times vector" );
 

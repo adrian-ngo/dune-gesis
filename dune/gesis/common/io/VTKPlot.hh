@@ -47,12 +47,11 @@ namespace Dune {
                               , const VCType& xSolution
                               , const std::string filename
                               , const std::string title
-                              , const int verbosity=0
-                              , bool bSubSampling = false
-                              , int nSubSampling = 0
+                              , int nSubSampling = -1
                               , bool bCellData = false
                               )
       {
+
         Dune::Timer watch;
         logger << "output2vtu: " << filename << std::endl;
 
@@ -67,10 +66,10 @@ namespace Dune {
 
         if( gv.comm().rank()==0
             &&
-            verbosity >= VERBOSITY_DEBUG_LEVEL )
+            General::verbosity >= VERBOSITY_DEBUG_LEVEL )
           std::cout << "VTK output of vertex-data " << title.c_str() << " to file '" << filename.c_str() << ".vtu'" <<  std::endl;
 
-        if(bSubSampling){
+        if(nSubSampling>-1){
 
 #ifdef PLOT_GHOST
           Dune::SubsamplingVTKWriter<GV,Dune::All_Partition> vtkwriter(gv,nSubSampling);
@@ -119,7 +118,7 @@ namespace Dune {
                  << filename;
         General::log_elapsed_time( watch.elapsed(),
                                    gv.comm(),
-                                   verbosity,
+                                   General::verbosity,
                                    "IO",
                                    jobtitle.str() );
 
@@ -140,9 +139,7 @@ namespace Dune {
                                        , const VECTOR& vCellData
                                        , const std::string filename
                                        , const std::string title
-                                       , const int verbosity=0
-                                       , bool bSubSampling = false
-                                       , int nSubSampling = 0
+                                       , int nSubSampling = -1
                                        , bool bCellData = false // special plot
                                         )
       {
@@ -154,11 +151,11 @@ namespace Dune {
 
         if( gv.comm().rank()==0
             &&
-            verbosity >= VERBOSITY_DEBUG_LEVEL )
+            General::verbosity >= VERBOSITY_DEBUG_LEVEL )
           std::cout << "VTK output of cell-data " << title.c_str() << " to file '" << filename.c_str() << ".vtu'" <<  std::endl;
 
 
-        if(bSubSampling){
+        if(nSubSampling>-1){
 
           // This will plot the cell data as they are,
           // namely in a non-conforming way.
@@ -183,20 +180,16 @@ namespace Dune {
           General::copy_from_std( vCellData, p0Celldata );
 
 
-          std::stringstream jobtitle;
-          jobtitle << "output_vector_to_vtu: copying data";
           General::log_elapsed_time( watch.elapsed(),
                                      gv.comm(),
-                                     verbosity,
+                                     General::verbosity,
                                      "IO",
-                                     jobtitle.str() );
+                                     "output_vector_to_vtu: copying data" );
 
           output2vtu( p0gfs,
                       p0Celldata,
                       filename.c_str(),
                       title.c_str(),
-                      verbosity,
-                      bSubSampling,
                       nSubSampling,
                       bCellData
                       );
@@ -225,7 +218,7 @@ namespace Dune {
           jobtitle << "output_vector_to_vtu: writing " << filename;
           General::log_elapsed_time( watch.elapsed(),
                                      gv.comm(),
-                                     verbosity,
+                                     General::verbosity,
                                      "IO",
                                      jobtitle.str() );
 
@@ -245,9 +238,7 @@ namespace Dune {
                                     , const DGF& dgf
                                     , const std::string filename
                                     , const std::string title
-                                    , const int verbosity=0
-                                    , bool bSubSampling = false
-                                    , int nSubSampling = 0
+                                    , int nSubSampling = -1
                                      )
       {
 
@@ -258,10 +249,10 @@ namespace Dune {
         Dune::VTK::OutputType vtkOutputType = Dune::VTK::appendedraw;
 
         if( gv.comm().rank()==0 &&
-            verbosity >= VERBOSITY_DEBUG_LEVEL )
+            General::verbosity >= VERBOSITY_DEBUG_LEVEL )
           std::cout << "VTK output of vertex-data '" << title.c_str() << "' to file '" << filename.c_str() << ".vtu'" <<  std::endl;
 
-        if( bSubSampling )
+        if( nSubSampling>-1 )
           {
 #ifdef PLOT_GHOST
             Dune::SubsamplingVTKWriter<GV,Dune::All_Partition> ss_vtkwriter( gv, nSubSampling );
@@ -307,7 +298,7 @@ namespace Dune {
                  << filename;
         General::log_elapsed_time( watch.elapsed(),
                                    gv.comm(),
-                                   verbosity,
+                                   General::verbosity,
                                    "IO",
                                    jobtitle.str() );
 
@@ -320,14 +311,13 @@ namespace Dune {
       // *************************************************************************
       // 4.) output_hdf5data_to_gridview    HDF5 file ---> cell-data / vertex data
       // *************************************************************************
-      template<typename GV,typename YFG>
+      template<typename GV,typename FD,typename YFG>
       inline static void output_hdf5data_to_gridview( const GV &gv_0,
-                                                      const CInputData& inputdata,
+                                                      const FD& fielddata,
                                                       const std::string & vtu_filename,
                                                       const std::string & Y_old_filename,
                                                       const std::string & groupname,
-                                                      YFG& yfg,
-                                                      const int verbosity=0
+                                                      YFG& yfg
                                                       ){
 
         Dune::Timer watch;
@@ -335,7 +325,8 @@ namespace Dune {
 
 
         Vector<REAL> local_Y_old;
-        Vector<UINT> local_count,local_offset;
+        Vector<UINT> local_offset;
+        Vector<UINT> local_count;
 
         HDF5Tools::h5g_pRead( gv_0
                               , local_Y_old
@@ -343,7 +334,7 @@ namespace Dune {
                               , groupname
                               , local_offset
                               , local_count
-                              , inputdata
+                              , fielddata
                               );
 
         if( gv_0.comm().size() > 1 ){
@@ -356,14 +347,14 @@ namespace Dune {
           yfg.import_from_vector( local_Y_old );
         }
 
-        yfg.plot2vtu( gv_0, vtu_filename, groupname );
+        yfg.plot2vtu( gv_0, vtu_filename, groupname, 0 );
 
         std::stringstream jobtitle;
         jobtitle << "VTK output of HDF5 data to "
                  << vtu_filename;
         General::log_elapsed_time( watch.elapsed(),
                                    gv_0.comm(),
-                                   verbosity,
+                                   General::verbosity,
                                    "IO",
                                    jobtitle.str() );
 
@@ -379,7 +370,7 @@ namespace Dune {
       // *******************************************************************
       template< typename GRID,
                 typename GV_GW,
-                typename IDT,
+                typename FD,
                 typename DIR,
                 typename YFG
                 >
@@ -388,7 +379,7 @@ namespace Dune {
                                          const std::string filename1,
                                          const std::string filename2,
                                          const std::string groupname,
-                                         const IDT& inputdata,
+                                         const FD& fielddata,
                                          const DIR& dir
                                          ) {
 
@@ -406,7 +397,8 @@ namespace Dune {
         // For example, one can start with head inversion in step 3) and carry on with m0m1 inversion in step 5)
         //
 
-        Vector<UINT> local_count,local_offset;
+        Vector<UINT> local_offset;
+        Vector<UINT> local_count;
         Vector<REAL> Y_est_parallel;
 
         HDF5Tools::h5g_pRead( gv_0
@@ -415,12 +407,13 @@ namespace Dune {
                               , groupname
                               , local_offset
                               , local_count
-                              , inputdata
+                              , fielddata
                               , 1 // P0 blocksize
                               , FEMType::DG // P0
                               , 0 // structure is on grid level 0
                               );
-        YFG yfg_Y_est( inputdata, dir, gv_0.comm() );
+
+        YFG yfg_Y_est( fielddata, dir, gv_0.comm() );
 
         if( gv_0.comm().size() > 1 )
           yfg_Y_est.parallel_import_from_local_vector( Y_est_parallel,
@@ -437,8 +430,7 @@ namespace Dune {
 
         yfg_Y_est.export_field_to_vector_on_grid( gv_1,
                                                   Y_est2,
-                                                  Y_est2_well, // dummy
-                                                  1 // grid level for mapper
+                                                  Y_est2_well // dummy
                                                   );
 
 
@@ -446,9 +438,7 @@ namespace Dune {
                                        Y_est2,
                                        dir.vtudir + "/Y_est2",
                                        groupname,
-                                       inputdata.verbosity,
-                                       true, // subsampling
-                                       0 // subsampling degree
+                                       1 // subsampling degree
                                        );
 
 
@@ -457,8 +447,7 @@ namespace Dune {
                               , Y_est2
                               , filename2
                               , groupname
-                              , inputdata
-                              , inputdata.domain_data.nCells
+                              , fielddata
                               , 1
                               , FEMType::DG
                               , 1
@@ -545,8 +534,6 @@ namespace Dune {
                     u0,
                     filename,
                     "elementorder",
-                    General::verbosity,
-                    true,
                     0
                     );
 

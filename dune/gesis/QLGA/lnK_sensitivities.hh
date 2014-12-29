@@ -11,7 +11,6 @@
  * inputdata:     the class holding all input information
  * dir:           information about IO Paths and file locations!
 
- * nCellsExt:     number of all cells of the extended domain_data
  * iteration_number: the current iteration number (only for some VTK output needed)
  * orig_measurements: the measuering points
  * Lambdas:       eigenvalues of the extended covariance matrix (in FFT data distribution format)
@@ -50,25 +49,25 @@ namespace Dune{
                             UINT iSetup,
                             UINT iteration_number,
                             MEASLIST& orig_measurements,
-                            const std::vector< Vector<UINT> >& nCellsExt,
-                            const std::vector< Vector<REAL> >& Lambdas,
-                            const std::vector< Vector<REAL> >& Xzones,
+                            const Vector<REAL>& Lambdas,
+                            const Vector<REAL>& Xzones,
                             Vector<REAL>& Y_old,
                             std::vector<MyMPIComm> CommunicatorPool,
                             //OUTPUT
-                            std::vector< Vector<REAL> >& JX,
+                            Vector<REAL>& JX,
                             Vector<REAL>& J_times_Y_old
                             )
     { 
+
+      typedef Dune::Gesis::FieldData FD;
+      FD fielddata(inputdata);
+
       //std::cout << "inside: " << nCellsExt[0][1] << std::endl;
       logger << "lnK_sensitivities(...)" << std::endl;
 
       // # of lnk measurements
       UINT nPoints_lnk=orig_measurements.nMeasPerSetupPerType(iSetup,0);
-  
-      // number of zones
-      UINT nzones=inputdata.yfield_properties.nz;
-  
+
       //number of available communicators. BE CAREFUL "nComm <= inputdata.maxNComm", because inputdata holds the given input for the pool size and this is a max. value!!!! 
       UINT nComm=CommunicatorPool.size();
   
@@ -129,8 +128,7 @@ namespace Dune{
                                 , Sensitivity
                                 , dir.Sensitivity_h5file[global_meas_id]
                                 , "/Sensitivity"
-                                , inputdata
-                                , inputdata.domain_data.nCells
+                                , fielddata
                                 );
 
 
@@ -146,8 +144,7 @@ namespace Dune{
           logger<<"calculating JQ PARALLEL ...."<<std::endl;
     
           //calculate JQ!
-          cross_covariance_JQ( inputdata, 
-                               nCellsExt,
+          cross_covariance_JQ( fielddata, 
                                Lambdas,
                                dir.Sensitivity_h5file[global_meas_id],
                                dir.JQ_h5file[global_meas_id],
@@ -179,13 +176,13 @@ namespace Dune{
             if( CommunicatorPool[meas_point%nComm].get_size()>1){
 	
               // needed for the HDF5 reading
-              Vector<UINT> read_local_count,read_local_offset;
+              Vector<UINT> read_local_offset;
+              Vector<UINT> read_local_count;
               HDF5Tools::h5g_Read( Sensitivity
                                    , dir.Sensitivity_h5file[global_meas_id]
                                    , "/Sensitivity"
                                    , read_local_offset
                                    , read_local_count
-                                   , inputdata
                                    );
             }
        
@@ -196,8 +193,7 @@ namespace Dune{
             const UINT nAllCells = inputdata.domain_data.nCells.componentsproduct();
 
             for(UINT iCell=0; iCell<nAllCells; iCell++){
-              for(UINT ii=0; ii<nzones; ii++)
-                JX[global_meas_id][ii] += Sensitivity[iCell] * Xzones[ii][iCell];//X[iCell][ii];//1.0; //ZonationMatrixX[ iCell ];
+              JX[global_meas_id] += Sensitivity[iCell] * Xzones[iCell];//X[iCell];//1.0; //ZonationMatrixX[ iCell ];
               J_times_Y_old[global_meas_id] += Sensitivity[ iCell ] * Y_old[ iCell ];
             }
          

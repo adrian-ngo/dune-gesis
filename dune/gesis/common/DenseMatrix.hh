@@ -258,24 +258,21 @@ namespace Dune {
                             );
       }
 
-      template<typename IDT>
       void read_from_HDF5( const std::string & filename,
-                           const std::string & dataname,
-                           const IDT& inputdata
-                           ){
+                           const std::string & dataname ){
 
         data.resize(0);
         rows=0;
         cols=0;
 
-        Vector<UINT> local_count(2,0), local_offset(2,0);
+        Vector<UINT> local_offset(2,0);
+        Vector<UINT> local_count(2,0);
 
         HDF5Tools::h5g_Read( data
                              , filename
                              , dataname
                              , local_offset
                              , local_count
-                             , inputdata
                              );
         rows=local_count[0];
         cols=local_count[1];

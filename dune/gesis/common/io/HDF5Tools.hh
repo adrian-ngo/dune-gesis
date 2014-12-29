@@ -259,7 +259,7 @@ namespace Dune {
         std::stringstream jobtitle;
         jobtitle << "h5g_Write: writing " << filename;
         General::log_elapsed_time( watch.elapsed(),
-                                   inputdata.verbosity,
+                                   General::verbosity,
                                    "IO",
                                    jobtitle.str() );
 
@@ -274,10 +274,9 @@ namespace Dune {
       /** function to write data (in parallel) to the hdf5 file
        *
        * \tparam gv is the gridview
-       * \tparam inputdata is the inputdata object
+       * \tparam fielddata is the fielddata object
        * \tparam data are the data which are written into the file (current hyperslab)
        * \tparam groupname is the name/path where the data are stored in the HDF5 file
-       * \tparam nCells  the number of virtual(global) cells for each dimension
        * \tparam nChunks = numbers of chunks (needed for hdf5) in each dimension
        * \tparam gridsizes = virtual grid-sizes, needed only for extra data (not used so far)
        * \tparam filename = name of the hdf5 file where all the data will be stored
@@ -287,13 +286,12 @@ namespace Dune {
        for a documentation of the HDF5 API.
        *
        */
-      template<typename GV>
+      template<typename GV,typename FD>
       static void h5g_pWrite( const GV& gv,
                               const Vector<REAL>& datavector,
                               const std::string& filename,
                               const std::string& groupname,
-                              const CInputData& inputdata,
-                              const Vector<UINT>& nCells,
+                              const FD& fielddata,
                               const int blocksizePerDimension = 1,
                               const FEMType::Type femtype=FEMType::DG,
                               const int current_grid_level=0,
@@ -342,7 +340,7 @@ namespace Dune {
         */
 
 
-        Vector<REAL> gridsizes (inputdata.domain_data.virtual_gridsizes);
+        Vector<REAL> gridsizes (fielddata.gridsizes);
 
         int gridLevelFactor = 1;
         if(current_grid_level>0)
@@ -386,7 +384,7 @@ namespace Dune {
 
 #ifdef DEBUG_LOG
         logger << "DEBUG: h5g_pWrite: nCells = "
-               << nCells
+               << fielddata.nCells
                << std::endl;
 
         logger << "DEBUG: h5g_pWrite: min_index = "
@@ -443,7 +441,7 @@ namespace Dune {
         hsize_t dims_global[ dim];
 
         for(UINT i=0; i<dim; i++) {
-          dims_global[dim -i-1] = nCells[i] * blocksizePerDimension * gridLevelFactor;
+          dims_global[dim -i-1] = fielddata.nCells[i] * blocksizePerDimension * gridLevelFactor;
           if(femtype==FEMType::CG){
             dims_global[dim -i-1] += 1;
           }
@@ -613,7 +611,7 @@ namespace Dune {
         jobtitle << "h5g_pWrite: writing " << filename;
         General::log_elapsed_time( watch.elapsed(),
                                    gv.comm(),
-                                   inputdata.verbosity,
+                                   General::verbosity,
                                    "IO",
                                    jobtitle.str() );
 
@@ -624,8 +622,8 @@ namespace Dune {
        *
        * \tparam local_data is a 'return value' which gets the data that belongs to the current processor (current hyperslab)
        * \tparam groupname is the name/path where the data are stored in the HDF5 file
-       * \tparam local_count is a 'return value' which gets the number of virtual cells for each dimension
        * \tparam local_offset is a 'return value' which gets the distance of the current hyperslab from the origin.
+       * \tparam local_count is a 'return value' which gets the number of virtual cells for each dimension
        * \tparam filename is the filename of the data file
        *
        *
@@ -637,13 +635,11 @@ namespace Dune {
 
 
 
-      template<typename IDT>
       static void h5g_Read( Vector<REAL>& local_data
                             , const std::string& filename
                             , const std::string& groupname
                             , Vector<UINT>& local_offset
                             , Vector<UINT>& local_count
-                            , const IDT& inputdata
                             , const int iPart=1
                             , const int nParts=1
                             , const bool bTimerOn=true
@@ -772,13 +768,13 @@ namespace Dune {
         if( bTimerOn ){
           // log and add to elapsed_IO
           General::log_elapsed_time( watch.elapsed(),
-                                     inputdata.verbosity,
+                                     General::verbosity,
                                      "IO",
                                      jobtitle.str() );
         }
         else {
           // log only to logger
-          if( inputdata.verbosity >= VERBOSITY_TIMER_DETAILS ){
+          if( General::verbosity >= VERBOSITY_TIMER_DETAILS ){
             logger << "Duration:["
                    << std::setw(6)
                    << "IO" << "]"
@@ -821,7 +817,8 @@ namespace Dune {
        *
        */
 
-      template<typename GV,
+      template<typename GV, 
+               typename FD,
                Dune::PartitionIteratorType partitiontype = Dune::All_Partition>
       static void h5g_pRead( const GV& gv,
                              Vector<REAL>& local_data,
@@ -829,7 +826,7 @@ namespace Dune {
                              const std::string& groupname,
                              Vector<UINT>& local_offset,
                              Vector<UINT>& local_count,
-                             const CInputData& inputdata,
+                             const FD& fielddata,
                              const int blocksizePerDimension=1,
                              const FEMType::Type femtype=FEMType::DG,
                              const int current_grid_level=0
@@ -866,7 +863,7 @@ namespace Dune {
 
         */
 
-        Vector<REAL> gridsizes (inputdata.domain_data.virtual_gridsizes);
+        Vector<REAL> gridsizes ( fielddata.gridsizes );
         if( current_grid_level > 0 )
           gridsizes /= REAL( std::pow(2,current_grid_level) );
 
@@ -991,7 +988,7 @@ namespace Dune {
             //logger << "local_count["<<ii<<"] = " << local_count[ii] << std::endl;
             //logger << "count["<<dim-1-ii<<"] = " << count[dim-1-ii] << std::endl;
 
-            if(dims[dim-1-ii]-inputdata.domain_data.nCells[ii]){
+            if(dims[dim-1-ii] - fielddata.nCells[ii]){
               local_count[ii]+=1;    // Q1-FEM: #nodes = #elements + 1 per dimension
               count[dim-1-ii]+=1;
             }
@@ -1004,7 +1001,7 @@ namespace Dune {
           for(UINT ii=0;ii<dim;ii++){
 
 
-            //if(dims[dim-1-ii]-inputdata.domain_data.nCells[ii]){
+            //if(dims[dim-1-ii] - fielddata.nCells[ii]){
             local_count[ii] = blocksizePerDimension * local_count[ii];
             count[dim-1-ii] = blocksizePerDimension * count[dim-1-ii];
             //}
@@ -1098,7 +1095,7 @@ namespace Dune {
           jobtitle << "h5g_pRead: nonoverlapped reading " << filename;
         General::log_elapsed_time( watch.elapsed(),
                                    comm,
-                                   inputdata.verbosity,
+                                   General::verbosity,
                                    "IO",
                                    jobtitle.str() );
 
@@ -1126,6 +1123,7 @@ namespace Dune {
                             , const Vector<UINT> dimensions
                             )
       {
+        Dune::Timer watch;
         // ge the dimensionality of the data
         UINT dim=dimensions.size();
 
@@ -1251,6 +1249,16 @@ namespace Dune {
         if( status < 0 )
           logger << "Warning : H5Fclose() failed." << std::endl;
         assert( status > -1 );
+
+
+        std::stringstream jobtitle;
+        jobtitle << "h5_Write: writing "
+                 << filename;
+        General::log_elapsed_time( watch.elapsed(),
+                                   General::verbosity,
+                                   "IO",
+                                   jobtitle.str() );
+        
       };
 
 
@@ -1275,6 +1283,7 @@ namespace Dune {
                           )
       {
 
+        Dune::Timer watch;
 
         // open the file for reading
         hid_t file_id=  H5Fopen (filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
@@ -1343,14 +1352,23 @@ namespace Dune {
         free(dims);
         status = H5Fclose( file_id );
         assert( status > -1 );
+
+        std::stringstream jobtitle;
+        jobtitle << "h5_Read: Reading "
+                 << filename;
+        General::log_elapsed_time( watch.elapsed(),
+                                   General::verbosity,
+                                   "IO",
+                                   jobtitle.str() );
+
       };
 
       /** function to write a vector (parallel) to a hdf5 file
        *
        * \tparam gobal_dim the global dimension of the stored data (total size)
        * \tparam data data which will be written to the file
-       * \tparam local_count give the size of the local data
        * \tparam local_offset the offset of the data (in each direction)
+       * \tparam local_count give the size of the local data
        * \tparam helper the DUNE MPIHelper for the MPI communication
        * \tparam groupname is the name/path where the data are stored in the HDF5 file
        * \tparam filename is the filename of the data file
@@ -1361,11 +1379,9 @@ namespace Dune {
        for a documentation of the HDF5 API.
        *
        */
-      template<typename IDT>
       static void h5_pWrite( const Vector<REAL> &data
                              , const std::string& filename
                              , const std::string& groupname
-                             , const IDT& inputdata
                              , const Vector<UINT>& global_dim
                              , const Vector<UINT>& local_offset
                              , const Vector<UINT>& local_count
@@ -1498,7 +1514,7 @@ namespace Dune {
                  << filename;
         General::log_elapsed_time( watch.elapsed(),
                                    communicator,
-                                   inputdata.verbosity,
+                                   General::verbosity,
                                    "IO",
                                    jobtitle.str() );
 
@@ -1509,8 +1525,8 @@ namespace Dune {
       /** function to retrieve a vector (sequential) from the hdf5 file
        *
        * \tparam local_data is a 'return value' which gets the data that belongs to the current processor (current hyperslab)
-       * \tparam local_count give the size of the local data
        * \tparam local_offset the offset of the data (in each direction)
+       * \tparam local_count give the size of the local data
        *  \tparam helper the DUNE MPIHelper for the MPI communication
        * \tparam groupname is the name/path where the data are stored in the HDF5 file
        * \tparam filename is the filename of the data file
@@ -1521,11 +1537,9 @@ namespace Dune {
        for a documentation of the HDF5 API.
        *
        */
-      template<typename IDT>
       static void h5_pRead( Vector<REAL>& local_data
                             , const std::string& filename
                             , const std::string& groupname
-                            , const IDT& inputdata
                             , const Vector<UINT>& local_offset
                             , const Vector<UINT>& local_count
                             , MPI_Comm communicator
@@ -1630,7 +1644,7 @@ namespace Dune {
                  << filename;
         General::log_elapsed_time( watch.elapsed(),
                                    communicator,
-                                   inputdata.verbosity,
+                                   General::verbosity,
                                    "IO",
                                    jobtitle.str() );
 
@@ -1640,8 +1654,8 @@ namespace Dune {
        *
        * \tparam gobal_dim the global dimension of the stored data (total size)
        * \tparam data data which will be written to the file
-       * \tparam local_count give the size of the local data
        * \tparam local_offset the offset of the data (in each direction)
+       * \tparam local_count give the size of the local data
        * \tparam helper the DUNE MPIHelper for the MPI communication
        * \tparam groupname is the name/path where the data are stored in the HDF5 file
        * \tparam filename is the filename of the data file
@@ -1929,9 +1943,9 @@ namespace Dune {
       // Save BackendVector to hdf5 (This implementation works not only for Q1 finite elements!)
       // counterparts:
       // void read_BackendVector_from_HDF5()
-      template<typename GFS>
+      template<typename GFS,typename FD>
       static void write_BackendVector_to_HDF5( const GFS& gfs,
-                                               const CInputData& inputdata,
+                                               const FD& fielddata,
                                                const std::string & filename,
                                                const std::string & groupname,
                                                const typename Dune::PDELab::BackendVectorSelector<GFS,REAL>::Type& backend_vector,
@@ -1952,7 +1966,7 @@ namespace Dune {
         jobtitle << "write_BackendVector_to_HDF5: copying data";
         General::log_elapsed_time( watch.elapsed(),
                                    gfs.gridView().comm(),
-                                   inputdata.verbosity,
+                                   General::verbosity,
                                    "IO",
                                    jobtitle.str() );
 
@@ -2006,7 +2020,7 @@ namespace Dune {
           //  logger << "DEBUG: standard_vector["<<i<<"] = " << standard_vector[i] << std::endl;
           //}
 
-          Vector<REAL> gridsizes (inputdata.domain_data.virtual_gridsizes);
+          Vector<REAL> gridsizes (fielddata.gridsizes);
           if( current_grid_level > 0 )
             gridsizes /= REAL( std::pow(2,current_grid_level) );
 
@@ -2014,8 +2028,7 @@ namespace Dune {
                       standard_vector,
                       filename,
                       groupname,
-                      inputdata,
-                      inputdata.domain_data.nCells,
+                      fielddata,
                       blocksizePerDimension,
                       femtype,
                       current_grid_level,
@@ -2186,9 +2199,9 @@ namespace Dune {
 
       // Read BackendVector from hdf5 (This implementation works only for Q1 finite elements!)
       // <---> write_BackendVector_to_HDF5()
-      template<typename GFS>
+      template<typename GFS,typename FD>
       static void read_BackendVector_from_HDF5( const GFS& gfs,
-                                                const CInputData& inputdata,
+                                                const FD& fielddata,
                                                 const std::string & filename,
                                                 const std::string & groupname,
                                                 typename Dune::PDELab::BackendVectorSelector<GFS,REAL>::Type& backend_vector,
@@ -2242,16 +2255,16 @@ namespace Dune {
           }
 
 
-          Vector<UINT> local_count;
           Vector<UINT> local_offset;
+          Vector<UINT> local_count;
 
           h5g_pRead( gfs.gridView(),
                      read_local_data,
                      filename,
                      groupname,
-                     local_count,
                      local_offset,
-                     inputdata,
+                     local_count,
+                     fielddata,
                      blocksizePerDimension,
                      femtype,
                      current_grid_level
@@ -2278,7 +2291,7 @@ namespace Dune {
         jobtitle << "read_BackendVector_from_HDF5(): copying data";
         General::log_elapsed_time( watch.elapsed(),
                                    gfs.gridView().comm(),
-                                   inputdata.verbosity,
+                                   General::verbosity,
                                    "IO",
                                    jobtitle.str() );
 
@@ -2438,7 +2451,7 @@ namespace Dune {
                  << filename;
         General::log_elapsed_time( watch.elapsed(),
                                    gv.comm(),
-                                   inputdata.verbosity,
+                                   General::verbosity,
                                    "IO",
                                    jobtitle.str() );
 

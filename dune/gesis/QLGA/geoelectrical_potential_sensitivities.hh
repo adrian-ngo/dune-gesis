@@ -12,7 +12,6 @@
  * inputdata:     the class holding all input information
  * dir:           information about IO Paths and file locations!
  * nAllCells:     number of all cells
- * nCellsExt:     number of all cells of the extended domain_data
  * orig_measuring_points: class holding information about the measuring points
  * Lambdas:       eigenvalues of the extended covariance matrix
  * Y_old:         previous Y field
@@ -72,9 +71,8 @@ void geoelectrical_potential_sensitivities( // input:
                                            const MEASLIST& orig_measurements,
                                            const MEASLIST& measurements,
 
-                                           const std::vector< Vector<UINT> >& nCellsExt,
-                                           const std::vector< Vector<REAL> >& Lambdas,
-                                           const std::vector< Vector<REAL> >& Xzones,
+                                           const Vector<REAL>& Lambdas,
+                                           const Vector<REAL>& Xzones,
 
                                            const Vector<REAL>& Y_old,
                                            const YFG& YfieldGenerator_old,
@@ -90,7 +88,7 @@ void geoelectrical_potential_sensitivities( // input:
 
                                            std::vector<MyMPIComm> CommunicatorPool,
                                            // output
-                                           std::vector< Vector<REAL> >& JX,
+                                           Vector<REAL>& JX,
                                            Vector<REAL>& J_times_Y_old
                                             ) {
 
@@ -98,6 +96,10 @@ void geoelectrical_potential_sensitivities( // input:
    * some needed variables and typedefinitions
    */
   logger<<"GEP_sensitivities(...) "<<std::endl;
+
+  typedef Dune::Gesis::FieldData FD;
+  FD fielddata(inputdata);
+
 #ifdef USE_YASP
   int baselevel = inputdata.domain_data.yasp_baselevel;
 #endif
@@ -121,8 +123,6 @@ void geoelectrical_potential_sensitivities( // input:
   // Total number of all cells required to resolve the parameter field
   const UINT nAllCells = inputdata.domain_data.nCells.componentsproduct();
       
-  // number of zones
-  UINT nzones = inputdata.yfield_properties.nz;
   UINT iSetup = setupdata.index;
       
   logger<<"GEP SENS: precalculations ... "<<std::endl;
@@ -149,13 +149,12 @@ void geoelectrical_potential_sensitivities( // input:
                                 darcyflux_dgf, 
                                 dir.q_orig_vtu[iSetup] + "_TEST", 
                                 "q_orig", 
-                                inputdata.verbosity, 
-                                true,
                                 0 );
   }
 
   // some more variables
-  Vector<UINT> read_local_count,read_local_offset;
+  Vector<UINT> read_local_offset;
+  Vector<UINT> read_local_count;
   
   VCType_GW vc_phi_adj(gfs_gw,0.0);
   VCType_GW vcphi0(gfs_gw,0.0);
@@ -322,7 +321,7 @@ void geoelectrical_potential_sensitivities( // input:
      */
     if(CommunicatorPool[iConfig%nComm].I_am_in()){
       HDF5Tools::read_BackendVector_from_HDF5( gfs_gw,
-                                               inputdata,
+                                               fielddata,
                                                dir.vcphi0_orig_h5file[iSetup][iConfig],
                                                "/vcphi0_orig",
                                                vcphi0
@@ -374,8 +373,6 @@ void geoelectrical_potential_sensitivities( // input:
                                  vc_phi_adj,
                                  vtu_phi_adj.str(),
                                  "phi_adj",
-                                 inputdata.verbosity, 
-                                 true, 
                                  0 );
 
             std::stringstream vtu_phi_adj_vcphi0;
@@ -384,8 +381,6 @@ void geoelectrical_potential_sensitivities( // input:
                                  vcphi0,
                                  vtu_phi_adj_vcphi0.str() + "_vcphi0",
                                  "vcphi0",
-                                 inputdata.verbosity, 
-                                 true, 
                                  0 );
 
           }
@@ -408,8 +403,6 @@ void geoelectrical_potential_sensitivities( // input:
                                  vcM0_adj_phi_adj_cg,
                                  vtu_M0gp_adj_phi_adj.str() + "_cg",
                                  "GEP_M0_adj_phi_adj_cg",
-                                 inputdata.verbosity, 
-                                 true, 
                                  0 );
           }
 
@@ -445,8 +438,6 @@ void geoelectrical_potential_sensitivities( // input:
                                  vc_hadj_m0, 
                                  vtu_head_adj_M0.str(),
                                  "headGP_adj_M0_adj", 
-                                 inputdata.verbosity, 
-                                 true, 
                                  0 );
           }
 
@@ -511,8 +502,6 @@ void geoelectrical_potential_sensitivities( // input:
                                  vc_m0adj_m1adj_cg,
                                  vtu_gep_m0adj_m1adj.str() + "_cg",
                                  "GEP_m0adj_m1adj_cg",
-                                 inputdata.verbosity, 
-                                 true,
                                  0 );
           }
 
@@ -556,8 +545,6 @@ void geoelectrical_potential_sensitivities( // input:
                                  vc_hadj_m0m1,
                                  vtu_head_adj_M0M1.str(),
                                  "headGP_adj_M0M1_adj",
-                                 inputdata.verbosity, 
-                                 true, 
                                  0 );
           }
 
@@ -596,7 +583,6 @@ void geoelectrical_potential_sensitivities( // input:
                                            , phiM1Sensitivity
                                            , vtu_file1.str()
                                            , "phiM1Sensitivity"
-                                           , inputdata.verbosity
                                            );
           }
 
@@ -619,8 +605,7 @@ void geoelectrical_potential_sensitivities( // input:
                                  , Sensitivity
                                  , dir.Sensitivity_h5file[global_meas_id]
                                  , "/Sensitivity"
-                                 , inputdata
-                                 , inputdata.domain_data.nCells
+                                 , fielddata
                                  );
         }
 
@@ -629,15 +614,15 @@ void geoelectrical_potential_sensitivities( // input:
                  << dir.Sensitivity_h5file[global_meas_id]
                  << std::endl;
 
-          Vector<UINT> local_count;
           Vector<UINT> local_offset;
+          Vector<UINT> local_count;
           HDF5Tools::h5g_pRead( gv_0
                                 , Sensitivity
                                 , dir.Sensitivity_h5file[global_meas_id]
                                 , "/Sensitivity"
                                 , local_offset
                                 , local_count
-                                , inputdata
+                                , fielddata
                                 );
         }
 
@@ -662,8 +647,7 @@ void geoelectrical_potential_sensitivities( // input:
         logger<<"calculating JQ PARALLEL ...."<<std::endl;
     
         //calculate JQ!
-        cross_covariance_JQ( inputdata, 
-                             nCellsExt,
+        cross_covariance_JQ( fielddata,
                              Lambdas,
                              dir.Sensitivity_h5file[global_meas_id],
                              dir.JQ_h5file[global_meas_id],
@@ -702,7 +686,6 @@ void geoelectrical_potential_sensitivities( // input:
                                  , "/Sensitivity"
                                  , read_local_offset
                                  , read_local_count
-                                 , inputdata
                                  );
 
             if( gv_gw.comm().rank()==0 && inputdata.verbosity>=VERBOSITY_EQ_SUMMARY ){
@@ -715,8 +698,7 @@ void geoelectrical_potential_sensitivities( // input:
           }
 
           for(UINT iCell=0; iCell<nAllCells; iCell++){
-            for(UINT ii=0; ii<nzones; ii++)
-              JX[global_meas_id][ii] += Sensitivity[iCell] * Xzones[ii][iCell];
+            JX[global_meas_id] += Sensitivity[iCell] * Xzones[iCell];
             J_times_Y_old[global_meas_id] += Sensitivity[ iCell ] * Y_old[ iCell ];
           }
 
