@@ -1,5 +1,6 @@
 M4FILES = dune-gesis.m4 \
 	fftw3-mpi.m4 \
+	ax_boost_base.m4 \
 	boost_property_tree.m4
 
 aclocaldir = $(datadir)/dune/aclocal

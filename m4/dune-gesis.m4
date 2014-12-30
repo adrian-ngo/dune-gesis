@@ -9,7 +9,7 @@ dnl -*- autoconf -*-
 AC_DEFUN([DUNE_GESIS_CHECKS],[
   AC_REQUIRE([DUNE_PATH_HDF5])
   AC_REQUIRE([DUNE_PATH_FFTW3_MPI])
-  DUNE_BOOST_BASE(, [ DUNE_BOOST_PROPERTY_TREE ] , [] )
+  AX_BOOST_BASE(, [ DUNE_BOOST_PROPERTY_TREE ] , [] )
 ])
 
 # Additional checks needed to find dune-gesis
