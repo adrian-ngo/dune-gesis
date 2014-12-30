@@ -151,14 +151,11 @@ namespace Dune {
         }
       }
 
-      UINT nMeas=orig_measurements.nMeasurements();
-
-      REAL beta_star; // mean of the trend coefficients
-      REAL R_bb;     // uncertainty about the mean
+      UINT nMeas = orig_measurements.nMeasurements();
 
       // set the values from the inputdata
-      beta_star = inputdata.yfield_properties.zones[0].beta;
-      R_bb      = inputdata.yfield_properties.zones[0].qbb_y;
+      REAL beta_star = inputdata.yfield_properties.zones[0].beta;   // mean of the trend coefficients
+      REAL R_bb      = inputdata.yfield_properties.zones[0].qbb_y;  // uncertainty about the mean
 
       //initialize the measurement list for the inversion
       // it is always a synthetic measurement -> true
@@ -610,8 +607,8 @@ namespace Dune {
         REAL weighting(1.0);
         Vector<REAL> Y_new;
         Vector<REAL> ksi_new(nMeas);
-        REAL beta_new;
-        REAL stepsize;
+        REAL beta_new = inputdata.yfield_properties.zones[0].beta;
+        REAL stepsize(0.0);
 
         /*
          * sequential part!
@@ -804,7 +801,6 @@ namespace Dune {
           logger<<"generating new solution took "<<watch.elapsed()<<" sec."<<std::endl;
 
           // Compute the current step size
-          stepsize = 0.0;
           for( unsigned int iCell=0; iCell<nAllCells; iCell++){
             stepsize = std::max( stepsize, std::abs( Y_new[ iCell ] - Y_old[ iCell ] ) );
           }
@@ -838,7 +834,7 @@ namespace Dune {
         REAL L_try;
         Vector<REAL> ksi_try;
         Vector<REAL> Y_try;
-        REAL beta_try;
+        REAL beta_try = 0;
         int weighting_loop=1;
         logger<<"Weighting loop ..."<<std::endl;
         watch.reset();
