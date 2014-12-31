@@ -1,9 +1,8 @@
 /* 
  * File:   FieldData.hh
- * Author: A. Ngo (09/2014)
+ * Author: A. Ngo (12/2014)
  *
  * Data structure used to read the input data for the random field to be generated.
- * Corresponds to "yfield.cfg".
  *
  */
 
